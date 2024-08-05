@@ -1,0 +1,37 @@
+{
+  "name": "func_interpolator_aka_neural_network_with_vizualisation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "Neural Network Visualization",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "dev": "vite",
+    "serve": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-cmd": "ts-node --project tsconfig.json src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@types/node": "^22.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.8.0",
+    "globals": "^15.9.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.0.0"
+  },
+  "dependencies": {
+    "@swc/wasm-typescript": "^1.7.6",
+    "babel-preset-solid": "^1.8.19",
+    "esm": "^3.2.25",
+    "solid-js": "^1.8.19",
+    "vite": "^5.3.5",
+    "vite-plugin-solid": "^2.10.2"
+  }
+}
