@@ -1,11 +1,12 @@
 import { Component, createEffect, createSignal, onCleanup } from "solid-js";
-import { AppState, Store } from "../store";
+import { useAppStore } from "../AppContext";
 
-const TrainingStatus: Component<{ store: Store<AppState> }> = (props) => {
-  const [status, setStatus] = createSignal(props.store.getState().trainingResult);
+const TrainingStatus: Component = () => {
+  const store = useAppStore();
+  const [status, setStatus] = createSignal(store.getState().trainingResult);
 
   createEffect(() => {
-    const unsubscribe = props.store.subscribe((state) => {
+    const unsubscribe = store.subscribe((state) => {
       console.log("TrainingStatus Store updated:", state);
       setStatus(state.trainingResult);
     });

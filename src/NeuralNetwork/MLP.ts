@@ -4,9 +4,11 @@ import { Value } from './value';
 
 export class MLP {
   layers: Layer[];
+  activations: ActivationFunction[];
 
   constructor(nin: number, nouts: number[], activations: ActivationFunction[] = []) {
     const sizes = [nin, ...nouts];
+    this.activations = activations;
     this.layers = sizes.slice(0, -1).map((s, i) => 
       new Layer(s, sizes[i+1], activations[i] || 'tanh')
     );
@@ -32,6 +34,7 @@ export class MLP {
     return {
       layers: this.layers.map((layer, layerIndex) => ({
         id: `layer_${layerIndex}`,
+        activations: this.activations,
         neurons: layer.neurons.map((neuron, neuronIndex) => ({
           id: `neuron_${layerIndex}_${neuronIndex}`,
           weights: neuron.w.map(w => w.data),

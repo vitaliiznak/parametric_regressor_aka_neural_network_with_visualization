@@ -18,6 +18,7 @@ export class Store<T> {
 
   setState(newState: Partial<T>) {
     this.state = { ...this.state, ...newState };
+    console.log("Store updated:", this.state);
     this.notifyListeners();
   }
 

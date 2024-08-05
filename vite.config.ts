@@ -3,6 +3,9 @@ import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [solidPlugin()],
+  worker: {
+    format: 'es',
+  },
   server: {
     port: 3000,
   },

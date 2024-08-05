@@ -1,15 +1,16 @@
 import { Component, createSignal } from 'solid-js';
 import { Trainer } from '../trainer';
-import { Store, AppState } from '../store';
+import { useAppStore } from '../AppContext';
 
-const TrainingControls: Component<{ store: Store<AppState> }> = (props) => {
+const TrainingControls: Component = () => {
+  const store = useAppStore();
   const [isTraining, setIsTraining] = createSignal(false);
   let trainerRef: Trainer | undefined;
 
   const startTraining = async () => {
     setIsTraining(true);
     console.log("Training started");
-    const { network, trainingConfig } = props.store.getState();
+    const { network, trainingConfig } = store.getState();
     trainerRef = new Trainer(network, trainingConfig);
 
     const xs = [[0], [0.5], [1]];
@@ -23,7 +24,7 @@ const TrainingControls: Component<{ store: Store<AppState> }> = (props) => {
         
         const currentTime = Date.now();
         if (currentTime - lastUpdateTime > 100) {  // Update every 100ms
-          props.store.setState({ trainingResult: result });
+          store.setState({ trainingResult: result });
           lastUpdateTime = currentTime;
         }
         

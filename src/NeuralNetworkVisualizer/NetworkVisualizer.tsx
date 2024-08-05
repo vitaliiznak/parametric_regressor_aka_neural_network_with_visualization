@@ -1,10 +1,11 @@
 import { Component, createEffect, onCleanup, onMount, createSignal } from "solid-js";
-import { AppState, Store } from "../store";
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
 import { VisualNode, VisualNetworkData } from "./types";
+import { useAppStore } from "../AppContext";
 
-const NetworkVisualizer: Component<{ store: Store<AppState> }> = (props) => {
+const NetworkVisualizer: Component = () => {
+  const store = useAppStore();
   let canvasRef: HTMLCanvasElement | undefined;
   let layoutCalculator: NetworkLayout | undefined;
   let renderer: NetworkRenderer | undefined;
@@ -32,7 +33,8 @@ const NetworkVisualizer: Component<{ store: Store<AppState> }> = (props) => {
     lastUpdateTime = currentTime;
 
     if (layoutCalculator && renderer) {
-      const networkData = props.store.getState().network.toJSON();
+      const network = store.getState().network;
+      const networkData = network.toJSON();
       const newVisualData = layoutCalculator.calculateLayout(networkData);
       setVisualData(newVisualData);
       renderer.render(newVisualData);
@@ -53,11 +55,11 @@ const NetworkVisualizer: Component<{ store: Store<AppState> }> = (props) => {
       const rect = canvasRef.getBoundingClientRect();
       draggedNode.x = e.clientX - rect.left - layoutCalculator!.nodeWidth / 2;
       draggedNode.y = e.clientY - rect.top - layoutCalculator!.nodeHeight / 2;
-      
+
       // Ensure the node stays within the canvas
       draggedNode.x = Math.max(0, Math.min(draggedNode.x, canvasRef.width - layoutCalculator!.nodeWidth));
       draggedNode.y = Math.max(0, Math.min(draggedNode.y, canvasRef.height - layoutCalculator!.nodeHeight));
-      
+
       renderer!.render(visualData());
     }
   };
@@ -67,10 +69,9 @@ const NetworkVisualizer: Component<{ store: Store<AppState> }> = (props) => {
   };
 
   createEffect(() => {
-    const unsubscribe = props.store.subscribe((state) => {
-      if (state.trainingResult) {
-        updateVisualization();
-      }
+    const unsubscribe = store.subscribe((state) => {
+      console.log("NetworkVisualizer: Store updated", state);
+      updateVisualization();
     });
 
     onCleanup(() => {
@@ -83,7 +84,22 @@ const NetworkVisualizer: Component<{ store: Store<AppState> }> = (props) => {
     });
   });
 
-  return <canvas ref={el => { canvasRef = el }} width={800} height={600} />;
+
+  createEffect(() => {
+    const network = store.getState().network;
+    console.log("NetworkVisualizer: Network updated", network);
+    updateVisualization();
+  });
+
+
+  return <canvas ref={el => { 
+    canvasRef = el;
+    if (canvasRef) {
+      layoutCalculator = new NetworkLayout(canvasRef.width, canvasRef.height);
+      renderer = new NetworkRenderer(canvasRef);
+      updateVisualization();
+    }
+  }} width={800} height={600} />;
 };
 
 export default NetworkVisualizer;
