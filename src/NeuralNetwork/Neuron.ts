@@ -1,43 +1,43 @@
-import ModuleBase from "./ModuleBase";
-import { Value } from "./Value";
+// neuron.ts
+import { ActivationFunction, NeuronData } from './types';
+import { Value } from './value';
 
-export default class Neuron extends ModuleBase {
+
+export class Neuron {
   w: Value[];
   b: Value;
-  activation: string;
+  activation: ActivationFunction;
 
-  constructor(nin: number, activation: string = 'ReLU') {
-    super();
-    this.w = Array.from({ length: nin }, () => new Value(Math.random() * 2 - 1));
+  constructor(nin: number, activation: ActivationFunction = 'tanh') {
+    this.w = Array(nin).fill(0).map(() => new Value(Math.random() * 2 - 1));
     this.b = new Value(0);
     this.activation = activation;
   }
 
-  activate(x: Value): Value {
-    switch (this.activation) {
-      case 'ReLU':
-        return x.relu();
-      case 'Sigmoid':
-        return x.sigmoid();
-      case 'Tanh':
-        return x.tanh();
-      case 'LeakyReLU':
-        return x.leakyRelu();
-      default:
-        return x;
-    }
+  forward(x: Value[]): Value {
+    const act = x.reduce((sum, xi, i) => sum.add(this.w[i].mul(xi)), this.b);
+    return this.applyActivation(act);
   }
 
-  forward(x: Value[]): Value {
-    const act = this.w.reduce((acc, wi, i) => acc.add(wi.mul(x[i])), this.b);
-    return this.activate(act);
+  applyActivation(x: Value): Value {
+    switch (this.activation) {
+      case 'tanh': return x.tanh();
+      case 'relu': return x.relu();
+      case 'sigmoid': return x.sigmoid();
+      case 'linear': default: return x;
+    }
   }
 
   parameters(): Value[] {
     return [...this.w, this.b];
   }
 
-  toString(): string {
-    return `${this.activation}Neuron(${this.w.length})`;
+  toJSON(): NeuronData {
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      weights: this.w.map(w => w.data),
+      bias: this.b.data,
+      activation: this.activation
+    };
   }
 }

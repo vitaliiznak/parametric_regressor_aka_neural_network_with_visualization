@@ -1,9 +1,12 @@
-import { Neuron, ActivationFunction } from './Neuron';
-import { Value } from './Value';
+
+import { Neuron } from './neuron';
+import { ActivationFunction } from './types';
+import { Value } from './value';
+
 
 export class Layer {
   neurons: Neuron[];
-  
+
   constructor(nin: number, nout: number, activation: ActivationFunction = 'tanh') {
     this.neurons = Array(nout).fill(0).map(() => new Neuron(nin, activation));
   }
@@ -14,9 +17,5 @@ export class Layer {
 
   parameters(): Value[] {
     return this.neurons.flatMap(neuron => neuron.parameters());
-  }
-
-  toString(): string {
-    return `Layer of [${this.neurons.join(', ')}]`;
   }
 }

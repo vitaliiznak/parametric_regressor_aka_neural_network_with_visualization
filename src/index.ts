@@ -1,5 +1,5 @@
-import { MLP } from "./NeuralNetwork/MLP";
-import { Value } from "./NeuralNetwork/Value";
+import { MLP } from "./NeuralNetwork/mlp";
+import { Value } from "./NeuralNetwork/value";
 
 
 

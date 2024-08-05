@@ -1,6 +1,6 @@
-import { Layer } from './Layer';
-import { Value } from './Value';
-import { ActivationFunction } from './Neuron';
+import { ActivationFunction, NetworkData, LayerData } from './types';
+import { Layer } from './layer';
+import { Value } from './value';
 
 export class MLP {
   layers: Layer[];
@@ -25,20 +25,20 @@ export class MLP {
   }
 
   zeroGrad(): void {
-    this.parameters().forEach(p => p.grad = 0);
+    this.parameters().forEach(p => p.grad = 0); 
   }
 
-  toString(): string {
-    return `MLP of [${this.layers.join(', ')}]`;
-  }
-
-  static fromConfig(config: {
-    inputSize: number;
-    hiddenSizes: number[];
-    outputSize: number;
-    activations?: ActivationFunction[];
-  }): MLP {
-    const { inputSize, hiddenSizes, outputSize, activations = [] } = config;
-    return new MLP(inputSize, [...hiddenSizes, outputSize], activations);
+  toJSON(): NetworkData {
+    return {
+      layers: this.layers.map((layer, layerIndex) => ({
+        id: `layer_${layerIndex}`,
+        neurons: layer.neurons.map((neuron, neuronIndex) => ({
+          id: `neuron_${layerIndex}_${neuronIndex}`,
+          weights: neuron.w.map(w => w.data),
+          bias: neuron.b.data,
+          activation: neuron.activation
+        }))
+      }))
+    };
   }
 }

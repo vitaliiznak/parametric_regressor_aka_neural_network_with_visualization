@@ -1,22 +1,38 @@
 export class Value {
-  data: number;
-  grad: number;
+  #data: number;
+  #grad: number;
   _prev: Set<Value>;
   _op: string;
   _backward: () => void;
   label: string;
 
   constructor(data: number, _children: Value[] = [], _op: string = '', label: string = '') {
-    this.data = data;
-    this.grad = 0;
+    this.#data = data;
+    this.#grad = 0;
     this._prev = new Set(_children);
     this._op = _op;
-    this._backward = () => {};
+    this._backward = () => { };
     this.label = label;
   }
 
   static from(n: number | Value): Value {
     return n instanceof Value ? n : new Value(n);
+  }
+
+  get data(): number {
+    return this.#data;
+  }
+
+  set data(value: number) {
+    this.#data = value;
+  }
+
+  get grad(): number {
+    return this.#grad;
+  }
+
+  set grad(value: number) {
+    this.#grad = value;
   }
 
   add(other: number | Value): Value {
