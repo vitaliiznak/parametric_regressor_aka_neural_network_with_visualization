@@ -1,32 +1,44 @@
-import Layer from "./Layer";
-import ModuleBase from "./ModuleBase";
-import Value from "./Value";
+import { Layer } from './Layer';
+import { Value } from './Value';
+import { ActivationFunction } from './Neuron';
 
-export default class MLP extends ModuleBase {
-    layers: Layer[];
-  
-    constructor(nin: number, nouts: number[], activations: string[]) {
-      super();
-      if (nouts.length !== activations.length) {
-        throw new Error('The length of nouts and activations arrays must match.');
-      }
-      const sz = [nin, ...nouts];
-      this.layers = sz.slice(0, -1).map((s, i) => new Layer(s, sz[i + 1], activations[i]));
-    }
-  
-    forward(x: Value[]): Value | Value[] {
-      let output: Value[] = x;
-      this.layers.forEach(layer => {
-        output = layer.forward(output);
-      });
-      return output.length === 1 ? output[0] : output;
-    }
-  
-    parameters(): Value[] {
-      return this.layers.flatMap(layer => layer.parameters());
-    }
-  
-    toString(): string {
-      return `MLP of [${this.layers.join(', ')}]`;
-    }
+export class MLP {
+  layers: Layer[];
+
+  constructor(nin: number, nouts: number[], activations: ActivationFunction[] = []) {
+    const sizes = [nin, ...nouts];
+    this.layers = sizes.slice(0, -1).map((s, i) => 
+      new Layer(s, sizes[i+1], activations[i] || 'tanh')
+    );
   }
+
+  forward(x: (number | Value)[]): Value | Value[] {
+    let out: Value[] = x.map(Value.from);
+    for (const layer of this.layers) {
+      out = layer.forward(out);
+    }
+    return out.length === 1 ? out[0] : out;
+  }
+
+  parameters(): Value[] {
+    return this.layers.flatMap(layer => layer.parameters());
+  }
+
+  zeroGrad(): void {
+    this.parameters().forEach(p => p.grad = 0);
+  }
+
+  toString(): string {
+    return `MLP of [${this.layers.join(', ')}]`;
+  }
+
+  static fromConfig(config: {
+    inputSize: number;
+    hiddenSizes: number[];
+    outputSize: number;
+    activations?: ActivationFunction[];
+  }): MLP {
+    const { inputSize, hiddenSizes, outputSize, activations = [] } = config;
+    return new MLP(inputSize, [...hiddenSizes, outputSize], activations);
+  }
+}

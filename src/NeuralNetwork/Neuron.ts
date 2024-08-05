@@ -1,5 +1,5 @@
 import ModuleBase from "./ModuleBase";
-import Value from "./Value";
+import { Value } from "./Value";
 
 export default class Neuron extends ModuleBase {
   w: Value[];

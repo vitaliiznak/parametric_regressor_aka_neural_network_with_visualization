@@ -1,21 +1,19 @@
-import ModuleBase from "./ModuleBase";
-import Neuron from "./Neuron";
-import Value from "./Value";
+import { Neuron, ActivationFunction } from './Neuron';
+import { Value } from './Value';
 
-export default class Layer extends ModuleBase {
+export class Layer {
   neurons: Neuron[];
-
-  constructor(nin: number, nout: number, activation: string = 'ReLU') {
-    super();
-    this.neurons = Array.from({ length: nout }, () => new Neuron(nin, activation));
+  
+  constructor(nin: number, nout: number, activation: ActivationFunction = 'tanh') {
+    this.neurons = Array(nout).fill(0).map(() => new Neuron(nin, activation));
   }
 
   forward(x: Value[]): Value[] {
-    return this.neurons.map(n => n.forward(x));
+    return this.neurons.map(neuron => neuron.forward(x));
   }
 
   parameters(): Value[] {
-    return this.neurons.flatMap(n => n.parameters());
+    return this.neurons.flatMap(neuron => neuron.parameters());
   }
 
   toString(): string {

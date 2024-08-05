@@ -1,47 +1,75 @@
-export default class Value {
+export class Value {
   data: number;
   grad: number;
-  private _backward: () => void;
-  private _prev: Set<Value>;
-  private _op: string;
+  _prev: Set<Value>;
+  _op: string;
+  _backward: () => void;
+  label: string;
 
-  constructor(data: number, _children: Value[] = [], _op: string = '') {
+  constructor(data: number, _children: Value[] = [], _op: string = '', label: string = '') {
     this.data = data;
     this.grad = 0;
-    this._backward = () => {};
     this._prev = new Set(_children);
     this._op = _op;
+    this._backward = () => {};
+    this.label = label;
   }
 
-  add(other: Value | number): Value {
-    other = other instanceof Value ? other : new Value(other);
-    const out = new Value(this.data + other.data, [this, other], '+');
+  static from(n: number | Value): Value {
+    return n instanceof Value ? n : new Value(n);
+  }
+
+  add(other: number | Value): Value {
+    const otherValue = Value.from(other);
+    const out = new Value(this.data + otherValue.data, [this, otherValue], '+');
 
     out._backward = () => {
       this.grad += out.grad;
-      other.grad += out.grad;
+      otherValue.grad += out.grad;
     };
 
     return out;
   }
 
-  mul(other: Value | number): Value {
-    other = other instanceof Value ? other : new Value(other);
-    const out = new Value(this.data * other.data, [this, other], '*');
+  mul(other: number | Value): Value {
+    const otherValue = Value.from(other);
+    const out = new Value(this.data * otherValue.data, [this, otherValue], '*');
 
     out._backward = () => {
-      this.grad += other.data * out.grad;
-      other.grad += this.data * out.grad;
+      this.grad += otherValue.data * out.grad;
+      otherValue.grad += this.data * out.grad;
     };
 
     return out;
   }
 
-  pow(exp: number): Value {
-    const out = new Value(this.data ** exp, [this], `**${exp}`);
+  pow(n: number): Value {
+    const out = new Value(Math.pow(this.data, n), [this], `^${n}`);
 
     out._backward = () => {
-      this.grad += (exp * this.data ** (exp - 1)) * out.grad;
+      this.grad += n * Math.pow(this.data, n - 1) * out.grad;
+    };
+
+    return out;
+  }
+
+  exp(): Value {
+    const out = new Value(Math.exp(this.data), [this], 'exp');
+
+    out._backward = () => {
+      this.grad += out.data * out.grad;
+    };
+
+    return out;
+  }
+
+  tanh(): Value {
+    const x = this.data;
+    const t = (Math.exp(2 * x) - 1) / (Math.exp(2 * x) + 1);
+    const out = new Value(t, [this], 'tanh');
+
+    out._backward = () => {
+      this.grad += (1 - t * t) * out.grad;
     };
 
     return out;
@@ -58,32 +86,11 @@ export default class Value {
   }
 
   sigmoid(): Value {
-    const sig = 1 / (1 + Math.exp(-this.data));
-    const out = new Value(sig, [this], 'Sigmoid');
+    const s = 1 / (1 + Math.exp(-this.data));
+    const out = new Value(s, [this], 'sigmoid');
 
     out._backward = () => {
-      this.grad += sig * (1 - sig) * out.grad;
-    };
-
-    return out;
-  }
-
-  tanh(): Value {
-    const t = Math.tanh(this.data);
-    const out = new Value(t, [this], 'Tanh');
-
-    out._backward = () => {
-      this.grad += (1 - t ** 2) * out.grad;
-    };
-
-    return out;
-  }
-
-  leakyRelu(alpha: number = 0.01): Value {
-    const out = new Value(this.data > 0 ? this.data : alpha * this.data, [this], 'LeakyReLU');
-
-    out._backward = () => {
-      this.grad += (this.data > 0 ? 1 : alpha) * out.grad;
+      this.grad += s * (1 - s) * out.grad;
     };
 
     return out;
@@ -91,20 +98,23 @@ export default class Value {
 
   backward(): void {
     const topo: Value[] = [];
-    const visited: Set<Value> = new Set();
+    const visited = new Set<Value>();
 
-    const buildTopo = (v: Value) => {
+    function buildTopo(v: Value) {
       if (!visited.has(v)) {
         visited.add(v);
-        v._prev.forEach(child => buildTopo(child));
+        for (const child of v._prev) {
+          buildTopo(child);
+        }
         topo.push(v);
       }
-    };
+    }
 
     buildTopo(this);
-
     this.grad = 1;
-    topo.reverse().forEach(v => v._backward());
+    for (const v of topo.reverse()) {
+      v._backward();
+    }
   }
 
   toString(): string {
