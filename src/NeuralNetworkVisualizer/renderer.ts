@@ -8,7 +8,7 @@ export class NetworkRenderer {
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    this.ctx.scale(2, 2);  // Scale up for better resolution
+    //this.ctx.scale(2, 2);  // Removed scaling for better resolution
   }
 
   render(data: VisualNetworkData) {
@@ -22,8 +22,8 @@ export class NetworkRenderer {
   }
 
   pan(dx: number, dy: number) {
-    this.offsetX += dx;
-    this.offsetY += dy;
+    this.offsetX += dx / this.scale; // Adjust for current scale
+    this.offsetY += dy / this.scale; // Adjust for current scale
   }
 
   zoom(x: number, y: number, factor: number) {
@@ -34,6 +34,13 @@ export class NetworkRenderer {
     // Adjust offset to zoom towards mouse position
     this.offsetX = x - (x - this.offsetX) * (this.scale / prevScale);
     this.offsetY = y - (y - this.offsetY) * (this.scale / prevScale);
+  }
+
+  getScaledMousePosition(clientX: number, clientY: number): { x: number, y: number } {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (clientX - rect.left - this.offsetX) / this.scale;
+    const y = (clientY - rect.top - this.offsetY) / this.scale;
+    return { x, y };
   }
 
   private clear() {

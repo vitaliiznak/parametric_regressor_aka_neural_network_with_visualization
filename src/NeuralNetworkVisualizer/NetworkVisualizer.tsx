@@ -25,11 +25,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const initializeCanvas = () => {
     if (canvasRef && containerRef) {
       const { width, height } = containerRef.getBoundingClientRect();
-      canvasRef.width = width * 2;
-      canvasRef.height = height * 2;
+      canvasRef.width = width;
+      canvasRef.height = height;
       layoutCalculator = new NetworkLayout(canvasRef.width, canvasRef.height);
       renderer = new NetworkRenderer(canvasRef);
       updateVisualization();
+
+      console.log('initializeCanvas', { width, height } )
   
       canvasRef.addEventListener('mousedown', handleMouseDown);
       canvasRef.addEventListener('mousemove', handleMouseMove);
@@ -141,6 +143,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
+    console.log("renderer", renderer); 
     if (renderer) {
       const rect = canvasRef!.getBoundingClientRect();
       const x = e.clientX - rect.left;
