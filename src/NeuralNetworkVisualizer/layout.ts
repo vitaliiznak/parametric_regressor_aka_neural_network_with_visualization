@@ -4,19 +4,26 @@ import { VisualNetworkData, VisualNode, VisualConnection } from './types';
 export class NetworkLayout {
   public nodeWidth = 60;
   public nodeHeight = 40;
-  private layerSpacing = 200;
-  private nodeSpacing = 80;
+  public layerSpacing = 200;
+  public nodeSpacing = 80;
 
-  constructor(private canvasWidth: number, private canvasHeight: number) {}
+  constructor(public canvasWidth: number, public canvasHeight: number) {}
 
   calculateLayout(network: NetworkData): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
 
     const layerCount = network.layers.length;
+    const maxNeuronsInLayer = Math.max(...network.layers.map(layer => layer.neurons.length));
+    
+    const totalWidth = (layerCount + 1) * this.layerSpacing;
+    const totalHeight = (maxNeuronsInLayer + 1) * (this.nodeHeight + this.nodeSpacing);
+
+    this.canvasWidth = Math.max(this.canvasWidth, totalWidth);
+    this.canvasHeight = Math.max(this.canvasHeight, totalHeight);
   
     network.layers.forEach((layer, layerIndex) => {
-      const x = layerIndex * this.layerSpacing + (this.canvasWidth - (layerCount - 1) * this.layerSpacing) / 2;
+      const x = layerIndex * this.layerSpacing + this.layerSpacing / 2;
       const layerHeight = layer.neurons.length * this.nodeHeight + (layer.neurons.length - 1) * this.nodeSpacing;
       const startY = (this.canvasHeight - layerHeight) / 2;
 

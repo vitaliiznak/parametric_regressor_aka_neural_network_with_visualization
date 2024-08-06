@@ -14,27 +14,29 @@ const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
 
 const App: Component = () => {
   const initialState: AppState = {
-    network: new MLP(INITIAL_NETWORK.inputSize, INITIAL_NETWORK.layers, INITIAL_NETWORK.activations),
+    network: new MLP(INITIAL_NETWORK),
     trainingConfig: INITIAL_TRAINING,
-    visualData: { nodes: [], connections: [] }
+    visualData: { nodes: [], connections: [] },
+    dotString: '',
+    lossValue: 0
   };
 
   const store = createAppStore(initialState);
 
   return (
-    <ErrorBoundary fallback={(err, reset) => (
-      <div>
-        <p>Something went wrong: {err.toString()}</p>
-        <button onClick={reset}>Try again</button>
-      </div>
-    )}>
+    // <ErrorBoundary fallback={(err, reset) => (
+    //   <div>
+    //     <p>Something went wrong: {err.toString()}</p>
+    //     <button onClick={reset}>Try again</button>
+    //   </div>
+    // )}>
       <AppProvider store={store}>
         <div>
           <h1>Neural Network Visualizer</h1>
 
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 2 }}>
-              <NetworkVisualizer />
+              <NetworkVisualizer includeLossNode={true} />
             </div>
             <div style={{ flex: 1 }}>
               <NetworkConfigForm />
@@ -45,12 +47,14 @@ const App: Component = () => {
                 <h2>Current Network Configuration</h2>
                 <p>Layers: {store.getState().network.layers.map(layer => layer.neurons.length).join(', ')}</p>
                 <p>Activations: {store.getState().network.activations.join(', ')}</p>
+                <p>Current Loss: {store.getState().lossValue.toFixed(4)}</p>
               </div>
+            
             </div>
           </div>
         </div>
       </AppProvider>
-    </ErrorBoundary>
+    // </ErrorBoundary>
   );
 };
 

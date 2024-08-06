@@ -39,6 +39,8 @@ export interface AppState {
   trainingConfig: TrainingConfig;
   trainingResult?: TrainingResult;
   visualData: VisualNetworkData;
+  dotString: string;
+  lossValue: number; // Added this line
 }
 
 export const createAppStore = (initialState: AppState) => new Store(initialState);

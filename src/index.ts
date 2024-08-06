@@ -1,8 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
 
-
-
 // Example usage
 const xs: number[][] = [
     [2.0, 3.0, -1.0],
@@ -13,7 +11,11 @@ const xs: number[][] = [
 const yt: number[] = [1.0, -1.0, -1.0, 1.0];
 
 // Create MLP
-const n = new MLP(3, [4, 4, 1], ['tanh', 'tanh', 'tanh']);
+const n = new MLP({
+  inputSize: 3,
+  layers: [4, 4, 1],
+  activations: ['tanh', 'tanh', 'tanh']
+});
 
 // Hyperparameters
 const learningRate = 0.01;
@@ -32,8 +34,10 @@ for (let epoch = 0; epoch < epochs; epoch++) {
         const ypred = batchXs.map(x => n.forward(x.map(val => new Value(val))) as Value);
 
         const loss = ypred.reduce((sum, ypred_el, j) => {
-            const diff = ypred_el.add(new Value(-batchYt[j]));
-            return sum.add(diff.mul(diff));
+            const target = new Value(batchYt[j]);
+            const diff = ypred_el.sub(target);
+            const squaredError = diff.mul(diff);
+            return sum.add(squaredError);
         }, new Value(0));
 
         // Accumulate total loss
@@ -47,6 +51,10 @@ for (let epoch = 0; epoch < epochs; epoch++) {
         n.parameters().forEach(p => {
             p.data -= learningRate * p.grad;
         });
+
+        // Inside the training loop, after calculating the loss
+        console.log("Loss function tree:");
+        console.log(loss.toDot());
     }
 
     // Log average loss for the epoch
@@ -69,3 +77,18 @@ console.log("Evaluation:");
 xs.forEach((x, i) => {
     console.log(`Input: [${x}], Predicted: ${evaluate(x).toFixed(4)}, Actual: ${yt[i]}`);
 });
+
+// Visualize loss function tree
+const dotString = loss.toDot();
+console.log("Loss function tree DOT representation:");
+console.log(dotString);
+
+// Render loss function tree visualization
+const viz = new Viz();
+viz.renderSVGElement(dotString)
+    .then(element => {
+        document.getElementById("graph").appendChild(element);
+    })
+    .catch(error => {
+        console.error(error);
+    });

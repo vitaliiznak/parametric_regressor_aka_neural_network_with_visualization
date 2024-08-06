@@ -33,23 +33,31 @@ const NetworkConfigForm: Component = () => {
     console.log("Parsed layers:", layers);
     console.log("Parsed activations:", activationsFunctions);
 
-    if (layers.length < 2) {
-      alert("Please enter at least two layers (input and output)");
+    if (layers.length === 0) {
+      alert("Please enter at least one layer size");
       return;
     }
 
-    if (activationsFunctions.length < layers.length ) {
-      alert("The number of activation functions should be equal or larger to the number of layers");
+    const inputSize = store.getState().network.layers[0].neurons.length;
+
+    if (activationsFunctions.length !== layers.length - 1) {
+      alert("The number of activation functions should be equal to the number of layers (excluding the input layer)");
       return;
     }
 
-    const newNetwork = new MLP(layers[0], layers, activationsFunctions);
+    // Add 'linear' activation for the input layer
+    const allActivations = ['linear', ...activationsFunctions] as ActivationFunction[];
+
+    const newNetwork = new MLP({
+      inputSize: inputSize,
+      layers: layers,
+      activations: allActivations
+    });
     console.log("New network created:", newNetwork);
 
     store.setState({ network: newNetwork });
     console.log("Store updated with new network");
 
-    // Force a re-render by updating the layersString and activations
     setLayersString(layers.join(','));
     setActivations(activationsFunctions.join(','));
   };
@@ -68,7 +76,7 @@ const NetworkConfigForm: Component = () => {
       </div>
       <div>
         <label>
-          Activations (comma-separated):
+          Activations (comma-separated, one for each layer except input):
           <input
             type="text"
             value={activations()}

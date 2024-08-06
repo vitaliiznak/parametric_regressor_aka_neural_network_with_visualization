@@ -1,4 +1,4 @@
-import { ActivationFunction, NetworkData, LayerData } from './types';
+import { ActivationFunction, NetworkData, MLPConfig } from './types';
 import { Layer } from './layer';
 import { Value } from './value';
 
@@ -6,11 +6,12 @@ export class MLP {
   layers: Layer[];
   activations: ActivationFunction[];
 
-  constructor(nin: number, nouts: number[], activations: ActivationFunction[] = []) {
-    const sizes = [nin, ...nouts];
+  constructor(config: MLPConfig) {
+    const { inputSize, layers, activations } = config;
+    const sizes = [inputSize, ...layers];
     this.activations = activations;
-    this.layers = sizes.slice(0, -1).map((s, i) => 
-      new Layer(s, sizes[i+1], activations[i] || 'tanh')
+    this.layers = sizes.slice(1).map((s, i) => 
+      new Layer(sizes[i], s, activations[i] || 'tanh')
     );
   }
 

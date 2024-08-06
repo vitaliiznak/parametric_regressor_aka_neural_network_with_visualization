@@ -5,6 +5,7 @@ export class NetworkRenderer {
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
+    this.ctx.scale(2, 2);  // Scale up for better resolution
   }
 
   render(data: VisualNetworkData) {
@@ -14,12 +15,12 @@ export class NetworkRenderer {
   }
 
   private clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.canvas.width / 2, this.canvas.height / 2);
   }
 
   private drawNodes(nodes: VisualNode[]) {
     nodes.forEach(node => {
-      this.ctx.fillStyle = 'white';
+      this.ctx.fillStyle = node.layerId === 'input' ? 'lightblue' : 'white';
       this.ctx.strokeStyle = 'black';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
@@ -36,6 +37,12 @@ export class NetworkRenderer {
       if (node.value !== undefined) {
         this.ctx.font = '10px Arial';
         this.ctx.fillText(node.value.toFixed(2), node.x + 30, node.y + 35);
+      }
+
+      // Add activation function label for non-input nodes
+      if (node.layerId !== 'input' && node.activation) {
+        this.ctx.font = '8px Arial';
+        this.ctx.fillText(node.activation, node.x + 30, node.y + 5);
       }
     });
   }

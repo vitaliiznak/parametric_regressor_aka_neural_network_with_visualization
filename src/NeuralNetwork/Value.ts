@@ -5,6 +5,7 @@ export class Value {
   _op: string;
   _backward: () => void;
   label: string;
+  id: number; // Added a unique ID for each Value instance
 
   constructor(data: number, _children: Value[] = [], _op: string = '', label: string = '') {
     this.#data = data;
@@ -13,6 +14,7 @@ export class Value {
     this._op = _op;
     this._backward = () => { };
     this.label = label;
+    this.id = Value.idCounter++; // Assign a unique ID
   }
 
   static from(n: number | Value): Value {
@@ -136,4 +138,39 @@ export class Value {
   toString(): string {
     return `Value(data=${this.data}, grad=${this.grad})`;
   }
+
+  toDot(): string {
+    const nodes: string[] = [];
+    const edges: string[] = [];
+    const visited = new Set<Value>();
+
+    const traverse = (node: Value): string => {
+      if (visited.has(node)) {
+        return node.id;
+      }
+      visited.add(node);
+
+      const nodeId = `node_${node.id}`;
+      nodes.push(`${nodeId} [label="${node.label} (${node.data.toFixed(4)})"];`);
+
+      if (node.prev.length > 0) {
+        node.prev.forEach((child, i) => {
+          const childId = traverse(child);
+          edges.push(`${childId} -> ${nodeId} [label="${node.op}"];`);
+        });
+      }
+
+      return nodeId;
+    };
+
+    traverse(this);
+
+    return `digraph G {
+        rankdir=BT;
+        ${nodes.join('\n')}
+        ${edges.join('\n')}
+    }`;
+  }
 }
+
+Value.idCounter = 0; // Initialize the ID counter

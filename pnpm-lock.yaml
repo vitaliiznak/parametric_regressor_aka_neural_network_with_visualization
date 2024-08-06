@@ -11,6 +11,9 @@ importers:
       '@swc/wasm-typescript':
         specifier: ^1.7.6
         version: 1.7.6
+      '@viz-js/viz':
+        specifier: ^3.7.0
+        version: 3.7.0
       babel-preset-solid:
         specifier: ^1.8.19
         version: 1.8.19(@babel/core@7.25.2)
@@ -26,6 +29,9 @@ importers:
       vite-plugin-solid:
         specifier: ^2.10.2
         version: 2.10.2(solid-js@1.8.19)(vite@5.3.5(@types/node@22.1.0))
+      viz.js:
+        specifier: ^2.1.2
+        version: 2.1.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.8.0
@@ -527,6 +533,9 @@ packages:
   '@typescript-eslint/visitor-keys@8.0.0':
     resolution: {integrity: sha512-oN0K4nkHuOyF3PVMyETbpP5zp6wfyOvm7tWhTMfoqxSSsPmJIh6JNASuZDlODE8eE+0EB9uar+6+vxr9DBTYOA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@viz-js/viz@3.7.0':
+    resolution: {integrity: sha512-+nZ5LWe09ypRDk43pDU09wLW80kLAEonM7xES4s6AWiCUfAy5Vb+rxnQ3hKw79ptdaHJsyNIfwnzpEFtfMIyGA==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -1165,6 +1174,10 @@ packages:
       vite:
         optional: true
 
+  viz.js@2.1.2:
+    resolution: {integrity: sha512-UO6CPAuEMJ8oNR0gLLNl+wUiIzQUsyUOp8SyyDKTqVRBtq7kk1VnFmIZW8QufjxGrGEuI+LVR7p/C7uEKy0LQw==}
+    deprecated: 2.x is no longer supported, 3.x published as @viz-js/viz
+
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
@@ -1624,6 +1637,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.0.0
       eslint-visitor-keys: 3.4.3
+
+  '@viz-js/viz@3.7.0': {}
 
   acorn-jsx@5.3.2(acorn@8.12.1):
     dependencies:
@@ -2230,6 +2245,8 @@ snapshots:
   vitefu@0.2.5(vite@5.3.5(@types/node@22.1.0)):
     optionalDependencies:
       vite: 5.3.5(@types/node@22.1.0)
+
+  viz.js@2.1.2: {}
 
   which@2.0.2:
     dependencies:

@@ -15,3 +15,9 @@ export interface LayerData {
 export interface NetworkData {
   layers: LayerData[];
 }
+
+export interface MLPConfig {
+  inputSize: number;
+  layers: number[];
+  activations: ActivationFunction[];
+}
