@@ -1,5 +1,5 @@
-import { Component, ErrorBoundary } from 'solid-js';
-import { createAppStore, AppState } from './store';
+import { Component, createEffect } from 'solid-js';
+import { createStore } from "solid-js/store";
 import { MLP } from './NeuralNetwork/mlp';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import TrainingControls from './TrainingControl/TrainingControls';
@@ -8,6 +8,7 @@ import TrainingConfigForm from './TrainingControl/TrainingConfigForm';
 import TrainingStatus from './TrainingControl/TrainingStatus';
 import { AppProvider } from "./AppContext";
 import { CONFIG } from './config';
+import { AppState } from './store';
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -21,40 +22,35 @@ const App: Component = () => {
     lossValue: 0
   };
 
-  const store = createAppStore(initialState);
+  const [store, setStore] = createStore<AppState>(initialState);
+
+  createEffect(() => {
+    console.log("Current store state:", store);
+  });
 
   return (
-    // <ErrorBoundary fallback={(err, reset) => (
-    //   <div>
-    //     <p>Something went wrong: {err.toString()}</p>
-    //     <button onClick={reset}>Try again</button>
-    //   </div>
-    // )}>
-      <AppProvider store={store}>
-        <div>
-          <h1>Neural Network Visualizer</h1>
-
-          <div style={{ display: 'flex' }}>
-            <div style={{ flex: 2 }}>
-              <NetworkVisualizer includeLossNode={true} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <NetworkConfigForm />
-              <TrainingConfigForm />
-              <TrainingControls />
-              <TrainingStatus />
-              <div>
-                <h2>Current Network Configuration</h2>
-                <p>Layers: {store.getState().network.layers.map(layer => layer.neurons.length).join(', ')}</p>
-                <p>Activations: {store.getState().network.activations.join(', ')}</p>
-                <p>Current Loss: {store.getState().lossValue.toFixed(4)}</p>
-              </div>
-            
+    <AppProvider store={[store, setStore]}>
+      <div>
+        <h1>Neural Network Visualizer</h1>
+        <div style={{ display: 'flex' }}>
+          <div style={{ flex: 2 }}>
+            <NetworkVisualizer includeLossNode={true} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <NetworkConfigForm />
+            <TrainingConfigForm />
+            <TrainingControls />
+            <TrainingStatus />
+            <div>
+              <h2>Current Network Configuration</h2>
+              <p>Layers: {store.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
+              <p>Activations: {store.network.activations.join(', ')}</p>
+              <p>Current Loss: {store.lossValue.toFixed(4)}</p>
             </div>
           </div>
         </div>
-      </AppProvider>
-    // </ErrorBoundary>
+      </div>
+    </AppProvider>
   );
 };
 

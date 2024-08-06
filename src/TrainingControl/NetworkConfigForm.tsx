@@ -3,16 +3,15 @@ import { ActivationFunction } from "../NeuralNetwork/types";
 import { MLP } from "../NeuralNetwork/mlp";
 import { useAppStore } from "../AppContext";
 
-
 const NetworkConfigForm: Component = () => {
-  const store = useAppStore();
+  const [state, setState] = useAppStore();
   const [layersString, setLayersString] = createSignal(
-    store.getState().network.layers.map(layer => layer.neurons.length).join(',')
+    state.network.layers.map(layer => layer.neurons.length).join(',')
   );
-  const [activations, setActivations] = createSignal(store.getState().network.activations.join(','));
+  const [activations, setActivations] = createSignal(state.network.activations.join(','));
 
   createEffect(() => {
-    console.log("Current network state:", store.getState().network);
+    console.log("Current network state:", state.network);
   });
 
   const handleLayersChange = (e: Event) => {
@@ -38,7 +37,7 @@ const NetworkConfigForm: Component = () => {
       return;
     }
 
-    const inputSize = store.getState().network.layers[0].neurons.length;
+    const inputSize = state.network.layers[0].neurons.length;
 
     if (activationsFunctions.length !== layers.length - 1) {
       alert("The number of activation functions should be equal to the number of layers (excluding the input layer)");
@@ -55,7 +54,7 @@ const NetworkConfigForm: Component = () => {
     });
     console.log("New network created:", newNetwork);
 
-    store.setState({ network: newNetwork });
+    setState({ network: newNetwork });
     console.log("Store updated with new network");
 
     setLayersString(layers.join(','));
@@ -76,7 +75,7 @@ const NetworkConfigForm: Component = () => {
       </div>
       <div>
         <label>
-          Activations (comma-separated, one for each layer except input):
+          Activations (comma-separated):
           <input
             type="text"
             value={activations()}
@@ -89,8 +88,4 @@ const NetworkConfigForm: Component = () => {
   );
 };
 
-
-
-
-
-export default NetworkConfigForm
+export default NetworkConfigForm;

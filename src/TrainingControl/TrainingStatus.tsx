@@ -2,14 +2,14 @@ import { Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { useAppStore } from "../AppContext";
 
 const TrainingStatus: Component = () => {
-  const store = useAppStore();
-  const [status, setStatus] = createSignal(store.getState().trainingResult);
+  const [state, setState] = useAppStore();
+  const [status, setStatus] = createSignal(state.trainingResult);
 
   createEffect(() => {
-    const unsubscribe = store.subscribe((state) => {
+    const unsubscribe = () => {
       console.log("TrainingStatus Store updated:", state);
       setStatus(state.trainingResult);
-    });
+    };
 
     onCleanup(unsubscribe);
   });

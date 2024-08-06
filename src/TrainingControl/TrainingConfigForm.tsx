@@ -2,12 +2,12 @@ import { Component, createSignal } from "solid-js";
 import { useAppStore } from "../AppContext";
 
 const TrainingConfigForm: Component = () => {
-  const store = useAppStore();
-  const [config, setConfig] = createSignal(store.getState().trainingConfig);
+  const [state, setState] = useAppStore();
+  const [config, setConfig] = createSignal(state.trainingConfig);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    store.setState({ trainingConfig: config() });
+    setState({ trainingConfig: config() });
     console.log("Training config updated:", config());
   };
 

@@ -3,14 +3,14 @@ import { Trainer } from '../trainer';
 import { useAppStore } from '../AppContext';
 
 const TrainingControls: Component = () => {
-  const store = useAppStore();
+  const [state, setState] = useAppStore();
   const [isTraining, setIsTraining] = createSignal(false);
   let trainerRef: Trainer | undefined;
 
   const startTraining = async () => {
     setIsTraining(true);
     console.log("Training started");
-    const { network, trainingConfig } = store.getState();
+    const { network, trainingConfig } = state;
     trainerRef = new Trainer(network, trainingConfig);
 
     const xs = [[0], [0.5], [1]];
@@ -24,7 +24,7 @@ const TrainingControls: Component = () => {
         
         const currentTime = Date.now();
         if (currentTime - lastUpdateTime > 100) {  // Update every 100ms
-          store.setState({ trainingResult: result });
+          setState({ trainingResult: result });
           lastUpdateTime = currentTime;
         }
         

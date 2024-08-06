@@ -1,9 +1,10 @@
 import { createContext, useContext, ParentProps } from "solid-js";
-import { Store, AppState } from "./store";
+import { Store, SetStoreFunction } from "solid-js/store";
+import { AppState } from "./store";
 
-const AppContext = createContext<Store<AppState>>();
+const AppContext = createContext<[Store<AppState>, SetStoreFunction<AppState>]>();
 
-export function AppProvider(props: ParentProps<{ store: Store<AppState> }>) {
+export function AppProvider(props: ParentProps<{ store: [Store<AppState>, SetStoreFunction<AppState>] }>) {
   return (
     <AppContext.Provider value={props.store}>
       {props.children}

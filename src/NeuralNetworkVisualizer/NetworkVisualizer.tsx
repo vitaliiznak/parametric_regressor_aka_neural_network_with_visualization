@@ -3,15 +3,15 @@ import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
 import { VisualNode, VisualNetworkData, VisualConnection } from "./types";
 import { useAppStore } from "../AppContext";
+import { debounce } from "@solid-primitives/scheduled";
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
-  let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
   
-  const store = useAppStore();
+  const [state, setState] = useAppStore();
   let canvasRef: HTMLCanvasElement | undefined;
   let containerRef: HTMLDivElement | undefined;
   let layoutCalculator: NetworkLayout | undefined;
@@ -33,14 +33,19 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
       console.log('initializeCanvas', { width, height } )
   
-      canvasRef.addEventListener('mousedown', handleMouseDown);
-      canvasRef.addEventListener('mousemove', handleMouseMove);
-      canvasRef.addEventListener('mouseup', handleMouseUp);
-      canvasRef.addEventListener('wheel', handleWheel);
-      canvasRef.addEventListener('contextmenu', (e) => e.preventDefault());
+      manageEventListeners('add');
     }
   };
   
+  const manageEventListeners = (action: 'add' | 'remove') => {
+    const method = action === 'add' ? 'addEventListener' : 'removeEventListener';
+    canvasRef?.[method]('mousedown', handleMouseDown as EventListener);
+    canvasRef?.[method]('mousemove', handleMouseMove as EventListener);
+    canvasRef?.[method]('mouseup', handleMouseUp as EventListener);
+    canvasRef?.[method]('wheel', handleWheel as EventListener);
+    canvasRef?.[method]('contextmenu', (e) => e.preventDefault());
+  };
+
   onMount(() => {
     initializeCanvas();
     window.addEventListener('resize', initializeCanvas);
@@ -48,34 +53,23 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   onCleanup(() => {
     window.removeEventListener('resize', initializeCanvas);
+    manageEventListeners('remove');
   });
 
-  const updateVisualization = () => {
-    if (throttleTimeout) return;
+  const updateVisualization = debounce(() => {
+    if (layoutCalculator && renderer) {
+      const network = state.network;
+      const networkData = network.toJSON();
+      let newVisualData = layoutCalculator.calculateLayout(networkData);
 
-    throttleTimeout = setTimeout(() => {
-      throttleTimeout = null;
-      const currentTime = Date.now();
-      if (currentTime - lastUpdateTime < 100) {
-        return;
+      if (props.includeLossNode) {
+        newVisualData = addLossFunctionNodes(newVisualData, network);
       }
-      lastUpdateTime = currentTime;
 
-      if (layoutCalculator && renderer) {
-        const network = store.getState().network;
-        const networkData = network.toJSON();
-        let newVisualData = layoutCalculator.calculateLayout(networkData);
-
-        // Add loss function nodes if includeLossNode is true
-        if (props.includeLossNode) {
-          newVisualData = addLossFunctionNodes(newVisualData, network);
-        }
-
-        setVisualData(newVisualData);
-        renderer.render(newVisualData);
-      }
-    }, 100);
-  };
+      setVisualData(newVisualData);
+      renderer.render(newVisualData);
+    }
+  }, 100);
 
   const addLossFunctionNodes = (visualData: VisualNetworkData, network: any): VisualNetworkData => {
     const outputLayer = network.layers[network.layers.length - 1];
@@ -143,7 +137,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
-    console.log("renderer", renderer); 
+    console.log("handleWheel", handleWheel); 
     if (renderer) {
       const rect = canvasRef!.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -155,22 +149,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   createEffect(() => {
-    const unsubscribe = store.subscribe(() => {
-      updateVisualization();
-    });
-
-    onCleanup(() => {
-      unsubscribe();
-      if (canvasRef) {
-        canvasRef.removeEventListener('mousedown', handleMouseDown);
-        canvasRef.removeEventListener('mousemove', handleMouseMove);
-        canvasRef.removeEventListener('mouseup', handleMouseUp);
-      }
-    });
-  });
-
-  createEffect(() => {
-    const network = store.getState().network;
+    const network = state.network;
     console.log("NetworkVisualizer: Network updated", network);
     updateVisualization();
   });

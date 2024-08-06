@@ -27,10 +27,12 @@
     "typescript-eslint": "^8.0.0"
   },
   "dependencies": {
+    "@solid-primitives/scheduled": "^1.4.3",
     "@swc/wasm-typescript": "^1.7.6",
     "@viz-js/viz": "^3.7.0",
     "babel-preset-solid": "^1.8.19",
     "esm": "^3.2.25",
+    "solid-form-handler": "^1.2.3",
     "solid-js": "^1.8.19",
     "vite": "^5.3.5",
     "vite-plugin-solid": "^2.10.2",
