@@ -2,6 +2,9 @@ import { VisualNetworkData, VisualNode, VisualConnection } from './types';
 
 export class NetworkRenderer {
   private ctx: CanvasRenderingContext2D;
+  public scale: number = 1;
+  public offsetX: number = 0;
+  public offsetY: number = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
@@ -10,12 +13,31 @@ export class NetworkRenderer {
 
   render(data: VisualNetworkData) {
     this.clear();
+    this.ctx.save();
+    this.ctx.translate(this.offsetX, this.offsetY);
+    this.ctx.scale(this.scale, this.scale);
     this.drawConnections(data.connections, data.nodes);
     this.drawNodes(data.nodes);
+    this.ctx.restore();
+  }
+
+  pan(dx: number, dy: number) {
+    this.offsetX += dx;
+    this.offsetY += dy;
+  }
+
+  zoom(x: number, y: number, factor: number) {
+    const prevScale = this.scale;
+    this.scale *= factor;
+    this.scale = Math.max(0.1, Math.min(5, this.scale)); // Limit zoom level
+
+    // Adjust offset to zoom towards mouse position
+    this.offsetX = x - (x - this.offsetX) * (this.scale / prevScale);
+    this.offsetY = y - (y - this.offsetY) * (this.scale / prevScale);
   }
 
   private clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width / 2, this.canvas.height / 2);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   private drawNodes(nodes: VisualNode[]) {

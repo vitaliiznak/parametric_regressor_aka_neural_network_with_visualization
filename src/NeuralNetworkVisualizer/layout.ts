@@ -52,10 +52,27 @@ export class NetworkLayout {
     return { nodes, connections };
   }
 
-  findNodeAt(x: number, y: number, nodes: VisualNode[]): VisualNode | null {
-    return nodes.find(node =>
-      x >= node.x && x <= node.x + this.nodeWidth &&
-      y >= node.y && y <= node.y + this.nodeHeight
-    ) || null;
+  findNodeAt(
+    x: number, 
+    y: number, 
+    nodes: VisualNode[], 
+    scale: number, 
+    offsetX: number, 
+    offsetY: number
+  ): VisualNode | null {
+    const scaledX = (x - offsetX) / scale;
+    const scaledY = (y - offsetY) / scale;
+    
+    for (const node of nodes) {
+      if (
+        scaledX >= node.x &&
+        scaledX <= node.x + this.nodeWidth &&
+        scaledY >= node.y &&
+        scaledY <= node.y + this.nodeHeight
+      ) {
+        return node;
+      }
+    }
+    return null;
   }
 }

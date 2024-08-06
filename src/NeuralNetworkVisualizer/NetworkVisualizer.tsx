@@ -19,11 +19,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [visualData, setVisualData] = createSignal<VisualNetworkData>({ nodes: [], connections: [] });
   let draggedNode: VisualNode | null = null;
   let lastUpdateTime = 0;
+  let isPanning = false;
+  let lastPanPosition = { x: 0, y: 0 };
 
   const initializeCanvas = () => {
     if (canvasRef && containerRef) {
       const { width, height } = containerRef.getBoundingClientRect();
-      canvasRef.width = width * 2;  // Increase canvas size
+      canvasRef.width = width * 2;
       canvasRef.height = height * 2;
       layoutCalculator = new NetworkLayout(canvasRef.width, canvasRef.height);
       renderer = new NetworkRenderer(canvasRef);
@@ -32,6 +34,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       canvasRef.addEventListener('mousedown', handleMouseDown);
       canvasRef.addEventListener('mousemove', handleMouseMove);
       canvasRef.addEventListener('mouseup', handleMouseUp);
+      canvasRef.addEventListener('wheel', handleWheel);
+      canvasRef.addEventListener('contextmenu', (e) => e.preventDefault());
     }
   };
   
@@ -95,30 +99,56 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    if (canvasRef && layoutCalculator) {
+    if (e.button === 2) { // Right mouse button
+      isPanning = true;
+      lastPanPosition = { x: e.clientX, y: e.clientY };
+    } else if (canvasRef && layoutCalculator && renderer) {
       const rect = canvasRef.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      draggedNode = layoutCalculator.findNodeAt(x, y, visualData().nodes);
+      draggedNode = layoutCalculator.findNodeAt(
+        x,
+        y,
+        visualData().nodes,
+        renderer.scale,
+        renderer.offsetX,
+        renderer.offsetY
+      );
     }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (draggedNode && canvasRef && layoutCalculator) {
+    if (isPanning && renderer) {
+      const dx = e.clientX - lastPanPosition.x;
+      const dy = e.clientY - lastPanPosition.y;
+      renderer.pan(dx, dy);
+      lastPanPosition = { x: e.clientX, y: e.clientY };
+      renderer.render(visualData());
+    } else if (draggedNode && canvasRef && renderer) {
       const rect = canvasRef.getBoundingClientRect();
-      draggedNode.x = e.clientX - rect.left;
-      draggedNode.y = e.clientY - rect.top;
-
-      // Ensure the node stays within the canvas
-      draggedNode.x = Math.max(0, Math.min(draggedNode.x, canvasRef.width));
-      draggedNode.y = Math.max(0, Math.min(draggedNode.y, canvasRef.height));
-
-      renderer!.render(visualData());
+      const scaledX = (e.clientX - rect.left - renderer.offsetX) / renderer.scale;
+      const scaledY = (e.clientY - rect.top - renderer.offsetY) / renderer.scale;
+      draggedNode.x = scaledX;
+      draggedNode.y = scaledY;
+      renderer.render(visualData());
     }
   };
 
   const handleMouseUp = () => {
+    isPanning = false;
     draggedNode = null;
+  };
+
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    if (renderer) {
+      const rect = canvasRef!.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      renderer.zoom(x, y, delta);
+      renderer.render(visualData());
+    }
   };
 
   createEffect(() => {
@@ -143,7 +173,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   });
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'auto' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'hidden' }}>
       <canvas ref={el => { 
         canvasRef = el;
         initializeCanvas();
