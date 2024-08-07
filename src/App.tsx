@@ -13,17 +13,31 @@ import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProce
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
-
 const App: Component = () => {
   const initialState: AppState = {
     network: new MLP(INITIAL_NETWORK),
     trainingConfig: INITIAL_TRAINING,
     visualData: { nodes: [], connections: [] },
     dotString: '',
-    lossValue: 0
+    trainingHistory: [], // Added missing property
+    lossValue: 0,
+    trainingData: undefined // Initialize as undefined
   };
 
   const [store, setStore] = createStore<AppState>(initialState);
+
+  const loadTrainingData = () => {
+    // This is example data. Replace with your actual data loading logic.
+    const xs = [[0, 0], [0, 1], [1, 0], [1, 1]];
+    const ys = [0, 1, 1, 0];
+
+    setStore('trainingData', { xs, ys });
+  };
+
+  // Load training data when the component mounts
+  createEffect(() => {
+    loadTrainingData();
+  });
 
   createEffect(() => {
     console.log("Current store state:", store);

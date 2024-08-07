@@ -1,57 +1,81 @@
-import { Component, createSignal } from 'solid-js';
-import { Trainer } from '../trainer';
-import { useAppStore } from '../AppContext';
+import { Component, createEffect, createSignal } from "solid-js";
+import { useAppStore } from "../AppContext";
+import { Trainer } from "../trainer";
 
 const TrainingControls: Component = () => {
   const [state, setState] = useAppStore();
-  const [isTraining, setIsTraining] = createSignal(false);
-  let trainerRef: Trainer | undefined;
+  const [isRunning, setIsRunning] = createSignal(false);
+  const [trainer, setTrainer] = createSignal<Trainer | null>(null);
 
   const startTraining = async () => {
-    setIsTraining(true);
-    console.log("Training started");
-    const { network, trainingConfig } = state;
-    trainerRef = new Trainer(network, trainingConfig);
-
-    const xs = [[0], [0.5], [1]];
-    const yt = [0, 0.5, 1];
-
-    let lastUpdateTime = Date.now();
-
-    try {
-      for await (const result of trainerRef.train(xs, yt)) {
-        console.log("Training iteration:", result);
-        
-        const currentTime = Date.now();
-        if (currentTime - lastUpdateTime > 100) {  // Update every 100ms
-          setState({ trainingResult: result });
-          lastUpdateTime = currentTime;
-        }
-        
-        if (!isTraining()) {
-          console.log("Training stopped by user");
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error during training:", error);
-    } finally {
-      setIsTraining(false);
-      console.log("Training finished");
+    if (!state.trainingData?.xs || !state.trainingData?.ys) {
+      console.error("Training data is not available");
+      alert("Training data is not available");
+      return;
     }
+
+    setIsRunning(true);
+    const newTrainer = new Trainer(state.network, state.trainingConfig);
+    setTrainer(newTrainer);
+
+    const trainingGenerator = newTrainer.train(state.trainingData.xs, state.trainingData.ys);
+    for await (const result of trainingGenerator) {
+      setState('trainingResult', result);
+      if (!isRunning()) break;
+    }
+
+    setIsRunning(false);
   };
 
   const stopTraining = () => {
-    setIsTraining(false);
+    setIsRunning(false);
   };
+
+  const stepForward = () => {
+    const currentTrainer = trainer();
+    if (currentTrainer) {
+      const result = currentTrainer.stepForward();
+      console.log('Step Forward Result:', result);
+      if (result) {
+        setState('trainingResult', result);
+        console.log('State updated with new result');
+      } else {
+        console.log('No more steps available');
+      }
+    }
+  };
+
+  const stepBackward = () => {
+    const currentTrainer = trainer();
+    console.log('Step Backward');
+    if (currentTrainer) {
+      const result = currentTrainer.stepBackward();
+      console.log('Step Backward Result:', result);
+      if (result) {
+        setState('trainingResult', result);
+      }
+    }
+  };
+
+  // createEffect(() => {
+  //   console.log("isRunning:", isRunning());
+  //   console.log("trainer:", trainer());
+  // });
 
   return (
     <div>
-      <button onClick={startTraining} disabled={isTraining()}>
+      <h3>Training Controls</h3>
+      <button onClick={startTraining} disabled={isRunning()}>
         Start Training
       </button>
-      <button onClick={stopTraining} disabled={!isTraining()}>
+      <button onClick={stopTraining} disabled={!isRunning()}>
         Stop Training
+      </button>
+      <button onClick={stepForward} disabled={isRunning() || !trainer()}>
+        Step Forward
+      </button>
+      <button onClick={stepBackward} disabled={isRunning() || !trainer()}>
+        Step Backward
       </button>
     </div>
   );

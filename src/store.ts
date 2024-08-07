@@ -10,6 +10,11 @@ export interface AppState {
   visualData: VisualNetworkData;
   dotString: string;
   lossValue: number;
+  trainingHistory: TrainingResult[];
+  trainingData?: {
+    xs: number[][];
+    ys: number[];
+  };
 }
 
 export const createAppStore = (initialState: AppState) => createStore(initialState);

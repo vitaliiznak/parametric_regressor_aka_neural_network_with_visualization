@@ -51,6 +51,10 @@ export class Value {
     return out;
   }
 
+  sub(other: number | Value): Value {
+    return this.add(Value.from(other).mul(-1));
+  }
+
   mul(other: number | Value): Value {
     const otherValue = Value.from(other);
     const out = new Value(this.data * otherValue.data, [this, otherValue], '*');
