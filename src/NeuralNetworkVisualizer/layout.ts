@@ -33,7 +33,8 @@ export class NetworkLayout {
           label: `N${neuronIndex}`,
           layerId: layer.id,
           x: x - this.nodeWidth / 2,
-          y: startY + neuronIndex * (this.nodeHeight + this.nodeSpacing)
+          y: startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
+          activation: neuron.activation
         };
         nodes.push(node);
 

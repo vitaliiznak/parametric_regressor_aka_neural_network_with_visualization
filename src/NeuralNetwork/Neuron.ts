@@ -24,7 +24,7 @@ export class Neuron {
       case 'tanh': return x.tanh();
       case 'relu': return x.relu();
       case 'sigmoid': return x.sigmoid();
-      case 'linear': default: return x;
+      case 'identity': default: return x;
     }
   }
 
@@ -37,7 +37,8 @@ export class Neuron {
       id: Math.random().toString(36).substr(2, 9),
       weights: this.w.map(w => w.data),
       bias: this.b.data,
-      activation: this.activation
+      activation: this.activation,
+      name: this.activation
     };
   }
 }

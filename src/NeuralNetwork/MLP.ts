@@ -10,9 +10,13 @@ export class MLP {
     const { inputSize, layers, activations } = config;
     const sizes = [inputSize, ...layers];
     this.activations = activations;
-    this.layers = sizes.slice(1).map((s, i) => 
-      new Layer(sizes[i], s, activations[i] || 'tanh')
+    this.layers = layers.map((size, i) => 
+      new Layer(sizes[i], size, activations[i] || 'tanh')
     );
+    console.log("Creating MLP with layers:", layers, "and activations:", activations);
+    this.layers.forEach((layer, i) => {
+      console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
+    });
   }
 
   forward(x: (number | Value)[]): Value | Value[] {
@@ -35,12 +39,12 @@ export class MLP {
     return {
       layers: this.layers.map((layer, layerIndex) => ({
         id: `layer_${layerIndex}`,
-        activations: this.activations,
         neurons: layer.neurons.map((neuron, neuronIndex) => ({
           id: `neuron_${layerIndex}_${neuronIndex}`,
           weights: neuron.w.map(w => w.data),
           bias: neuron.b.data,
-          activation: neuron.activation
+          activation: neuron.activation,
+          name: neuron.activation // Ensure this line is present
         }))
       }))
     };

@@ -8,7 +8,7 @@ export interface VisualNode extends Point {
   label: string;
   layerId: string;
   value?: number;
-  activation?: string;
+  activation?: string; // Ensure this line is present
 }
 
 export interface VisualConnection {

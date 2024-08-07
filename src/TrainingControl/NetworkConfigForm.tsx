@@ -39,18 +39,15 @@ const NetworkConfigForm: Component = () => {
 
     const inputSize = state.network.layers[0].neurons.length;
 
-    if (activationsFunctions.length !== layers.length - 1) {
-      alert("The number of activation functions should be equal to the number of layers (excluding the input layer)");
+    if (activationsFunctions.length !== layers.length) {
+      alert("The number of activation functions should be equal to the number of layers");
       return;
     }
-
-    // Add 'linear' activation for the input layer
-    const allActivations = ['linear', ...activationsFunctions] as ActivationFunction[];
 
     const newNetwork = new MLP({
       inputSize: inputSize,
       layers: layers,
-      activations: allActivations
+      activations: activationsFunctions
     });
     console.log("New network created:", newNetwork);
 

@@ -57,21 +57,25 @@ export class NetworkRenderer {
       this.ctx.fill();
       this.ctx.stroke();
 
+      // Draw activation function with bigger font
+      if (node.layerId !== 'input' && node.activation) {
+        this.ctx.fillStyle = 'black';
+        this.ctx.font = '14px Arial'; // Bigger font for activation function
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(node.activation, node.x + 30, node.y + 15); // Adjust position
+      }
+
+      // Draw neuron label with smaller font
       this.ctx.fillStyle = 'black';
-      this.ctx.font = '12px Arial';
+      this.ctx.font = '10px Arial'; // Smaller font for neuron label
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(node.label, node.x + 30, node.y + 20);
+      this.ctx.fillText(node.label, node.x + 30, node.y + 30); // Adjust position
 
       if (node.value !== undefined) {
         this.ctx.font = '10px Arial';
         this.ctx.fillText(node.value.toFixed(2), node.x + 30, node.y + 35);
-      }
-
-      // Add activation function label for non-input nodes
-      if (node.layerId !== 'input' && node.activation) {
-        this.ctx.font = '8px Arial';
-        this.ctx.fillText(node.activation, node.x + 30, node.y + 5);
       }
     });
   }
