@@ -1,14 +1,12 @@
-import { Component, createSignal } from "solid-js";
+import { Component } from "solid-js";
 import { useAppStore } from "../AppContext";
 
 const TrainingConfigForm: Component = () => {
   const [state, setState] = useAppStore();
-  const [config, setConfig] = createSignal(state.trainingConfig);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    setState({ trainingConfig: config() });
-    console.log("Training config updated:", config());
+    console.log("Training config updated:", state.trainingConfig);
   };
 
   return (
@@ -19,8 +17,8 @@ const TrainingConfigForm: Component = () => {
           <input
             type="number"
             step="0.001"
-            value={config().learningRate}
-            onInput={(e) => setConfig({ ...config(), learningRate: Number(e.currentTarget.value) })}
+            value={state.trainingConfig.learningRate}
+            onInput={(e) => setState('trainingConfig', 'learningRate', Number(e.currentTarget.value))}
           />
         </label>
       </div>
@@ -29,8 +27,8 @@ const TrainingConfigForm: Component = () => {
           Epochs:
           <input
             type="number"
-            value={config().epochs}
-            onInput={(e) => setConfig({ ...config(), epochs: Number(e.currentTarget.value) })}
+            value={state.trainingConfig.epochs}
+            onInput={(e) => setState('trainingConfig', 'epochs', Number(e.currentTarget.value))}
           />
         </label>
       </div>
@@ -39,8 +37,8 @@ const TrainingConfigForm: Component = () => {
           Batch Size:
           <input
             type="number"
-            value={config().batchSize}
-            onInput={(e) => setConfig({ ...config(), batchSize: Number(e.currentTarget.value) })}
+            value={state.trainingConfig.batchSize}
+            onInput={(e) => setState('trainingConfig', 'batchSize', Number(e.currentTarget.value))}
           />
         </label>
       </div>

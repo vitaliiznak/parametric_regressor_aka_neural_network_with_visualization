@@ -9,6 +9,7 @@ import TrainingStatus from './TrainingControl/TrainingStatus';
 import { AppProvider } from "./AppContext";
 import { CONFIG } from './config';
 import { AppState } from './store';
+import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -35,6 +36,7 @@ const App: Component = () => {
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 2 }}>
             <NetworkVisualizer includeLossNode={true} />
+            <LearningProcessVisualizer />
           </div>
           <div style={{ flex: 1 }}>
             <NetworkConfigForm />

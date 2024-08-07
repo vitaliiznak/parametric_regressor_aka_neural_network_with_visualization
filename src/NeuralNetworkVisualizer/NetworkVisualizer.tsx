@@ -161,7 +161,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   });
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'hidden' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'hidden', border: '1px solid black' }}>
       <canvas ref={el => { 
         canvasRef = el;
         if (canvasRef) {

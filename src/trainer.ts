@@ -8,56 +8,76 @@ export interface TrainingConfig {
   batchSize: number;
 }
 
-export interface TrainingResult {
-  epoch: number;
-  loss: number;
-}
+export type TrainingResult = {
+  step: 'forward' | 'loss' | 'backward' | 'update' | 'epoch';
+  data: {
+    input?: number[];
+    output?: Value | Value[];
+    loss?: number;
+    gradients?: number[];
+    oldWeights?: number[];
+    updatedWeights?: number[];
+    epoch?: number;
+    newWeights?: number[];
+    learningRate?: number;
+  };
+};
 
 export class Trainer {
   constructor(private network: MLP, private config: TrainingConfig) {}
 
   async* train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult> {
     for (let epoch = 0; epoch < this.config.epochs; epoch++) {
-      console.log(`Starting epoch ${epoch + 1}`);
       let totalLoss = new Value(0);
-  
+
       for (let i = 0; i < xs.length; i += this.config.batchSize) {
         const batchXs = xs.slice(i, i + this.config.batchSize);
         const batchYt = yt.slice(i, i + this.config.batchSize);
-  
-        console.log(`Processing batch ${i / this.config.batchSize + 1}`);
-        const ypred = batchXs.map(x => {
+
+        // Forward pass
+        const ypred = [];
+        for (const x of batchXs) {
           const output = this.network.forward(x.map(val => new Value(val)));
-          console.log(`Network output:`, output);
-          return Array.isArray(output) ? output[0] : output;
-        });
-  
+          ypred.push(Array.isArray(output) ? output[0] : output);
+          yield { step: 'forward', data: { input: x, output: output  } };
+        }
+
+        // Loss calculation
         const loss = ypred.reduce((sum, ypred_el, j) => {
-          if (!(ypred_el instanceof Value)) {
-            console.error('Unexpected output type:', ypred_el);
-            return sum;
-          }
           const diff = ypred_el.add(new Value(-batchYt[j]));
           return sum.add(diff.mul(diff));
         }, new Value(0));
-  
-        console.log(`Batch loss:`, loss.data);
+        yield { step: 'loss', data: { loss: loss.data } };
+
         totalLoss = totalLoss.add(loss);
-  
+
+        // Backward pass
         this.network.zeroGrad();
         loss.backward();
-  
+        yield { step: 'backward', data: { gradients: this.network.parameters().map(p => p.grad) } };
+
+        // Weight update
+        const oldWeights = this.network.parameters().map(p => p.data);
         this.network.parameters().forEach(p => {
           p.data -= this.config.learningRate * p.grad;
         });
+        yield { 
+          step: 'update', 
+          data: { 
+            oldWeights,
+            newWeights: this.network.parameters().map(p => p.data),
+            learningRate: this.config.learningRate
+          } 
+        };
       }
-  
-      const epochResult = {
-        epoch: epoch + 1,
-        loss: totalLoss.data / xs.length
+
+      yield {
+        step: 'epoch',
+        data: {
+          epoch: epoch + 1,
+          loss: totalLoss.data / xs.length
+        }
       };
-      console.log(`Finished epoch ${epoch + 1}:`, epochResult);
-      yield epochResult;
     }
   }
   

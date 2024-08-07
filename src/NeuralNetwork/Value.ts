@@ -17,6 +17,8 @@ export class Value {
     this.id = Value.idCounter++; // Assign a unique ID
   }
 
+  static idCounter: number = 0; // Initialize the static idCounter property
+
   static from(n: number | Value): Value {
     return n instanceof Value ? n : new Value(n);
   }
@@ -146,17 +148,17 @@ export class Value {
 
     const traverse = (node: Value): string => {
       if (visited.has(node)) {
-        return node.id;
+        return `node_${node.id}`;
       }
       visited.add(node);
 
       const nodeId = `node_${node.id}`;
       nodes.push(`${nodeId} [label="${node.label} (${node.data.toFixed(4)})"];`);
 
-      if (node.prev.length > 0) {
-        node.prev.forEach((child, i) => {
+      if (node._prev.size > 0) {
+        node._prev.forEach((child: Value) => {
           const childId = traverse(child);
-          edges.push(`${childId} -> ${nodeId} [label="${node.op}"];`);
+          edges.push(`${childId} -> ${nodeId} [label="${node._op}"];`);
         });
       }
 
