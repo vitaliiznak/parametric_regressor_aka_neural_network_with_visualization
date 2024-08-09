@@ -38,6 +38,10 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
   const stepForward = () => {
     const currentTrainer = trainer();
     if (currentTrainer) {
+      // Get current output before stepping
+      const currentOutput = currentTrainer.getCurrentOutput();
+      console.log('Current Output:', Array.isArray(currentOutput) ? currentOutput.map(output => output.data) : currentOutput?.data || null);
+  
       const result = currentTrainer.stepForward();
       console.log('Step Forward Result:', result);
       if (result) {
@@ -55,6 +59,10 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
     const currentTrainer = trainer();
     console.log('Step Backward');
     if (currentTrainer) {
+      // Get current output before stepping
+      const currentOutput = currentTrainer.getCurrentOutput();
+      console.log('Current Output:', Array.isArray(currentOutput) ? currentOutput.map(output => output.data) : currentOutput?.data || null);
+  
       const result = currentTrainer.stepBackward();
       console.log('Step Backward Result:', result);
       if (result) {

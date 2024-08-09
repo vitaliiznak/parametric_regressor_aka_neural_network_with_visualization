@@ -7,6 +7,7 @@ export interface AppState {
   network: MLP;
   trainingConfig: TrainingConfig;
   trainingResult?: TrainingResult;
+  simulationOutput?: SimulationOutput;
   visualData: VisualNetworkData;
   dotString: string;
   lossValue: number;
@@ -16,6 +17,11 @@ export interface AppState {
     xs: number[][];
     ys: number[];
   };
+}
+
+export interface SimulationOutput {
+  input: number[];
+  output: number[];
 }
 
 export const createAppStore = (initialState: AppState) => createStore(initialState);

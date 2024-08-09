@@ -9,7 +9,16 @@ export interface TrainingConfig {
 
 export interface TrainingResult {
   step: 'forward' | 'loss' | 'backward' | 'update' | 'epoch';
-  data: any;
+  data: {
+    input?: number[];
+    output?: number[];
+    loss?: number;
+    gradients?: number[];
+    oldWeights?: number[];
+    newWeights?: number[];
+    learningRate?: number;
+    epoch?: number;
+  };
 }
 
 export class Trainer {
@@ -21,6 +30,7 @@ export class Trainer {
   private xs: number[][] = [];
   private yt: number[] = [];
   private history: TrainingResult[] = [];
+  private currentInput: number[] | null = null;
 
   constructor(network: MLP, config: TrainingConfig) {
     this.network = network.clone(); 
@@ -29,6 +39,13 @@ export class Trainer {
 
   getNetwork(): MLP {
     return this.network;
+  }
+
+  getCurrentOutput(): Value | Value[] | null {
+    if (this.currentInput === null) {
+      return null;
+    }
+    return this.network.forward(this.currentInput.map(val => new Value(val)));
   }
 
   async* train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {
@@ -59,6 +76,9 @@ export class Trainer {
     console.log('batchXs', batchXs);
     console.log(`\n--- Training Step ${this.currentStep} ---`);
     console.log(`Epoch: ${this.currentEpoch + 1}/${this.config.epochs}, Batch: ${this.currentBatch / this.config.batchSize + 1}`);
+
+    // Update currentInput with the first input of the batch
+    this.currentInput = batchXs[0];
 
     const ypred = batchXs.map(x => {
       const result = this.network.forward(x.map(val => new Value(val)));

@@ -49,6 +49,13 @@ const App: Component = () => {
     const input = store.currentInput.map(val => new Value(val));
     const output = store.network.forward(input);
     console.log("Network output:", output);
+  
+    // Update the simulationOutput
+    setStore('simulationOutput', {
+      input: store.currentInput,
+      output: output instanceof Value ? [output.data] : output.map(v => v.data)
+    });
+  
     alert(`Network output: ${output instanceof Value ? output.data : output.map(v => v.data)}`);
   };
 

@@ -1,4 +1,6 @@
 import { NetworkData } from '../NeuralNetwork/types';
+import { SimulationOutput } from '../store';
+import { TrainingResult } from '../trainer';
 import { VisualNetworkData, VisualNode, VisualConnection } from './types';
 
 export class NetworkLayout {
@@ -11,7 +13,7 @@ export class NetworkLayout {
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
-  calculateLayout(network: NetworkData): VisualNetworkData {
+  calculateLayout(network: NetworkData,  simulationOutput?: SimulationOutput): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
     console.log('Network data:', network);
@@ -37,7 +39,7 @@ export class NetworkLayout {
         layerId: 'input',
         x: this.inputValuesSpacing,
         y: startY + i * (this.nodeHeight + this.nodeSpacing),
-        value: 0 // This will be updated with actual input values
+    
       });
     }
 
@@ -53,7 +55,6 @@ export class NetworkLayout {
           layerId: layer.id,
           x: x - this.nodeWidth / 2,
           y: startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
-          value: 0, // This will be updated with actual input values
           activation: neuron.activation
         };
         nodes.push(node);
@@ -83,6 +84,19 @@ export class NetworkLayout {
 
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
+
+  // Populate output values if available
+  if (simulationOutput) {
+    const outputValues = simulationOutput.output;
+    nodes.forEach((node) => {
+      if (node.layerId !== 'input' && outputValues) {
+        const nodeIndex = parseInt(node.id.split('_')[1]);
+        if (!isNaN(nodeIndex) && outputValues[nodeIndex] !== undefined) {
+          node.outputValue = outputValues[nodeIndex];
+        }
+      }
+    });
+  }
 
     return { nodes, connections };
   }

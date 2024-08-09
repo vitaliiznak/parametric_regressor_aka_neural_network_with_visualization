@@ -77,16 +77,30 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
   
   const updateVisualization = debounce(() => {
+  
     if (layoutCalculator && renderer) {
+     
       const network = state.network;
       const networkData = network.toJSON();
-      let newVisualData = layoutCalculator.calculateLayout(networkData);
+
+      let newVisualData = layoutCalculator.calculateLayout(networkData, state.simulationOutput);
 
       if (state.currentInput) {
         const currentInput = state.currentInput;
         newVisualData.nodes.forEach((node, index) => {
           if (node.layerId === 'input' && currentInput[index] !== undefined) {
-            node.value = currentInput[index];
+            node.outputValue = currentInput[index];
+          }
+        });
+      }
+
+      if (state.simulationOutput) {
+        const { input, output } = state.simulationOutput;
+        newVisualData.nodes.forEach((node, index) => {
+          if (node.layerId === 'input' && input[index] !== undefined) {
+            node.outputValue = input[index];
+          } else if (node.layerId === 'output' && output[index] !== undefined) {
+            node.outputValue = output[index];
           }
         });
       }
@@ -169,11 +183,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   createEffect(() => {
     console.log('Network data in NetworkVisualizer:', state.network);
     if (state.network && layoutCalculator) {
-      const visualData = layoutCalculator.calculateLayout(state.network.toJSON());
+      const visualData = layoutCalculator.calculateLayout(state.network.toJSON(), state.simulationOutput);
       console.log('Calculated visual data:', visualData);
       setVisualData(visualData);
     }
   });
+
 
   createEffect(() => {
     const currentInput = state.currentInput;
@@ -181,11 +196,17 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       updateVisualization();
     }
   });
-
   createEffect(() => {
     const networkState = state.network;
+    if (networkState) {
+      console.log('Network state or training result changed, updating visualization');
+      updateVisualization();
+    }
+  });
+
+  createEffect(() => {
     const trainingResult = state.trainingResult;
-    if (networkState && trainingResult) {
+    if ( trainingResult) {
       console.log('Network state or training result changed, updating visualization');
       updateVisualization();
     }

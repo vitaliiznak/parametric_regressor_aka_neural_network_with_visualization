@@ -47,7 +47,7 @@ export class NetworkRenderer {
       this.ctx.font = '14px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(inputNode.value?.toFixed(4) || 'Input', inputNode.x + 30, inputNode.y + 20);
+      this.ctx.fillText(inputNode.outputValue?.toFixed(4) || 'Input', inputNode.x + 30, inputNode.y + 20);
   
    
     });
@@ -90,28 +90,31 @@ export class NetworkRenderer {
       this.ctx.rect(node.x, node.y, 60, 40);
       this.ctx.fill();
       this.ctx.stroke();
-
+  
       // Draw activation function with bigger font
       if (node.layerId !== 'input' && node.activation) {
         this.ctx.fillStyle = 'black';
-        this.ctx.font = '14px Arial'; // Bigger font for activation function
+        this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(node.activation, node.x + 30, node.y + 15); // Adjust position
+        this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
       }
-
+  
       // Draw neuron label with smaller font
       this.ctx.fillStyle = 'black';
-      this.ctx.font = '10px Arial'; // Smaller font for neuron label
+      this.ctx.font = '10px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(node.label, node.x + 30, node.y + 30); // Adjust position
-
-      // if (node.value !== undefined) {
-      //   this.ctx.font = '10px Arial';
-      //   this.ctx.fillText(node.value.toFixed(4), node.x + 30, node.y + 35);
-      // }
-
+      this.ctx.fillText(node.label, node.x + 30, node.y + 30);
+  
+      // Draw output value if available
+      if (node.outputValue !== undefined) {
+        this.ctx.fillStyle = 'red';
+        this.ctx.font = '10px Arial';
+        this.ctx.textAlign = 'right';
+        this.ctx.textBaseline = 'bottom';
+        this.ctx.fillText(node.outputValue.toFixed(4), node.x + 58, node.y + 38);
+      }
     });
   }
 
