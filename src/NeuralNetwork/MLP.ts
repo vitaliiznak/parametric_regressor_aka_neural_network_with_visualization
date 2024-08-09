@@ -5,14 +5,17 @@ import { Value } from './value';
 export class MLP {
   layers: Layer[];
   activations: ActivationFunction[];
+  inputSize: number;
 
   constructor(config: MLPConfig) {
     const { inputSize, layers, activations } = config;
+    this.inputSize = inputSize;
     const sizes = [inputSize, ...layers];
     this.activations = activations;
-    this.layers = layers.map((size, i) => 
-      new Layer(sizes[i], size, activations[i] || 'tanh')
-    );
+    this.layers = [];
+    for (let i = 0; i < layers.length; i++) {
+      this.layers.push(new Layer(sizes[i], layers[i], activations[i] || 'tanh'));
+    }
     console.log("Creating MLP with layers:", layers, "and activations:", activations);
     this.layers.forEach((layer, i) => {
       console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
@@ -37,6 +40,7 @@ export class MLP {
 
   toJSON(): NetworkData {
     return {
+      inputSize: this.inputSize,
       layers: this.layers.map((layer, layerIndex) => ({
         id: `layer_${layerIndex}`,
         neurons: layer.neurons.map((neuron, neuronIndex) => ({
@@ -44,7 +48,7 @@ export class MLP {
           weights: neuron.w.map(w => w.data),
           bias: neuron.b.data,
           activation: neuron.activation,
-          name: neuron.activation // Ensure this line is present
+          name: neuron.activation
         }))
       }))
     };

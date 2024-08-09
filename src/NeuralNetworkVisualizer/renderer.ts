@@ -8,7 +8,6 @@ export class NetworkRenderer {
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    //this.ctx.scale(2, 2);  // Removed scaling for better resolution
   }
 
   render(data: VisualNetworkData) {
@@ -18,8 +17,66 @@ export class NetworkRenderer {
     this.ctx.scale(this.scale, this.scale);
     this.drawConnections(data.connections, data.nodes);
     this.drawNodes(data.nodes);
+    this.drawInputConnections(data);
     this.ctx.restore();
   }
+
+  private drawInputConnections(data: VisualNetworkData) {
+
+    console.log('Drawing input connections');
+    console.log('Input nodes:', data.nodes.filter(node => node.layerId === 'input'));
+  console.log('First layer nodes:', data.nodes.filter(node => node.layerId === 'layer_0'));
+
+
+    const inputNodes = data.nodes.filter(node => node.layerId === 'input');
+    const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
+  
+    inputNodes.forEach((inputNode, index) => {
+      console.log(`Processing input node ${index}:`, inputNode);
+      // Draw input node
+      this.ctx.fillStyle = 'lightgreen';
+      this.ctx.strokeStyle = 'black';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.rect(inputNode.x, inputNode.y, 60, 40);
+      this.ctx.fill();
+      this.ctx.stroke();
+  
+      // Draw input value
+      this.ctx.fillStyle = 'black';
+      this.ctx.font = '14px Arial';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(inputNode.value?.toFixed(2) || 'Input', inputNode.x + 30, inputNode.y + 20);
+  
+      // Draw connections to first layer neurons
+      firstLayerNodes.forEach(neuron => {
+        const connection = data.connections.find(conn => conn.from === inputNode.id && conn.to === neuron.id);
+        if (connection) {
+          this.drawInputConnection(inputNode, neuron, connection);
+        }
+      });
+    });
+  }
+
+  private drawInputConnection(from: VisualNode, to: VisualNode, connection: VisualConnection) {
+    const fromX = from.x + 60;
+    const fromY = from.y + 20;
+    const toX = to.x;
+    const toY = to.y + 20;
+  
+    this.drawArrow(fromX, fromY, toX, toY);
+  
+    // Draw weight label
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+  
+    this.drawLabel(midX, midY - 10, `W: ${connection.weight.toFixed(2)}`, 'blue');
+  
+    // Draw bias label
+    this.drawLabel(toX - 30, toY - 30, `B: ${connection.bias.toFixed(2)}`, 'green');
+  }
+
 
   pan(dx: number, dy: number) {
     this.offsetX += dx / this.scale; // Adjust for current scale
@@ -73,10 +130,11 @@ export class NetworkRenderer {
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.label, node.x + 30, node.y + 30); // Adjust position
 
-      if (node.value !== undefined) {
-        this.ctx.font = '10px Arial';
-        this.ctx.fillText(node.value.toFixed(2), node.x + 30, node.y + 35);
-      }
+      // if (node.value !== undefined) {
+      //   this.ctx.font = '10px Arial';
+      //   this.ctx.fillText(node.value.toFixed(2), node.x + 30, node.y + 35);
+      // }
+
     });
   }
 
@@ -95,10 +153,12 @@ export class NetworkRenderer {
       // Draw weight label
       const midX = (fromX + toX) / 2;
       const midY = (fromY + toY) / 2;
+
+      console.log('conn', conn);
       this.drawLabel(midX, midY - 10, `W: ${conn.weight.toFixed(2)}`, 'blue');
 
       // Draw bias label
-      this.drawLabel(midX, midY + 10, `B: ${conn.weight.toFixed(2)}`, 'green');
+      this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(2)}`, 'green');
     });
   }
 

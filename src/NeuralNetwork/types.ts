@@ -14,6 +14,7 @@ export interface LayerData {
 }
 
 export interface NetworkData {
+  inputSize: number;
   layers: LayerData[];
 }
 

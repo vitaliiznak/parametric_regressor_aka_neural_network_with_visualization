@@ -7,6 +7,7 @@ import { debounce } from "@solid-primitives/scheduled";
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
+  onVisualizationUpdate: () => void;
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
@@ -80,13 +81,15 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const network = state.network;
       const networkData = network.toJSON();
       let newVisualData = layoutCalculator.calculateLayout(networkData);
-
+  
       if (props.includeLossNode) {
         newVisualData = addLossFunctionNodes(newVisualData, network);
       }
-
+      console.log('debhere', newVisualData);
       setVisualData(newVisualData);
       renderer.render(newVisualData);
+      console.log('updateVisualization', { newVisualData });
+      props.onVisualizationUpdate();
     }
   }, 100);
 
@@ -104,7 +107,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const lossConnections: VisualConnection[] = outputLayer.neurons.map((_, index) => ({
       from: `neuron_${network.layers.length - 1}_${index}`,
       to: lossNodeId,
-      weight: 1 // This could be updated with actual loss contribution if available
+      weight: 1, // This could be updated with actual loss contribution if available
+      bias: 1
     }));
 
     return {
@@ -155,9 +159,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   createEffect(() => {
-    const network = state.network;
-    console.log("NetworkVisualizer: Network updated", network);
-    updateVisualization();
+    console.log('Network data in NetworkVisualizer:', state.network);
+    if (state.network && layoutCalculator) {
+      const visualData = layoutCalculator.calculateLayout(state.network.toJSON());
+      console.log('Calculated visual data:', visualData);
+      setVisualData(visualData);
+    }
   });
 
   return (

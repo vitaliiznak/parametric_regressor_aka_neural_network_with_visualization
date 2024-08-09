@@ -8,13 +8,14 @@ export interface VisualNode extends Point {
   label: string;
   layerId: string;
   value?: number;
-  activation?: string; // Ensure this line is present
+  activation?: string;
 }
 
 export interface VisualConnection {
   from: string;
   to: string;
   weight: number;
+  bias: number;
 }
 
 export interface VisualNetworkData {

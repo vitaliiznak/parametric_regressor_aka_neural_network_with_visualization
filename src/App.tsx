@@ -28,7 +28,9 @@ const App: Component = () => {
 
   const loadTrainingData = () => {
     // This is example data. Replace with your actual data loading logic.
-    const xs = [[0, 0], [0, 1], [1, 0], [1, 1]];
+    //const xs = [[0, 0], [0, 1], [1, 0], [1, 1]];
+
+    const xs = [[0], [0], [1], [1]];
     const ys = [0, 1, 1, 0];
 
     setStore('trainingData', { xs, ys });
@@ -49,13 +51,13 @@ const App: Component = () => {
         <h1>Neural Network Visualizer</h1>
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 2 }}>
-            <NetworkVisualizer includeLossNode={true} />
+          <NetworkVisualizer includeLossNode={false} onVisualizationUpdate={() => console.log("Visualization updated")} />
             <LearningProcessVisualizer />
           </div>
           <div style={{ flex: 1 }}>
             <NetworkConfigForm />
             <TrainingConfigForm />
-            <TrainingControls />
+            <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
             <TrainingStatus />
             <div>
               <h2>Current Network Configuration</h2>

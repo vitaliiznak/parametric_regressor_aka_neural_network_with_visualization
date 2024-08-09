@@ -2,14 +2,14 @@ import { MLPConfig } from "./NeuralNetwork/types";
 
 export const CONFIG = {
   INITIAL_NETWORK: {
-    inputSize: 3,
-    layers: [4, 4, 1],
-    activations: ['identity', 'tanh', 'tanh']
+    inputSize: 1,
+    layers: [1, 1],
+    activations: ['identity']
   } as MLPConfig,
   INITIAL_TRAINING: {
     learningRate: 0.01,
-    epochs: 1000,
-    batchSize: 1
+    epochs: 1,
+    batchSize: 4
   },
   VISUALIZATION: {
     width: 800,

@@ -2,7 +2,7 @@ import { Component, createEffect, createSignal } from "solid-js";
 import { useAppStore } from "../AppContext";
 import { Trainer } from "../trainer";
 
-const TrainingControls: Component = () => {
+const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (props) => {
   const [state, setState] = useAppStore();
   const [isRunning, setIsRunning] = createSignal(false);
   const [trainer, setTrainer] = createSignal<Trainer | null>(null);
@@ -21,6 +21,7 @@ const TrainingControls: Component = () => {
     const trainingGenerator = newTrainer.train(state.trainingData.xs, state.trainingData.ys);
     for await (const result of trainingGenerator) {
       setState('trainingResult', result);
+      props.onVisualizationUpdate();
       if (!isRunning()) break;
     }
 
@@ -38,12 +39,14 @@ const TrainingControls: Component = () => {
       console.log('Step Forward Result:', result);
       if (result) {
         setState('trainingResult', result);
+        props.onVisualizationUpdate();
         console.log('State updated with new result');
       } else {
         console.log('No more steps available');
       }
     }
   };
+
 
   const stepBackward = () => {
     const currentTrainer = trainer();
@@ -53,6 +56,7 @@ const TrainingControls: Component = () => {
       console.log('Step Backward Result:', result);
       if (result) {
         setState('trainingResult', result);
+        props.onVisualizationUpdate();
       }
     }
   };
