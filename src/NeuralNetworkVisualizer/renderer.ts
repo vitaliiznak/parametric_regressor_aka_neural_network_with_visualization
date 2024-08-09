@@ -25,11 +25,11 @@ export class NetworkRenderer {
 
     console.log('Drawing input connections');
     console.log('Input nodes:', data.nodes.filter(node => node.layerId === 'input'));
-  console.log('First layer nodes:', data.nodes.filter(node => node.layerId === 'layer_0'));
+    console.log('First layer nodes:', data.nodes.filter(node => node.layerId === 'layer_0'));
 
 
     const inputNodes = data.nodes.filter(node => node.layerId === 'input');
-    const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
+   // const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
   
     inputNodes.forEach((inputNode, index) => {
       console.log(`Processing input node ${index}:`, inputNode);
@@ -49,33 +49,10 @@ export class NetworkRenderer {
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(inputNode.value?.toFixed(2) || 'Input', inputNode.x + 30, inputNode.y + 20);
   
-      // Draw connections to first layer neurons
-      firstLayerNodes.forEach(neuron => {
-        const connection = data.connections.find(conn => conn.from === inputNode.id && conn.to === neuron.id);
-        if (connection) {
-          this.drawInputConnection(inputNode, neuron, connection);
-        }
-      });
+   
     });
   }
 
-  private drawInputConnection(from: VisualNode, to: VisualNode, connection: VisualConnection) {
-    const fromX = from.x + 60;
-    const fromY = from.y + 20;
-    const toX = to.x;
-    const toY = to.y + 20;
-  
-    this.drawArrow(fromX, fromY, toX, toY);
-  
-    // Draw weight label
-    const midX = (fromX + toX) / 2;
-    const midY = (fromY + toY) / 2;
-  
-    this.drawLabel(midX, midY - 10, `W: ${connection.weight.toFixed(2)}`, 'blue');
-  
-    // Draw bias label
-    this.drawLabel(toX - 30, toY - 30, `B: ${connection.bias.toFixed(2)}`, 'green');
-  }
 
 
   pan(dx: number, dy: number) {

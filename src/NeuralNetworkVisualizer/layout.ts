@@ -6,6 +6,8 @@ export class NetworkLayout {
   public nodeHeight = 40;
   public layerSpacing = 200;
   public nodeSpacing = 80;
+  public inputValuesSpacing = 10;
+  public inputValueAndNetworkSpacing = 40;
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
@@ -33,14 +35,14 @@ export class NetworkLayout {
         id: `input_${i}`,
         label: `Input ${i}`,
         layerId: 'input',
-        x: 0,
+        x: this.inputValuesSpacing,
         y: startY + i * (this.nodeHeight + this.nodeSpacing),
         value: 0 // This will be updated with actual input values
       });
     }
 
     network.layers.forEach((layer, layerIndex) => {
-      const x = layerIndex * this.layerSpacing + this.layerSpacing / 2;
+      const x = this.inputValueAndNetworkSpacing + layerIndex * this.layerSpacing + this.layerSpacing / 2;
       const layerHeight = layer.neurons.length * this.nodeHeight + (layer.neurons.length - 1) * this.nodeSpacing;
       const startY = (this.canvasHeight - layerHeight) / 2;
 

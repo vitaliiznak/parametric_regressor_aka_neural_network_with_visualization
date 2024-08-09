@@ -2,7 +2,7 @@ import { MLPConfig } from "./NeuralNetwork/types";
 
 export const CONFIG = {
   INITIAL_NETWORK: {
-    inputSize: 1,
+    inputSize: 2,
     layers: [1, 1],
     activations: ['identity']
   } as MLPConfig,
