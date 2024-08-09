@@ -13,7 +13,7 @@ export class NetworkLayout {
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
-  calculateLayout(network: NetworkData,  simulationOutput?: SimulationOutput): VisualNetworkData {
+  calculateLayout(network: NetworkData, simulationOutput?: SimulationOutput): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
     console.log('Network data:', network);
@@ -39,7 +39,7 @@ export class NetworkLayout {
         layerId: 'input',
         x: this.inputValuesSpacing,
         y: startY + i * (this.nodeHeight + this.nodeSpacing),
-    
+
       });
     }
 
@@ -85,18 +85,31 @@ export class NetworkLayout {
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
 
-  // Populate output values if available
-  if (simulationOutput) {
-    const outputValues = simulationOutput.output;
-    nodes.forEach((node) => {
-      if (node.layerId !== 'input' && outputValues) {
-        const nodeIndex = parseInt(node.id.split('_')[1]);
-        if (!isNaN(nodeIndex) && outputValues[nodeIndex] !== undefined) {
-          node.outputValue = outputValues[nodeIndex];
+    if (simulationOutput) {
+      const inputValues = simulationOutput.input;
+      const outputValues = simulationOutput.output;
+    
+      console.log('Simulation output:', simulationOutput);
+      console.log('Input values:', inputValues);
+      console.log('Output values:', outputValues);
+    
+      nodes.forEach((node) => {
+        const [nodeType, indexStr] = node.id.split('_');
+        const nodeIndex = parseInt(indexStr);
+        
+        if (nodeType === 'input' && inputValues && !isNaN(nodeIndex) && indexStr !== undefined) {
+          node.outputValue = inputValues[nodeIndex];
+          console.log(`Set input node ${node.id} value to ${node.outputValue}`);
+        } else if (node.layerId.startsWith('layer_') && outputValues && !isNaN(nodeIndex) && indexStr !== undefined) {
+          // Check if this is the last layer (output layer)
+          const layerNumber = parseInt(node.layerId.split('_')[1]);
+          if (layerNumber === network.layers.length - 1) {
+            node.outputValue = outputValues[nodeIndex];
+            console.log(`Set output node ${node.id} value to ${node.outputValue}`);
+          }
         }
-      }
-    });
-  }
+      });
+    }
 
     return { nodes, connections };
   }

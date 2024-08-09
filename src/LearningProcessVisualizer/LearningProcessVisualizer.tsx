@@ -1,10 +1,10 @@
-import { Component, Show, For } from "solid-js";
+import { Component, Show, For, createMemo } from "solid-js";
 import { useAppStore } from "../AppContext";
 
 const LearningProcessVisualizer: Component = () => {
   const [state] = useAppStore();
 
-  const renderData = () => {
+  const renderData = createMemo(() => {
     if (!state.trainingResult) return null;
 
     const { step, data } = state.trainingResult;
@@ -45,7 +45,7 @@ const LearningProcessVisualizer: Component = () => {
       default:
         return null;
     }
-  };
+  });
 
   return (
     <div>

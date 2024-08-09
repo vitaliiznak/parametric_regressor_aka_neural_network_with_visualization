@@ -20,8 +20,11 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
   
     const trainingGenerator = newTrainer.train(state.trainingData.xs, state.trainingData.ys);
     for await (const result of trainingGenerator) {
-      setState('trainingResult', result);
-      setState('network', newTrainer.getNetwork()); // Update the network in the state
+      setState(prev => ({
+        ...prev,
+        trainingResult: result,
+        network: newTrainer.getNetwork()
+      }));
       props.onVisualizationUpdate();
       console.log('Training step completed, updating visualization');
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -71,11 +74,6 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
       }
     }
   };
-
-  // createEffect(() => {
-  //   console.log("isRunning:", isRunning());
-  //   console.log("trainer:", trainer());
-  // });
 
   return (
     <div>

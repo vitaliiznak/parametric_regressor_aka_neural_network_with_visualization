@@ -6,6 +6,7 @@ export class MLP {
   layers: Layer[];
   activations: ActivationFunction[];
   inputSize: number;
+  layerOutputs: Value[][];
 
   constructor(config: MLPConfig) {
     const { inputSize, layers, activations } = config;
@@ -20,15 +21,30 @@ export class MLP {
     this.layers.forEach((layer, i) => {
       console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
     });
+    this.clearLayerOutputs();
+  }
+
+  getLayerOutputs(): number[][] {
+    return this.layerOutputs.map(layer => {
+      console.log('here layer layerOutputs', layer);
+      return layer.map(v => v.data)
+    });
+  }
+
+  clearLayerOutputs(): void {
+    this.layerOutputs = [];
   }
 
   forward(x: (number | Value)[]): Value | Value[] {
+    this.clearLayerOutputs(); // Clear outputs before a new forward pass
     let out: Value[] = x.map(Value.from);
     for (const layer of this.layers) {
       out = layer.forward(out);
+      this.layerOutputs.push(out);
     }
     return out.length === 1 ? out[0] : out;
   }
+  
 
   parameters(): Value[] {
     return this.layers.flatMap(layer => layer.parameters());

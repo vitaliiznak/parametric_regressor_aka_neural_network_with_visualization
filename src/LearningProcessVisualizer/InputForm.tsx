@@ -8,8 +8,8 @@ const InputForm: Component = () => {
   const handleSubmit = (e: Event) => {
     e.preventDefault();
     const values = inputValues().split(',').map(Number);
-    if (values.length !== state.network.layers[0].neurons.length) {
-      alert(`Please provide ${state.network.layers[0].neurons.length} input values`);
+    if (values.length !== state.network.layers[0]?.neurons.length) {
+      alert(`Please provide ${state.network.layers[0]?.neurons.length} input values`);
       return;
     }
     setState('currentInput', values);

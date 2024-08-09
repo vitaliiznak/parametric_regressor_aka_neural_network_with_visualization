@@ -48,15 +48,23 @@ const App: Component = () => {
     }
     const input = store.currentInput.map(val => new Value(val));
     const output = store.network.forward(input);
-    console.log("Network output:", output);
-  
+    // Collect outputs from all neurons
+    const layerOutputs = store.network.getLayerOutputs();
+    console.log('here store layerOutputs', layerOutputs);
     // Update the simulationOutput
+    console.log('here simulateNEtwork', {
+      input: store.currentInput,
+      output: output instanceof Value ? [output.data] : output.map(v => v.data),
+      layerOutputs: layerOutputs
+    })
     setStore('simulationOutput', {
       input: store.currentInput,
-      output: output instanceof Value ? [output.data] : output.map(v => v.data)
+      output: output instanceof Value ? [output.data] : output.map(v => v.data),
+      layerOutputs: layerOutputs
     });
+
   
-    alert(`Network output: ${output instanceof Value ? output.data : output.map(v => v.data)}`);
+    alert(`Network output: ${output instanceof Value ? [output.data] : output.map(v => v.data)}`);
   };
 
   return (

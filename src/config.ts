@@ -3,8 +3,8 @@ import { MLPConfig } from "./NeuralNetwork/types";
 export const CONFIG = {
   INITIAL_NETWORK: {
     inputSize: 1,
-    layers: [1, 1],
-    activations: ['identity', 'tanh']
+    layers: [1, 1, 1],
+    activations: ['identity', 'tanh', 'identity']
   } as MLPConfig,
   INITIAL_TRAINING: {
     learningRate: 0.01,

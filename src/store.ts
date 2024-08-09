@@ -22,6 +22,7 @@ export interface AppState {
 export interface SimulationOutput {
   input: number[];
   output: number[];
+  layerOutputs: number[][];
 }
 
 export const createAppStore = (initialState: AppState) => createStore(initialState);
