@@ -7,8 +7,8 @@ const TrainingStatus: Component = () => {
   return (
     <div>
       <h3>Training Status</h3>
-      <p>Epoch: {state.trainingResult?.epoch || 0}</p>
-      <p>Loss: {state.trainingResult?.loss?.toFixed(4) || 'N/A'}</p>
+      <p>Epoch: {state.trainingResult?.data.epoch || 0}</p>
+      <p>Loss: {state.trainingResult?.data.loss?.toFixed(4) || 'N/A'}</p>
     </div>
   );
 };

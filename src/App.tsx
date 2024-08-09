@@ -10,40 +10,47 @@ import { AppProvider } from "./AppContext";
 import { CONFIG } from './config';
 import { AppState } from './store';
 import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
+import InputForm from './LearningProcessVisualizer/InputForm';
+
+import { Value } from './NeuralNetwork/value';
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
+
 const App: Component = () => {
   const initialState: AppState = {
     network: new MLP(INITIAL_NETWORK),
     trainingConfig: INITIAL_TRAINING,
     visualData: { nodes: [], connections: [] },
     dotString: '',
-    trainingHistory: [], // Added missing property
+    trainingHistory: [],
     lossValue: 0,
-    trainingData: undefined // Initialize as undefined
+    trainingData: undefined,
+    currentInput: undefined
   };
 
   const [store, setStore] = createStore<AppState>(initialState);
 
   const loadTrainingData = () => {
-    // This is example data. Replace with your actual data loading logic.
-    //const xs = [[0, 0], [0, 1], [1, 0], [1, 1]];
-
-    const xs = [[0], [0], [1], [1]];
+    const xs = [[1], [1], [1], [1]];
     const ys = [0, 1, 1, 0];
-
     setStore('trainingData', { xs, ys });
   };
 
-  // Load training data when the component mounts
   createEffect(() => {
     loadTrainingData();
   });
 
-  createEffect(() => {
-    console.log("Current store state:", store);
-  });
+  const simulateNetwork = () => {
+    if (!store.currentInput) {
+      alert("Please set input values first");
+      return;
+    }
+    const input = store.currentInput.map(val => new Value(val));
+    const output = store.network.forward(input);
+    console.log("Network output:", output);
+    alert(`Network output: ${output instanceof Value ? output.data : output.map(v => v.data)}`);
+  };
 
   return (
     <AppProvider store={[store, setStore]}>
@@ -51,7 +58,7 @@ const App: Component = () => {
         <h1>Neural Network Visualizer</h1>
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 2 }}>
-          <NetworkVisualizer includeLossNode={false} onVisualizationUpdate={() => console.log("Visualization updated")} />
+            <NetworkVisualizer includeLossNode={false} onVisualizationUpdate={() => console.log("Visualization updated")} />
             <LearningProcessVisualizer />
           </div>
           <div style={{ flex: 1 }}>
@@ -59,6 +66,8 @@ const App: Component = () => {
             <TrainingConfigForm />
             <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
             <TrainingStatus />
+            <InputForm />
+            <button onClick={simulateNetwork}>Simulate Network</button>
             <div>
               <h2>Current Network Configuration</h2>
               <p>Layers: {store.network.layers.map(layer => layer.neurons.length).join(', ')}</p>

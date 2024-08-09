@@ -4,10 +4,10 @@ import { VisualNetworkData, VisualNode, VisualConnection } from './types';
 export class NetworkLayout {
   public nodeWidth = 60;
   public nodeHeight = 40;
-  public layerSpacing = 200;
+  public layerSpacing = 210;
   public nodeSpacing = 80;
   public inputValuesSpacing = 10;
-  public inputValueAndNetworkSpacing = 40;
+  public inputValueAndNetworkSpacing = 180;
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 

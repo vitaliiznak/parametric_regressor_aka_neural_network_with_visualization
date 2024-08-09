@@ -23,8 +23,12 @@ export class Trainer {
   private history: TrainingResult[] = [];
 
   constructor(network: MLP, config: TrainingConfig) {
-    this.network = network;
+    this.network = network.clone(); 
     this.config = config;
+  }
+
+  getNetwork(): MLP {
+    return this.network;
   }
 
   async* train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {

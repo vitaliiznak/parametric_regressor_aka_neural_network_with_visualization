@@ -53,4 +53,25 @@ export class MLP {
       }))
     };
   }
+
+  clone(): MLP {
+    const config: MLPConfig = {
+      inputSize: this.inputSize,
+      layers: this.layers.map(layer => layer.neurons.length),
+      activations: this.activations
+    };
+    const newMLP = new MLP(config);
+    
+    // Copy weights and biases
+    this.layers.forEach((layer, i) => {
+      layer.neurons.forEach((neuron, j) => {
+        neuron.w.forEach((w, k) => {
+          newMLP.layers[i].neurons[j].w[k].data = w.data;
+        });
+        newMLP.layers[i].neurons[j].b.data = neuron.b.data;
+      });
+    });
+
+    return newMLP;
+  }
 }

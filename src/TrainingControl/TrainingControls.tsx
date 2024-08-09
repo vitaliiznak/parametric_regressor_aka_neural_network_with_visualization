@@ -13,18 +13,21 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
       alert("Training data is not available");
       return;
     }
-
+  
     setIsRunning(true);
     const newTrainer = new Trainer(state.network, state.trainingConfig);
     setTrainer(newTrainer);
-
+  
     const trainingGenerator = newTrainer.train(state.trainingData.xs, state.trainingData.ys);
     for await (const result of trainingGenerator) {
       setState('trainingResult', result);
+      setState('network', newTrainer.getNetwork()); // Update the network in the state
       props.onVisualizationUpdate();
+      console.log('Training step completed, updating visualization');
+      await new Promise(resolve => setTimeout(resolve, 0));
       if (!isRunning()) break;
     }
-
+  
     setIsRunning(false);
   };
 

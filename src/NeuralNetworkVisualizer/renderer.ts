@@ -47,7 +47,7 @@ export class NetworkRenderer {
       this.ctx.font = '14px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(inputNode.value?.toFixed(2) || 'Input', inputNode.x + 30, inputNode.y + 20);
+      this.ctx.fillText(inputNode.value?.toFixed(4) || 'Input', inputNode.x + 30, inputNode.y + 20);
   
    
     });
@@ -109,7 +109,7 @@ export class NetworkRenderer {
 
       // if (node.value !== undefined) {
       //   this.ctx.font = '10px Arial';
-      //   this.ctx.fillText(node.value.toFixed(2), node.x + 30, node.y + 35);
+      //   this.ctx.fillText(node.value.toFixed(4), node.x + 30, node.y + 35);
       // }
 
     });
@@ -132,10 +132,10 @@ export class NetworkRenderer {
       const midY = (fromY + toY) / 2;
 
       console.log('conn', conn);
-      this.drawLabel(midX, midY - 10, `W: ${conn.weight.toFixed(2)}`, 'blue');
+      this.drawLabel(midX, midY - 10, `W: ${conn.weight.toFixed(4)}`, 'blue');
 
       // Draw bias label
-      this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(2)}`, 'green');
+      this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(4)}`, 'green');
     });
   }
 

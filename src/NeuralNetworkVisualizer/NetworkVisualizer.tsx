@@ -81,14 +81,22 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const network = state.network;
       const networkData = network.toJSON();
       let newVisualData = layoutCalculator.calculateLayout(networkData);
+
+      if (state.currentInput) {
+        const currentInput = state.currentInput;
+        newVisualData.nodes.forEach((node, index) => {
+          if (node.layerId === 'input' && currentInput[index] !== undefined) {
+            node.value = currentInput[index];
+          }
+        });
+      }
   
       if (props.includeLossNode) {
         newVisualData = addLossFunctionNodes(newVisualData, network);
       }
-      console.log('debhere', newVisualData);
+      console.log('Updating visualization with new data:', newVisualData);
       setVisualData(newVisualData);
       renderer.render(newVisualData);
-      console.log('updateVisualization', { newVisualData });
       props.onVisualizationUpdate();
     }
   }, 100);
@@ -166,6 +174,29 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       setVisualData(visualData);
     }
   });
+
+  createEffect(() => {
+    const currentInput = state.currentInput;
+    if (currentInput) {
+      updateVisualization();
+    }
+  });
+
+  createEffect(() => {
+    const networkState = state.network;
+    const trainingResult = state.trainingResult;
+    if (networkState && trainingResult) {
+      console.log('Network state or training result changed, updating visualization');
+      updateVisualization();
+    }
+  });
+
+  // createEffect(() => {
+  //   const currentInput = state;
+  //   if (currentInput) {
+  //     updateVisualization();
+  //   }
+  // });
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'hidden', border: '1px solid black' }}>

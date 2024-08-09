@@ -11,6 +11,7 @@ export interface AppState {
   dotString: string;
   lossValue: number;
   trainingHistory: TrainingResult[];
+  currentInput?: number[];
   trainingData?: {
     xs: number[][];
     ys: number[];
