@@ -9,6 +9,8 @@ export interface VisualNode extends Point {
   layerId: string;
   outputValue?: number;
   activation?: string;
+  weights: number[];
+  bias: number;
 }
 
 export interface VisualConnection {

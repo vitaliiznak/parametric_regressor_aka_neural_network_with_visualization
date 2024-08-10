@@ -38,7 +38,8 @@ export class NetworkLayout {
         layerId: 'input',
         x: this.inputValuesSpacing,
         y: startY + i * (this.nodeHeight + this.nodeSpacing),
-
+        weights: [0],
+        bias: 0
       });
     }
 
@@ -54,7 +55,9 @@ export class NetworkLayout {
           layerId: layer.id,
           x: x - this.nodeWidth / 2,
           y: startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
-          activation: neuron.activation
+          activation: neuron.activation,
+          weights: neuron.weights,
+          bias: neuron.bias
         };
         nodes.push(node);
 

@@ -107,14 +107,15 @@ export class NetworkRenderer {
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.label, node.x + 30, node.y + 30);
   
-/*       // Draw output value if available
-      if (node.outputValue !== undefined) {
-        this.ctx.fillStyle = 'red';
-        this.ctx.font = '10px Arial';
-        this.ctx.textAlign = 'right';
-        this.ctx.textBaseline = 'bottom';
-        this.ctx.fillText(node.outputValue.toFixed(4), node.x + 58, node.y + 38);
-      } */
+      // // Draw weight and bias formula on top of the node
+      // if (node.layerId !== 'input' ) {
+      //   const formula = `X*${node.weight.toFixed(4)} + ${node.bias.toFixed(4)}`;
+      //   this.ctx.fillStyle = 'black';
+      //   this.ctx.font = '10px Arial';
+      //   this.ctx.textAlign = 'center';
+      //   this.ctx.textBaseline = 'bottom';
+      //   this.ctx.fillText(formula, node.x + 30, node.y - 5);
+      // }
     });
   }
 

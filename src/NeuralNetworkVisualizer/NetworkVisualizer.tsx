@@ -166,7 +166,9 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       label: 'Loss',
       layerId: 'loss_layer',
       x: (network.layers.length + 1) * layoutCalculator()!.layerSpacing,
-      y: layoutCalculator()!.canvasHeight / 2
+      y: layoutCalculator()!.canvasHeight / 2,
+      weights: [],
+      bias: 0
     };
 
     const newNodes = [...visualData.nodes, lossNode];

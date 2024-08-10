@@ -14,6 +14,7 @@ export interface LayerData {
 }
 
 export interface NetworkData {
+  // @TODO: inputSize should be inferred from the first layer
   inputSize: number;
   layers: LayerData[];
 }
