@@ -107,14 +107,14 @@ export class NetworkRenderer {
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.label, node.x + 30, node.y + 30);
   
-      // Draw output value if available
+/*       // Draw output value if available
       if (node.outputValue !== undefined) {
         this.ctx.fillStyle = 'red';
         this.ctx.font = '10px Arial';
         this.ctx.textAlign = 'right';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillText(node.outputValue.toFixed(4), node.x + 58, node.y + 38);
-      }
+      } */
     });
   }
 
@@ -123,8 +123,8 @@ export class NetworkRenderer {
       const fromNode = nodes.find(n => n.id === conn.from)!;
       const toNode = nodes.find(n => n.id === conn.to)!;
 
-      const fromX = fromNode.x + 60;
-      const fromY = fromNode.y + 20;
+      const fromX = fromNode.x + 60; // Get the right edge of the node
+      const fromY = fromNode.y + 20; // Center vertically
       const toX = toNode.x;
       const toY = toNode.y + 20;
 
@@ -139,6 +139,11 @@ export class NetworkRenderer {
 
       // Draw bias label
       this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(4)}`, 'green');
+
+      // Draw output value label
+      if (fromNode.outputValue !== undefined) {
+        this.drawLabel(fromX + 10, fromY, `${fromNode.outputValue.toFixed(4)}`, 'red');
+      }
     });
   }
 

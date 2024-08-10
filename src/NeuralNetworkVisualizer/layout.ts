@@ -1,6 +1,5 @@
 import { NetworkData } from '../NeuralNetwork/types';
 import { SimulationOutput } from '../store';
-import { TrainingResult } from '../trainer';
 import { VisualNetworkData, VisualNode, VisualConnection } from './types';
 
 export class NetworkLayout {
