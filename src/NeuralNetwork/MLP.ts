@@ -42,7 +42,7 @@ export class MLP {
       out = layer.forward(out);
       this.layerOutputs.push(out);
     }
-    return out.length === 1 ? out[0] : out;
+    return out;
   }
   
 

@@ -31,7 +31,7 @@ for (let epoch = 0; epoch < epochs; epoch++) {
         const batchXs = xs.slice(i, i + batchSize);
         const batchYt = yt.slice(i, i + batchSize);
 
-        const ypred = batchXs.map(x => n.forward(x.map(val => new Value(val))) as Value);
+        const ypred = batchXs.map(x => n.forward(x.map(val => new Value(val)))[0]);
 
         const loss = ypred.reduce((sum, ypred_el, j) => {
             const target = new Value(batchYt[j]);
@@ -70,7 +70,7 @@ for (let epoch = 0; epoch < epochs; epoch++) {
 // Evaluation
 function evaluate(x: number[]): number {
     const result = n.forward(x.map(val => new Value(val)));
-    return (result as Value).data;
+    return result[0].data;
 }
 
 console.log("Evaluation:");
@@ -78,17 +78,5 @@ xs.forEach((x, i) => {
     console.log(`Input: [${x}], Predicted: ${evaluate(x).toFixed(4)}, Actual: ${yt[i]}`);
 });
 
-// Visualize loss function tree
-const dotString = loss.toDot();
-console.log("Loss function tree DOT representation:");
-console.log(dotString);
 
-// Render loss function tree visualization
-const viz = new Viz();
-viz.renderSVGElement(dotString)
-    .then(element => {
-        document.getElementById("graph").appendChild(element);
-    })
-    .catch(error => {
-        console.error(error);
-    });
+

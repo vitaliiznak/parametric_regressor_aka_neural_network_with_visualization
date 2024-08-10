@@ -140,7 +140,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           if (nodeType === 'input' && input[nodeIndex] !== undefined) {
             node.outputValue = input[nodeIndex];
           } else if (node.layerId.startsWith('layer_')) {
-            console.log('here layerOutputs', layerOutputs[0]);
             const layerIndex = parseInt(node.layerId.split('_')[1]);
             if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
               node.outputValue = layerOutputs[layerIndex][nodeIndex];

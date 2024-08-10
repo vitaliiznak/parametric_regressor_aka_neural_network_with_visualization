@@ -41,7 +41,7 @@ export class Trainer {
     return this.network;
   }
 
-  getCurrentOutput(): Value | Value[] | null {
+  getCurrentOutput(): Value[] | null {
     if (this.currentInput === null) {
       return null;
     }
@@ -82,7 +82,7 @@ export class Trainer {
 
     const ypred = batchXs.map(x => {
       const result = this.network.forward(x.map(val => new Value(val)));
-      return Array.isArray(result) ? result[0] : result;
+      return result[0]; // Update here
     });
 
     console.log('Forward pass completed');
