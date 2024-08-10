@@ -122,7 +122,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const networkData = network.toJSON();
 
       let newVisualData = layoutCalculatorValue.calculateLayout(networkData, state.simulationOutput);
-
+      console.log('state.simulationOutput', state.simulationOutput);
       if (state.currentInput) {
         const currentInput = state.currentInput;
         newVisualData.nodes.forEach((node, index) => {
@@ -134,13 +134,14 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
       if (state.simulationOutput) {
         const { input, layerOutputs } = state.simulationOutput;
-        newVisualData.nodes.forEach((node, index) => {
-          const [nodeType, indexStr] = node.id.split('_');
-          const nodeIndex = parseInt(indexStr);
+
+        newVisualData.nodes.forEach((node, _index) => {
+          const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
+          const layerIndex = parseInt(layerIndexStr);
+          const nodeIndex = parseInt(nodeIndexStr);
           if (nodeType === 'input' && input[nodeIndex] !== undefined) {
             node.outputValue = input[nodeIndex];
-          } else if (node.layerId.startsWith('layer_')) {
-            const layerIndex = parseInt(node.layerId.split('_')[1]);
+          } else if (nodeType === 'neuron') {
             if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
               node.outputValue = layerOutputs[layerIndex][nodeIndex];
             }
