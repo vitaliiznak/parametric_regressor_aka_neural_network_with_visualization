@@ -52,7 +52,27 @@ export class Value {
   }
 
   sub(other: number | Value): Value {
-    return this.add(Value.from(other).mul(-1));
+    const otherValue = Value.from(other);
+    const out = this.add(otherValue.mul(-1));
+
+    out._backward = () => {
+      this.grad += out.grad;
+      otherValue.grad -= out.grad;
+    };
+
+    return out;
+  }
+
+  div(other: number | Value): Value {
+    const otherValue = Value.from(other);
+    const out = this.mul(otherValue.pow(-1));
+
+    out._backward = () => {
+      this.grad += (1 / otherValue.data) * out.grad;
+      otherValue.grad -= (this.data / Math.pow(otherValue.data, 2)) * out.grad;
+    };
+
+    return out;
   }
 
   mul(other: number | Value): Value {

@@ -35,7 +35,7 @@ export class MLP {
     this.layerOutputs = [];
   }
 
-  forward(x: (number | Value)[]): Value | Value[] {
+  forward(x: (number | Value)[]): Value[] {
     this.clearLayerOutputs(); // Clear outputs before a new forward pass
     let out: Value[] = x.map(Value.from);
     for (const layer of this.layers) {

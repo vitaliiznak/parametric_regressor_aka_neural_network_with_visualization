@@ -32,8 +32,13 @@ const App: Component = () => {
   const [store, setStore] = createStore<AppState>(initialState);
 
   const loadTrainingData = () => {
-    const xs = [[1], [1], [1], [1]];
-    const ys = [0, 1, 1, 0];
+    const xs = [
+      [1500, 3, 20],
+      [1800, 4, 15],
+      [2400, 4, 10],
+      [3000, 5, 5]
+    ];
+    const ys = [300000, 400000, 500000, 600000];
     setStore('trainingData', { xs, ys });
   };
 

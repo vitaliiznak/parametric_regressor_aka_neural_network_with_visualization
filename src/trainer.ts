@@ -95,7 +95,7 @@ export class Trainer {
       const target = new Value(batchYt[j]);
       const diff = ypred_el.sub(target);
       return sum.add(diff.mul(diff));
-    }, new Value(0));
+    }, new Value(0)).div(new Value(batchYt.length)); // MSE
 
     console.log('Loss calculated:', loss.data);
 
