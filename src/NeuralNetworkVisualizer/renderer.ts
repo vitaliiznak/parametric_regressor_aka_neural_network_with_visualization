@@ -29,8 +29,8 @@ export class NetworkRenderer {
 
 
     const inputNodes = data.nodes.filter(node => node.layerId === 'input');
-   // const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
-  
+    // const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
+
     inputNodes.forEach((inputNode, index) => {
       console.log(`Processing input node ${index}:`, inputNode);
       // Draw input node
@@ -41,15 +41,15 @@ export class NetworkRenderer {
       this.ctx.rect(inputNode.x, inputNode.y, 60, 40);
       this.ctx.fill();
       this.ctx.stroke();
-  
+
       // Draw input value
       this.ctx.fillStyle = 'black';
       this.ctx.font = '14px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(inputNode.outputValue?.toFixed(4) || 'Input', inputNode.x + 30, inputNode.y + 20);
-  
-   
+
+
     });
   }
 
@@ -90,7 +90,7 @@ export class NetworkRenderer {
       this.ctx.rect(node.x, node.y, 60, 40);
       this.ctx.fill();
       this.ctx.stroke();
-  
+
       // Draw activation function with bigger font
       if (node.layerId !== 'input' && node.activation) {
         this.ctx.fillStyle = 'black';
@@ -99,14 +99,14 @@ export class NetworkRenderer {
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
       }
-  
+
       // Draw neuron label with smaller font
       this.ctx.fillStyle = 'black';
       this.ctx.font = '10px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.label, node.x + 30, node.y + 30);
-  
+
       // // Draw weight and bias formula on top of the node
       // if (node.layerId !== 'input' ) {
       //   const formula = `X*${node.weight.toFixed(4)} + ${node.bias.toFixed(4)}`;
@@ -116,6 +116,11 @@ export class NetworkRenderer {
       //   this.ctx.textBaseline = 'bottom';
       //   this.ctx.fillText(formula, node.x + 30, node.y - 5);
       // }
+
+      // Draw output value for all nodes, including the last layer
+      if (node.outputValue !== undefined) {
+        this.drawOutputValue(node);
+      }
     });
   }
 
@@ -141,11 +146,32 @@ export class NetworkRenderer {
       // Draw bias label
       this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(4)}`, 'green');
 
-      // Draw output value label
-      if (fromNode.outputValue !== undefined) {
-        this.drawLabel(fromX + 10, fromY, `${fromNode.outputValue.toFixed(4)}`, 'red');
-      }
+      // // Draw output value label
+      // if (fromNode.outputValue !== undefined) {
+      //   this.drawLabel(fromX + 24, fromY, `${fromNode.outputValue.toFixed(4)}`, 'red');
+      // }
     });
+  }
+
+
+  private drawOutputValue(node: VisualNode) {
+    const outputX = node.x + 64; // Right side of the node
+    const outputY = node.y + 20; // Vertical center of the node
+
+    // Draw a small circle
+    this.ctx.beginPath();
+    this.ctx.arc(outputX + 20, outputY, 20, 0, 2 * Math.PI);
+    this.ctx.fillStyle = 'lightgreen';
+    this.ctx.fill();
+    this.ctx.strokeStyle = 'black';
+    this.ctx.stroke();
+
+    // Draw the output value
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = '9px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(node.outputValue!.toFixed(4), outputX + 20, outputY);
   }
 
   private drawArrow(fromX: number, fromY: number, toX: number, toY: number) {

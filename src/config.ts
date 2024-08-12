@@ -12,7 +12,7 @@ export const CONFIG = {
     batchSize: 4
   },
   VISUALIZATION: {
-    width: 800,
+    width: 1000,
     height: 600,
     nodeWidth: 60,
     nodeHeight: 40,

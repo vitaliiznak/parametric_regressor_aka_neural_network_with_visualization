@@ -3,13 +3,15 @@ import { useAppStore } from "../AppContext";
 
 const InputForm: Component = () => {
   const [state, setState] = useAppStore();
-  const [inputValues, setInputValues] = createSignal<string>("");
+  const [size, setSize] = createSignal("");
+  const [bedrooms, setBedrooms] = createSignal("");
+  const [age, setAge] = createSignal("");
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    const values = inputValues().split(',').map(Number);
-    if (values.length !== state.network.layers[0]?.neurons.length) {
-      alert(`Please provide ${state.network.layers[0]?.neurons.length} input values`);
+    const values = [Number(size()), Number(bedrooms()), Number(age())];
+    if (values.some(isNaN)) {
+      alert("Please provide valid numbers for all inputs");
       return;
     }
     setState('currentInput', values);
@@ -18,12 +20,16 @@ const InputForm: Component = () => {
   return (
     <form onSubmit={handleSubmit}>
       <label>
-        Input Values (comma-separated):
-        <input
-          type="text"
-          value={inputValues()}
-          onInput={(e) => setInputValues(e.currentTarget.value)}
-        />
+        Size (sq m):
+        <input type="number" value={size()} onInput={(e) => setSize(e.currentTarget.value)} />
+      </label>
+      <label>
+        Bedrooms:
+        <input type="number" value={bedrooms()} onInput={(e) => setBedrooms(e.currentTarget.value)} />
+      </label>
+      <label>
+        Age (years):
+        <input type="number" value={age()} onInput={(e) => setAge(e.currentTarget.value)} />
       </label>
       <button type="submit">Set Input</button>
     </form>

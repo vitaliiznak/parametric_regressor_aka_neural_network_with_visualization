@@ -6,6 +6,7 @@ const TrainingControls: Component<{ onVisualizationUpdate: () => void }> = (prop
   const [state, setState] = useAppStore();
   const [isRunning, setIsRunning] = createSignal(false);
   const [trainer, setTrainer] = createSignal<Trainer | null>(null);
+  const [predictedPrice, setPredictedPrice] = createSignal<number | null>(null);
 
   const startTraining = async () => {
     if (!state.trainingData?.xs || !state.trainingData?.ys) {

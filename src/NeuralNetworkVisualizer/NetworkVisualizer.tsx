@@ -152,6 +152,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         newVisualData = addLossFunctionNodes(newVisualData, network);
       }
       console.log('Updating visualization with new data:', newVisualData);
+      
       setVisualData(newVisualData);
       rendererValue.render(newVisualData);
       props.onVisualizationUpdate();

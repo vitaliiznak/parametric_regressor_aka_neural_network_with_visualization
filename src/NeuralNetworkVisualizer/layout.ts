@@ -32,15 +32,17 @@ export class NetworkLayout {
     // Calculate startY for input nodes
     const startY = (this.canvasHeight - totalHeight) / 2;
     for (let i = 0; i < inputSize; i++) {
-      nodes.push({
-        id: `input_${i}`,
-        label: `Input ${i}`,
-        layerId: 'input',
-        x: this.inputValuesSpacing,
-        y: startY + i * (this.nodeHeight + this.nodeSpacing),
-        weights: [0],
-        bias: 0
-      });
+      for (let i = 0; i < inputSize; i++) {
+        nodes.push({
+          id: `input_${i}`,
+          label: ['Size', 'Bedrooms', 'Age'][i],
+          layerId: 'input',
+          x: this.inputValuesSpacing,
+          y: startY + i * (this.nodeHeight + this.nodeSpacing),
+          weights: [0],
+          bias: 0
+        });
+      }
     }
 
     network.layers.forEach((layer, layerIndex) => {
@@ -87,27 +89,24 @@ export class NetworkLayout {
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
 
-    if (simulationOutput) {
-      const inputValues = simulationOutput.input;
-      const outputValues = simulationOutput.output;
     
-      console.log('Simulation output:', simulationOutput);
-      console.log('Input values:', inputValues);
-      console.log('Output values:', outputValues);
+    if (simulationOutput) {
+      const { input, output, layerOutputs } = simulationOutput;
     
       nodes.forEach((node) => {
-        const [nodeType, indexStr] = node.id.split('_');
-        const nodeIndex = parseInt(indexStr);
-        
-        if (nodeType === 'input' && inputValues && !isNaN(nodeIndex) && indexStr !== undefined) {
-          node.outputValue = inputValues[nodeIndex];
-          console.log(`Set input node ${node.id} value to ${node.outputValue}`);
-        } else if (node.layerId.startsWith('layer_') && outputValues && !isNaN(nodeIndex) && indexStr !== undefined) {
-          // Check if this is the last layer (output layer)
-          const layerNumber = parseInt(node.layerId.split('_')[1]);
-          if (layerNumber === network.layers.length - 1) {
-            node.outputValue = outputValues[nodeIndex];
-            console.log(`Set output node ${node.id} value to ${node.outputValue}`);
+        const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
+        const layerIndex = parseInt(layerIndexStr);
+        const nodeIndex = parseInt(nodeIndexStr);
+    
+        if (nodeType === 'input' && input[nodeIndex] !== undefined) {
+          node.outputValue = input[nodeIndex];
+        } else if (nodeType === 'neuron') {
+          if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
+            node.outputValue = layerOutputs[layerIndex][nodeIndex];
+          }
+          // Set output values for the last layer
+          if (layerIndex === layerOutputs.length - 1 && output[nodeIndex] !== undefined) {
+            node.outputValue = output[nodeIndex];
           }
         }
       });

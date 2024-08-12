@@ -1,4 +1,4 @@
-import { Component, createEffect } from 'solid-js';
+import { Component, createEffect, createSignal } from 'solid-js';
 import { createStore } from "solid-js/store";
 import { MLP } from './NeuralNetwork/mlp';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
@@ -30,13 +30,14 @@ const App: Component = () => {
   };
 
   const [store, setStore] = createStore<AppState>(initialState);
+  const [predictedPrice, setPredictedPrice] = createSignal<number | null>(null);
 
   const loadTrainingData = () => {
     const xs = [
-      [1500, 3, 20],
-      [1800, 4, 15],
-      [2400, 4, 10],
-      [3000, 5, 5]
+      [70, 3, 20],  // Size (sq m), Bedrooms, Age
+      [80, 4, 15],
+      [90, 4, 10],
+      [120, 5, 5]
     ];
     const ys = [300000, 400000, 500000, 600000];
     setStore('trainingData', { xs, ys });
@@ -53,6 +54,8 @@ const App: Component = () => {
     }
     const input = store.currentInput.map(val => new Value(val));
     const output = store.network.forward(input);
+    const price = output instanceof Value ? output.data : output[0].data;
+    setPredictedPrice(price);
     // Collect outputs from all neurons
     const layerOutputs = store.network.getLayerOutputs();
     console.log('here store layerOutputs', layerOutputs);
@@ -64,11 +67,11 @@ const App: Component = () => {
     })
     setStore('simulationOutput', {
       input: store.currentInput,
-      output: output instanceof Value ? [output.data] : output.map(v => v.data),
+      output: output.map(v => v.data),
       layerOutputs: layerOutputs
     });
 
-  
+    console.log(`Predicted house price: $${price.toFixed(2)}`);
     alert(`Network output: ${output instanceof Value ? [output.data] : output.map(v => v.data)}`);
   };
 
