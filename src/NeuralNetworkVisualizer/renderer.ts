@@ -86,37 +86,32 @@ export class NetworkRenderer {
       this.ctx.fillStyle = node.layerId === 'input' ? 'lightblue' : 'white';
       this.ctx.strokeStyle = 'black';
       this.ctx.lineWidth = 2;
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.shadowBlur = 10;
+      this.ctx.shadowOffsetX = 5;
+      this.ctx.shadowOffsetY = 5;
       this.ctx.beginPath();
-      this.ctx.rect(node.x, node.y, 60, 40);
+      this.ctx.roundRect(node.x, node.y, 60, 40, 10); // Use roundRect for rounded corners
       this.ctx.fill();
       this.ctx.stroke();
-
+      this.ctx.shadowColor = 'transparent'; // Reset shadow
+  
       // Draw activation function with bigger font
       if (node.layerId !== 'input' && node.activation) {
         this.ctx.fillStyle = 'black';
-        this.ctx.font = '14px Arial';
+        this.ctx.font = '16px Arial'; // Increase font size
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
       }
-
+  
       // Draw neuron label with smaller font
       this.ctx.fillStyle = 'black';
-      this.ctx.font = '10px Arial';
+      this.ctx.font = '12px Arial'; // Increase font size
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.label, node.x + 30, node.y + 30);
-
-      // // Draw weight and bias formula on top of the node
-      // if (node.layerId !== 'input' ) {
-      //   const formula = `X*${node.weight.toFixed(4)} + ${node.bias.toFixed(4)}`;
-      //   this.ctx.fillStyle = 'black';
-      //   this.ctx.font = '10px Arial';
-      //   this.ctx.textAlign = 'center';
-      //   this.ctx.textBaseline = 'bottom';
-      //   this.ctx.fillText(formula, node.x + 30, node.y - 5);
-      // }
-
+  
       // Draw output value for all nodes, including the last layer
       if (node.outputValue !== undefined) {
         this.drawOutputValue(node);
@@ -178,14 +173,14 @@ export class NetworkRenderer {
     const headLen = 10;
     const angle = Math.atan2(toY - fromY, toX - fromX);
     const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
-
+  
     this.ctx.beginPath();
     this.ctx.moveTo(fromX, fromY);
-    this.ctx.lineTo(toX, toY);
+    this.ctx.quadraticCurveTo((fromX + toX) / 2, fromY - 20, toX, toY); // Use quadraticCurveTo for curved lines
     this.ctx.strokeStyle = 'black';
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
-
+  
     // Only draw arrowhead if there's enough space
     if (length > headLen * 2) {
       this.ctx.beginPath();

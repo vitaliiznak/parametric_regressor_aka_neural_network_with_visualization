@@ -219,7 +219,26 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const scaledY = (e.clientY - rect.top - renderer()!.offsetY) / renderer()!.scale;
       draggedNode.x = scaledX;
       draggedNode.y = scaledY;
+      setVisualData({ ...visualData(), nodes: visualData().nodes.map(node => node.id === draggedNode!.id ? draggedNode : node) }); // Update visualData
       renderer()!.render(visualData());
+    } else if (canvasRef && layoutCalculator && renderer) {
+      const rect = canvasRef.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const hoveredNode = layoutCalculator()!.findNodeAt(
+        x,
+        y,
+        visualData().nodes,
+        renderer()!.scale,
+        renderer()!.offsetX,
+        renderer()!.offsetY
+      );
+      if (hoveredNode) {
+        canvasRef.style.cursor = 'pointer';
+      } else {
+        canvasRef.style.cursor = 'default';
+        renderer()!.render(visualData());
+      }
     }
   };
 
