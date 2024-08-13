@@ -2,6 +2,66 @@ import { Component, createEffect, createSignal } from "solid-js";
 import { ActivationFunction } from "../NeuralNetwork/types";
 import { MLP } from "../NeuralNetwork/mlp";
 import { useAppStore } from "../AppContext";
+import { css } from "@emotion/css";
+
+const styles = {
+  container: css`
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
+  `,
+  title: css`
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  `,
+  form: css`
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  `,
+  inputGroup: css`
+    display: flex;
+    flex-direction: column;
+  `,
+  label: css`
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-bottom: 0.25rem;
+  `,
+  input: css`
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+  `,
+  button: css`
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    &:hover {
+      background-color: #2563eb;
+    }
+  `,
+  currentConfig: css`
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+  `,
+};
 
 const NetworkConfigForm: Component = () => {
   const [state, setState] = useAppStore();
@@ -29,9 +89,6 @@ const NetworkConfigForm: Component = () => {
     const layers = layersString().split(',').map(Number).filter(n => !isNaN(n));
     const activationsFunctions = activations().split(',') as ActivationFunction[];
     
-    console.log("Parsed layers:", layers);
-    console.log("Parsed activations:", activationsFunctions);
-
     if (layers.length === 0) {
       alert("Please enter at least one layer size");
       return;
@@ -49,7 +106,6 @@ const NetworkConfigForm: Component = () => {
       layers: layers,
       activations: activationsFunctions
     });
-    console.log("New network created:", newNetwork);
 
     setState({ network: newNetwork });
     console.log("Store updated with new network");
@@ -59,29 +115,41 @@ const NetworkConfigForm: Component = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          Layers (comma-separated):
-          <input
-            type="text"
-            value={layersString()}
-            onInput={handleLayersChange}
-          />
-        </label>
+    <div class={styles.container}>
+      <h3 class={styles.title}>Network Configuration</h3>
+      <form onSubmit={handleSubmit} class={styles.form}>
+        <div class={styles.inputGroup}>
+          <label class={styles.label}>
+            Layers (comma-separated):
+            <input
+              type="text"
+              value={layersString()}
+              onInput={handleLayersChange}
+              class={styles.input}
+              placeholder="e.g., 5,3,1"
+            />
+          </label>
+        </div>
+        <div class={styles.inputGroup}>
+          <label class={styles.label}>
+            Activations (comma-separated):
+            <input
+              type="text"
+              value={activations()}
+              onInput={handleActivationsChange}
+              class={styles.input}
+              placeholder="e.g., tanh,relu,sigmoid"
+            />
+          </label>
+        </div>
+        <button type="submit" class={styles.button}>Update Network</button>
+      </form>
+      <div class={styles.currentConfig}>
+        <p>Current Configuration:</p>
+        <p>Layers: {state.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
+        <p>Activations: {state.network.activations.join(', ')}</p>
       </div>
-      <div>
-        <label>
-          Activations (comma-separated):
-          <input
-            type="text"
-            value={activations()}
-            onInput={handleActivationsChange}
-          />
-        </label>
-      </div>
-      <button type="submit">Update Network</button>
-    </form>
+    </div>
   );
 };
 

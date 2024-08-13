@@ -86,15 +86,8 @@ const App: Component = () => {
             <NetworkConfigForm />
             <TrainingConfigForm />
             <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
-            <TrainingStatus />
             <InputForm />
             <button onClick={simulateNetwork}>Simulate Network</button>
-            <div>
-              <h2>Current Network Configuration</h2>
-              <p>Layers: {store.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
-              <p>Activations: {store.network.activations.join(', ')}</p>
-              <p>Current Loss: {store.lossValue.toFixed(4)}</p>
-            </div>
           </div>
         </div>
       
