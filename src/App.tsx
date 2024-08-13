@@ -13,6 +13,7 @@ import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProce
 import InputForm from './LearningProcessVisualizer/InputForm';
 
 import { Value } from './NeuralNetwork/value';
+import InputDataVisualizer from './LearningProcessVisualizer/InputDataVisualizer';
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -32,19 +33,25 @@ const App: Component = () => {
   const [store, setStore] = createStore<AppState>(initialState);
   const [predictedPrice, setPredictedPrice] = createSignal<number | null>(null);
 
-  const loadTrainingData = () => {
-    const xs = [
-      [70, 3, 20],  // Size (sq m), Bedrooms, Age
-      [80, 4, 15],
-      [90, 4, 10],
-      [120, 5, 5]
-    ];
-    const ys = [300000, 400000, 500000, 600000];
-    setStore('trainingData', { xs, ys });
+  const generateSampleData = (count: number) => {
+    const xs: number[][] = [];
+    const ys: number[] = [];
+  
+    for (let i = 0; i < count; i++) {
+      const size = Math.random() * 200 + 50; // 50 to 250 sq m
+      const bedrooms = Math.floor(Math.random() * 4) + 1; // 1 to 4 bedrooms
+      const price = size * 1000 + bedrooms * 50000 + Math.random() * 100000; // Simple price model
+  
+      xs.push([size, bedrooms]);
+      ys.push(price);
+    }
+  
+    return { xs, ys };
   };
 
   createEffect(() => {
-    loadTrainingData();
+    const sampleData = generateSampleData(100);
+    setStore('trainingData', sampleData);
   });
 
   const simulateNetwork = () => {
@@ -80,6 +87,7 @@ const App: Component = () => {
       <div>
         <h1>Neural Network Visualizer</h1>
         <div style={{ display: 'flex' }}>
+        
           <div style={{ flex: 2 }}>
             <NetworkVisualizer includeLossNode={false} onVisualizationUpdate={() => console.log("Visualization updated")} />
             <LearningProcessVisualizer />
@@ -99,6 +107,7 @@ const App: Component = () => {
             </div>
           </div>
         </div>
+        <InputDataVisualizer />
       </div>
     </AppProvider>
   );

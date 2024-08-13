@@ -9,7 +9,7 @@ const InputForm: Component = () => {
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    const values = [Number(size()), Number(bedrooms()), Number(age())];
+    const values = [Number(size()), Number(bedrooms()),/*  Number(age() )*/];
     if (values.some(isNaN)) {
       alert("Please provide valid numbers for all inputs");
       return;
@@ -27,10 +27,10 @@ const InputForm: Component = () => {
         Bedrooms:
         <input type="number" value={bedrooms()} onInput={(e) => setBedrooms(e.currentTarget.value)} />
       </label>
-      <label>
+      {/* <label>
         Age (years):
         <input type="number" value={age()} onInput={(e) => setAge(e.currentTarget.value)} />
-      </label>
+      </label> */}
       <button type="submit">Set Input</button>
     </form>
   );

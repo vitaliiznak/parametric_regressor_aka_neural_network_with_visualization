@@ -39,16 +39,17 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [visualData, setVisualData] = createSignal<VisualNetworkData>({ nodes: [], connections: [] });
   const [layoutCalculator, setLayoutCalculator] = createSignal<NetworkLayout | undefined>();
   const [renderer, setRenderer] = createSignal<NetworkRenderer | undefined>();
-
-  let canvasRef: HTMLCanvasElement | undefined;
-  let containerRef: HTMLDivElement | undefined;
+  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | undefined>();
+  const [containerRef, setContainerRef] = createSignal<HTMLDivElement | undefined>();
+  const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
 
   let draggedNode: VisualNode | null = null;
   let isPanning = false;
   let lastPanPosition = { x: 0, y: 0 };
 
-  createEffect(() => {
-    if (canvasRef) {
+  const setupEventListeners = () => {
+    const canvas = canvasRef();
+    if (canvas) {
       const listeners = {
         mousedown: handleMouseDown,
         mousemove: handleMouseMove,
@@ -58,84 +59,58 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       };
 
       Object.entries(listeners).forEach(([event, handler]) => {
-        canvasRef!.addEventListener(event, handler as EventListener);
+        canvas.addEventListener(event, handler as EventListener);
       });
 
       onCleanup(() => {
         Object.entries(listeners).forEach(([event, handler]) => {
-          canvasRef!.removeEventListener(event, handler as EventListener);
+          canvas.removeEventListener(event, handler as EventListener);
         });
       });
     }
-  });
+  };
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
     console.log("handleWheel called");
-    if (renderer()) {
-      const rect = canvasRef!.getBoundingClientRect();
+    const canvas = canvasRef();
+    const rendererValue = renderer()
+    if (rendererValue && canvas) {
+      const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      renderer()!.zoom(x, y, delta);
-      renderer()!.render(visualData());
+      rendererValue.zoom(x, y, delta);
+      rendererValue.render(visualData());
     }
   };
 
-  onMount(() => {
-    console.log("onMount called");
-    initializeCanvas();
-    window.addEventListener('resize', initializeCanvas);
-  });
-
-  onCleanup(() => {
-    console.log("onCleanup called");
-    window.removeEventListener('resize', initializeCanvas);
-  });
-
-  const manageEventListeners = (action: 'add' | 'remove') => {
-    const listeners = {
-      mousedown: handleMouseDown,
-      mousemove: handleMouseMove,
-      mouseup: handleMouseUp,
-      wheel: handleWheel,
-      contextmenu: (e: Event) => e.preventDefault()
-    };
-
-    Object.entries(listeners).forEach(([event, handler]) => {
-      if (canvasRef) {
-        if (action === 'add') {
-          canvasRef.addEventListener(event, handler as EventListener);
-        } else {
-          canvasRef.removeEventListener(event, handler as EventListener);
-        }
-      }
-    });
-  };
-
-  const initializeCanvas = () => {
-    if (!canvasRef || !containerRef) {
+  const initializeCanvas = (canvasArg: HTMLCanvasElement) => {
+    const canvas = canvasArg || canvasRef()
+    const container = containerRef()
+    if (!container || !containerRef) {
       console.error('Canvas or container ref is undefined');
       return;
     }
-    const { width, height } = containerRef.getBoundingClientRect();
-    if(width === 0 || height === 0) {
-      console.error('Container dimensions are zero, skipping canvas initialization');
-      return;
-    }
-    if (width > 0 && height > 0) {
-      canvasRef.width = width;
-      canvasRef.height = height;
-      setLayoutCalculator(new NetworkLayout(canvasRef.width, canvasRef.height));
-      setRenderer(new NetworkRenderer(canvasRef));
-      manageEventListeners('add');
-      renderer()?.render(visualData());
+    const { width, height } = container.getBoundingClientRect();
+    if (canvas && width > 0 && height > 0) {
+      canvas.width = width;
+      canvas.height = height;
+      setLayoutCalculator(new NetworkLayout(canvas.width, canvas.height));
+      setRenderer(new NetworkRenderer(canvas));
       props.onVisualizationUpdate();
+      setIsCanvasInitialized(true);
     } else {
       console.warn('Container dimensions are zero, skipping canvas initialization');
     }
 
   };
+
+  createEffect(() => {
+    if (isCanvasInitialized()) {
+      setupEventListeners();
+    }
+  });
 
   createEffect(() => {
     const layoutCalculatorValue = layoutCalculator();
@@ -176,7 +151,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         newVisualData = addLossFunctionNodes(newVisualData, network);
       }
       console.log('Updating visualization with new data:', newVisualData);
-      
+
       setVisualData(newVisualData);
       rendererValue.render(newVisualData);
       props.onVisualizationUpdate();
@@ -212,11 +187,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   const handleMouseDown = (e: MouseEvent) => {
+    const canvas = canvasRef()
     if (e.button === 2) { // Right mouse button
       isPanning = true;
       lastPanPosition = { x: e.clientX, y: e.clientY };
-    } else if (canvasRef && layoutCalculator && renderer) {
-      const rect = canvasRef.getBoundingClientRect();
+    } else if (canvas && layoutCalculator && renderer) {
+      const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       draggedNode = layoutCalculator()!.findNodeAt(
@@ -231,28 +207,32 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isPanning && renderer) {
+    const canvas = canvasRef()
+    const rendererValue = renderer()
+    if (isPanning && rendererValue) {
       const dx = e.clientX - lastPanPosition.x;
       const dy = e.clientY - lastPanPosition.y;
-      renderer()!.pan(dx, dy);
+      rendererValue.pan(dx, dy);
       lastPanPosition = { x: e.clientX, y: e.clientY };
-      renderer()!.render(visualData());
-    } else if (draggedNode && canvasRef && renderer) {
-      const rect = canvasRef.getBoundingClientRect();
-      const scaledX = (e.clientX - rect.left - renderer()!.offsetX) / renderer()!.scale;
-      const scaledY = (e.clientY - rect.top - renderer()!.offsetY) / renderer()!.scale;
+      rendererValue.render(visualData());
+    } else if (draggedNode && canvas && rendererValue) {
+      const rect = canvas.getBoundingClientRect();
+      const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
+      const scaledY = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
       if (draggedNode) {
         if (draggedNode) {
           draggedNode.x = scaledX;
           draggedNode.y = scaledY;
-          setVisualData({ ...visualData(), nodes: visualData().nodes
-            .map(node => node.id === draggedNode?.id ? draggedNode : node)
-            .filter(node => node !== null) as VisualNode[] }); 
+          setVisualData({
+            ...visualData(), nodes: visualData().nodes
+              .map(node => node.id === draggedNode?.id ? draggedNode : node)
+              .filter(node => node !== null) as VisualNode[]
+          });
           renderer()!.render(visualData());
         }
       }
-    } else if (canvasRef && layoutCalculator && renderer) {
-      const rect = canvasRef.getBoundingClientRect();
+    } else if (canvas && layoutCalculator && rendererValue) {
+      const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const hoveredNode = layoutCalculator()!.findNodeAt(
@@ -264,13 +244,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         renderer()!.offsetY
       );
       if (hoveredNode) {
-        canvasRef.style.cursor = 'pointer';
+        canvas.style.cursor = 'pointer';
         // Show tooltip
         showTooltip(e.clientX, e.clientY, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue}`);
       } else {
-        canvasRef.style.cursor = 'default';
+        canvas.style.cursor = 'default';
         hideTooltip();
-        renderer()!.render(visualData());
+        rendererValue.render(visualData());
       }
     }
   };
@@ -282,8 +262,9 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   createEffect(() => {
     console.log('Network data in NetworkVisualizer:', state.network);
-    if (state.network && layoutCalculator()) {
-      const visualData = layoutCalculator()!.calculateLayout(state.network.toJSON(), state.simulationOutput);
+    const layoutCalculatorValue = layoutCalculator()
+    if (state.network && layoutCalculatorValue) {
+      const visualData = layoutCalculatorValue.calculateLayout(state.network.toJSON(), state.simulationOutput);
       console.log('Calculated visual data:', visualData);
       setVisualData(visualData);
     }
@@ -291,29 +272,35 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
 
   createEffect(() => {
-    if (containerRef) {
+    const container = containerRef()
+    const canvas = canvasRef()
+    if (container && canvas) {
       const resizeObserver = new ResizeObserver(() => {
-        initializeCanvas();
+        const { width, height } = container.getBoundingClientRect();
+        if (width > 0 && height > 0) {
+          initializeCanvas(canvas);
+        }
       });
-      resizeObserver.observe(containerRef);
-
+      resizeObserver.observe(container);
+  
+      // Trigger an initial resize event
+      resizeObserver.disconnect();
+      resizeObserver.observe(container);
+  
       onCleanup(() => {
         resizeObserver.disconnect();
       });
     }
   });
 
-  return (
-    <div ref={containerRef} style={{ width: '100%', height: '600px', overflow: 'hidden', border: '1px solid black' }}>
-      <canvas ref={el => {
-        canvasRef = el;
-        if (canvasRef) {
-          console.log("Canvas ref set");
-          initializeCanvas(); // Ensure canvas is initialized here
-        }
-      }} style={{ width: '100%', height: '100%' }} />
-    </div>
-  );
+return (
+  <div ref={setContainerRef} style={{ width: '100%', height: '840px', minHeight: '400px', overflow: 'hidden', border: '1px solid black' }}>
+    <canvas ref={el => {
+      setCanvasRef(el);
+      if (el) initializeCanvas(el);
+    }} style={{ width: '100%', height: '100%' }} />
+  </div>
+);
 };
 
 export default NetworkVisualizer;
