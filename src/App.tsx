@@ -11,9 +11,10 @@ import { CONFIG } from './config';
 import { AppState } from './store';
 import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
 import InputForm from './LearningProcessVisualizer/InputForm';
-
 import { Value } from './NeuralNetwork/value';
-import InputDataVisualizer from './LearningProcessVisualizer/InputDataVisualizer';
+import { generateSampleData, DataPoint } from './utils/dataGeneration';
+import FunctionVisualizer from './FunctionVisualizer';
+import LegendAndTask from './LegendAndTask';
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -33,25 +34,12 @@ const App: Component = () => {
   const [store, setStore] = createStore<AppState>(initialState);
   const [predictedPrice, setPredictedPrice] = createSignal<number | null>(null);
 
-  const generateSampleData = (count: number) => {
-    const xs: number[][] = [];
-    const ys: number[] = [];
-  
-    for (let i = 0; i < count; i++) {
-      const size = Math.random() * 200 + 50; // 50 to 250 sq m
-      const bedrooms = Math.floor(Math.random() * 4) + 1; // 1 to 4 bedrooms
-      const price = size * 1000 + bedrooms * 50000 + Math.random() * 100000; // Simple price model
-  
-      xs.push([size, bedrooms]);
-      ys.push(price);
-    }
-  
-    return { xs, ys };
-  };
-
   createEffect(() => {
     const sampleData = generateSampleData(100);
-    setStore('trainingData', sampleData);
+    setStore('trainingData', {
+      xs: sampleData.map(point => [point.x]),
+      ys: sampleData.map(point => point.y)
+    });
   });
 
   const simulateNetwork = () => {
@@ -78,19 +66,21 @@ const App: Component = () => {
       layerOutputs: layerOutputs
     });
 
-    console.log(`Predicted house price: $${price.toFixed(2)}`);
-    alert(`Network output: ${output instanceof Value ? [output.data] : output.map(v => v.data)}`);
+    console.log(`Predicted productivity score: ${price.toFixed(2)}`);
+    alert(`Predicted productivity score: ${price.toFixed(2)}`);
   };
 
   return (
     <AppProvider store={[store, setStore]}>
       <div>
-        <h1>Neural Network Visualizer</h1>
+        <h1>Neural Network Visualizer: ChatGPT Productivity Paradox</h1>
+        <LegendAndTask/>
         <div style={{ display: 'flex' }}>
         
           <div style={{ flex: 2 }}>
             <NetworkVisualizer includeLossNode={false} onVisualizationUpdate={() => console.log("Visualization updated")} />
             <LearningProcessVisualizer />
+            <FunctionVisualizer />
           </div>
           <div style={{ flex: 1 }}>
             <NetworkConfigForm />
@@ -107,7 +97,7 @@ const App: Component = () => {
             </div>
           </div>
         </div>
-        <InputDataVisualizer />
+      
       </div>
     </AppProvider>
   );

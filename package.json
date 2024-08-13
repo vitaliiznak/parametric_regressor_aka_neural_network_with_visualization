@@ -17,6 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@types/node": "^22.1.0",
+    "@types/plotly.js": "^2.33.3",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.8.0",
@@ -27,6 +28,7 @@
     "typescript-eslint": "^8.0.0"
   },
   "dependencies": {
+    "@emotion/css": "^11.13.0",
     "@solid-primitives/scheduled": "^1.4.3",
     "@swc/wasm-typescript": "^1.7.6",
     "@types/chart.js": "^2.9.41",
@@ -34,7 +36,9 @@
     "babel-preset-solid": "^1.8.19",
     "chart.js": "^4.4.3",
     "esm": "^3.2.25",
+    "plotly.js-dist": "^2.34.0",
     "solid-form-handler": "^1.2.3",
+    "solid-icons": "^1.1.0",
     "solid-js": "^1.8.19",
     "vite": "^5.3.5",
     "vite-plugin-solid": "^2.10.2",

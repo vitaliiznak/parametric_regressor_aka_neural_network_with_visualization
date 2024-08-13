@@ -31,6 +31,7 @@ export class Trainer {
   private yt: number[] = [];
   private history: TrainingResult[] = [];
   private currentInput: number[] | null = null;
+  private isPaused: boolean = false;
 
   constructor(network: MLP, config: TrainingConfig) {
     this.network = network.clone(); 
@@ -56,7 +57,7 @@ export class Trainer {
     this.currentStep = 0;
     this.history = [];
 
-    while (this.currentEpoch < this.config.epochs) {
+    while (this.currentEpoch < this.config.epochs && !this.isPaused) {
       const batchXs = this.xs.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
       const batchYt = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
 
@@ -154,5 +155,17 @@ export class Trainer {
       return null;
     }
     return this.history[--this.currentStep];
+  }
+
+  pause() {
+    this.isPaused = true;
+  }
+
+  resume() {
+    this.isPaused = false;
+  }
+
+  getCurrentEpoch() {
+    return this.currentEpoch;
   }
 }

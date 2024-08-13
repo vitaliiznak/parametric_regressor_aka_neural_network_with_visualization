@@ -32,17 +32,15 @@ export class NetworkLayout {
     // Calculate startY for input nodes
     const startY = (this.canvasHeight - totalHeight) / 2;
     for (let i = 0; i < inputSize; i++) {
-      for (let i = 0; i < inputSize; i++) {
-        nodes.push({
-          id: `input_${i}`,
-          label: ['Size', 'Bedrooms', 'Age'][i],
-          layerId: 'input',
-          x: this.inputValuesSpacing,
-          y: startY + i * (this.nodeHeight + this.nodeSpacing),
-          weights: [0],
-          bias: 0
-        });
-      }
+      nodes.push({
+        id: `input_${i}`,
+        label: 'ChatGPT Usage',
+        layerId: 'input',
+        x: this.inputValuesSpacing,
+        y: startY + i * (this.nodeHeight + this.nodeSpacing),
+        weights: [0],
+        bias: 0
+      });
     }
 
     network.layers.forEach((layer, layerIndex) => {

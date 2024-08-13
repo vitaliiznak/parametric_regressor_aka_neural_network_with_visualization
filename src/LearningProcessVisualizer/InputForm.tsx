@@ -3,34 +3,31 @@ import { useAppStore } from "../AppContext";
 
 const InputForm: Component = () => {
   const [state, setState] = useAppStore();
-  const [size, setSize] = createSignal("");
-  const [bedrooms, setBedrooms] = createSignal("");
-  const [age, setAge] = createSignal("");
+  const [chatGPTUsage, setChatGPTUsage] = createSignal("");
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    const values = [Number(size()), Number(bedrooms()),/*  Number(age() )*/];
-    if (values.some(isNaN)) {
-      alert("Please provide valid numbers for all inputs");
+    const value = Number(chatGPTUsage());
+    if (isNaN(value) || value < 0 || value > 100) {
+      alert("Please provide a valid percentage between 0 and 100");
       return;
     }
-    setState('currentInput', values);
+    setState('currentInput', [value]);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <label>
-        Size (sq m):
-        <input type="number" value={size()} onInput={(e) => setSize(e.currentTarget.value)} />
+        ChatGPT Usage (%):
+        <input 
+          type="number" 
+          min="0" 
+          max="100" 
+          step="0.1" 
+          value={chatGPTUsage()} 
+          onInput={(e) => setChatGPTUsage(e.currentTarget.value)} 
+        />
       </label>
-      <label>
-        Bedrooms:
-        <input type="number" value={bedrooms()} onInput={(e) => setBedrooms(e.currentTarget.value)} />
-      </label>
-      {/* <label>
-        Age (years):
-        <input type="number" value={age()} onInput={(e) => setAge(e.currentTarget.value)} />
-      </label> */}
       <button type="submit">Set Input</button>
     </form>
   );

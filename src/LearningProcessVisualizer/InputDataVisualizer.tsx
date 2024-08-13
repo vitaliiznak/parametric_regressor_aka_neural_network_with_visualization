@@ -1,88 +1,120 @@
 import { Component, onMount, createSignal, createEffect } from "solid-js";
 import { useAppStore } from "../AppContext";
-import Chart from "chart.js/auto";
+import Plotly from 'plotly.js';
+import { css } from '@emotion/css';
 
 const InputDataVisualizer: Component = () => {
   const [state] = useAppStore();
-  const [chartRef, setChartRef] = createSignal<HTMLCanvasElement | null>(null);
-  const [chart, setChart] = createSignal<Chart | null>(null);
+  const [plotRef, setPlotRef] = createSignal<HTMLDivElement | null>(null);
 
-  const createChart = () => {
-    const chartEl = chartRef();
-    if (chartEl && state.trainingData) {
-      const ctx = chartEl.getContext('2d');
-      if (ctx) {
-        // Destroy existing chart if it exists
-        const chartValue = chart();
-        if (chartValue) {
-          chartValue.destroy();
-        }
-        const newChart = new Chart(ctx, {
-          type: 'scatter',
-          data: {
-            datasets: [{
-              label: 'House Prices',
-              data: state.trainingData.xs.map((x, i) => ({
-                x: x[0], // Size
-                y: x[1], // Bedrooms
-                r: state.trainingData!.ys[i] / 1000 // Price (scaled down for better visualization)
-              })),
-              backgroundColor: 'rgba(75, 192, 192, 0.6)'
-            }]
+  const createPlot = () => {
+    const plotEl = plotRef();
+    if (plotEl && state.trainingData) {
+      const { xs, ys } = state.trainingData;
+
+      const trace = {
+        x: xs.map(x => x[0]),  // ChatGPT usage percentage
+        y: ys,                 // Productivity score
+        mode: 'markers',
+        type: 'scatter',
+        marker: {
+          size: 10,
+          color: ys,
+          colorscale: 'Viridis',
+          colorbar: {
+            title: 'Productivity Score',
+            thickness: 20,
+            len: 0.5,
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                title: {
-                  display: true,
-                  text: 'Size (sq m)'
-                }
-              },
-              y: {
-                title: {
-                  display: true,
-                  text: 'Number of Bedrooms'
-                }
-              }
-            },
-            plugins: {
-              tooltip: {
-                callbacks: {
-                  label: (context: any) => {
-                    return `Size: ${context.parsed.x} sq m, Bedrooms: ${context.parsed.y}, Price: $${context.raw.r * 1000}`;
-                  }
-                }
-              }
-            }
-          }
+          symbol: 'circle',
+        },
+        text: xs.map((x, i) => `ChatGPT Usage: ${x[0].toFixed(2)}%<br>Productivity: ${ys[i].toFixed(2)}`),
+        hoverinfo: 'text'
+      };
+
+      const layout = {
+        title: {
+          text: 'Developer Productivity vs ChatGPT Usage',
+          font: { size: 24 }
+        },
+        xaxis: { 
+          title: 'ChatGPT Usage (%)',
+          gridcolor: 'lightgray',
+          zerolinecolor: 'lightgray',
+        },
+        yaxis: { 
+          title: 'Productivity Score',
+          gridcolor: 'lightgray',
+          zerolinecolor: 'lightgray',
+        },
+        height: 600,
+        margin: { l: 50, r: 50, b: 50, t: 80 },
+        paper_bgcolor: 'rgb(250, 250, 250)',
+        plot_bgcolor: 'rgb(250, 250, 250)',
+        hovermode: 'closest',
+        dragmode: 'pan',
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToAdd: ['select2d', 'lasso2d'],
+        modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+        displaylogo: false,
+        scrollZoom: true, // Enable scroll zoom
+      };
+
+      Plotly.newPlot(plotEl, [trace], layout, config);
+
+      // Add double-click event for resetting the zoom
+      plotEl.on('plotly_doubleclick', () => {
+        Plotly.relayout(plotEl, {
+          'xaxis.autorange': true,
+          'yaxis.autorange': true
         });
-        setChart(newChart);
-      }
+      });
     }
   };
 
   onMount(() => {
-    // Use a small delay to ensure the DOM is fully rendered
-    setTimeout(() => {
-      createChart();
-    }, 0);
+    createPlot();
   });
 
   createEffect(() => {
     if (state.trainingData) {
-      // Use a small delay here as well
-      setTimeout(() => {
-        createChart();
-      }, 0);
+      createPlot();
     }
   });
 
   return (
-    <div style={{ width: '100%', height: '400px' }}>
-      <h3>Input Data Visualization</h3>
-      <canvas ref={setChartRef}></canvas>
+    <div class={css`
+      background-color: rgb(250, 250, 250);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    `}>
+      <h3 class={css`
+        font-size: 1.5em;
+        margin-bottom: 15px;
+        color: #333;
+      `}>Input Data Visualization</h3>
+      <div 
+        ref={setPlotRef} 
+        class={css`
+          width: 100%;
+          height: 600px;
+        `}
+      ></div>
+      <div class={css`
+        text-align: center;
+        margin-top: 10px;
+        font-size: 14px;
+        color: #666;
+      `}>
+        <p>Drag to pan, scroll to zoom, or use the buttons in the top-right corner.</p>
+        <p>Double-click to reset the view.</p>
+      </div>
     </div>
   );
 };
