@@ -1,8 +1,32 @@
 import { Component, createEffect, onCleanup, onMount, createSignal, createMemo } from "solid-js";
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
-import { VisualNode, VisualNetworkData, VisualConnection } from "./types";
+import { VisualNode, VisualNetworkData } from "./types";
 import { useAppStore } from "../AppContext";
+
+
+// Create tooltip element
+const tooltip = document.createElement('div');
+tooltip.style.position = 'absolute';
+tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+tooltip.style.color = 'white';
+tooltip.style.padding = '5px';
+tooltip.style.borderRadius = '5px';
+tooltip.style.pointerEvents = 'none';
+tooltip.style.display = 'none';
+document.body.appendChild(tooltip);
+
+const showTooltip = (x: number, y: number, text: string) => {
+  tooltip.style.left = `${x + 10}px`;
+  tooltip.style.top = `${y + 10}px`;
+  tooltip.innerText = text;
+  tooltip.style.display = 'block';
+};
+
+const hideTooltip = () => {
+  tooltip.style.display = 'none';
+};
+
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
@@ -217,10 +241,16 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const rect = canvasRef.getBoundingClientRect();
       const scaledX = (e.clientX - rect.left - renderer()!.offsetX) / renderer()!.scale;
       const scaledY = (e.clientY - rect.top - renderer()!.offsetY) / renderer()!.scale;
-      draggedNode.x = scaledX;
-      draggedNode.y = scaledY;
-      setVisualData({ ...visualData(), nodes: visualData().nodes.map(node => node.id === draggedNode!.id ? draggedNode : node) }); // Update visualData
-      renderer()!.render(visualData());
+      if (draggedNode) {
+        if (draggedNode) {
+          draggedNode.x = scaledX;
+          draggedNode.y = scaledY;
+          setVisualData({ ...visualData(), nodes: visualData().nodes
+            .map(node => node.id === draggedNode?.id ? draggedNode : node)
+            .filter(node => node !== null) as VisualNode[] }); 
+          renderer()!.render(visualData());
+        }
+      }
     } else if (canvasRef && layoutCalculator && renderer) {
       const rect = canvasRef.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -235,8 +265,11 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       );
       if (hoveredNode) {
         canvasRef.style.cursor = 'pointer';
+        // Show tooltip
+        showTooltip(e.clientX, e.clientY, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue}`);
       } else {
         canvasRef.style.cursor = 'default';
+        hideTooltip();
         renderer()!.render(visualData());
       }
     }
