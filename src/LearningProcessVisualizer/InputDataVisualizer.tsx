@@ -1,17 +1,23 @@
-import { Component, onMount, createEffect } from "solid-js";
+import { Component, onMount, createSignal, createEffect } from "solid-js";
 import { useAppStore } from "../AppContext";
 import Chart from "chart.js/auto";
 
 const InputDataVisualizer: Component = () => {
   const [state] = useAppStore();
-  let chartRef: HTMLCanvasElement | undefined;
-  let chart: Chart | undefined;
+  const [chartRef, setChartRef] = createSignal<HTMLCanvasElement | null>(null);
+  const [chart, setChart] = createSignal<Chart | null>(null);
 
   const createChart = () => {
-    if (chartRef && state.trainingData) {
-      const ctx = chartRef.getContext('2d');
+    const chartEl = chartRef();
+    if (chartEl && state.trainingData) {
+      const ctx = chartEl.getContext('2d');
       if (ctx) {
-        chart = new Chart(ctx, {
+        // Destroy existing chart if it exists
+        const chartValue = chart();
+        if (chartValue) {
+          chartValue.destroy();
+        }
+        const newChart = new Chart(ctx, {
           type: 'scatter',
           data: {
             datasets: [{
@@ -25,6 +31,8 @@ const InputDataVisualizer: Component = () => {
             }]
           },
           options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
               x: {
                 title: {
@@ -50,27 +58,31 @@ const InputDataVisualizer: Component = () => {
             }
           }
         });
+        setChart(newChart);
       }
     }
   };
 
   onMount(() => {
-    createChart();
+    // Use a small delay to ensure the DOM is fully rendered
+    setTimeout(() => {
+      createChart();
+    }, 0);
   });
 
   createEffect(() => {
     if (state.trainingData) {
-      if (chart) {
-        chart.destroy();
-      }
-      createChart();
+      // Use a small delay here as well
+      setTimeout(() => {
+        createChart();
+      }, 0);
     }
   });
 
   return (
-    <div>
+    <div style={{ width: '100%', height: '400px' }}>
       <h3>Input Data Visualization</h3>
-      <canvas ref={chartRef} width="400" height="200"></canvas>
+      <canvas ref={setChartRef}></canvas>
     </div>
   );
 };
