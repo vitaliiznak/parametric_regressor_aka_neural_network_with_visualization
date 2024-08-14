@@ -5,12 +5,11 @@ import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import TrainingControls from './TrainingControl/TrainingControls';
 import NetworkConfigForm from './TrainingControl/NetworkConfigForm';
 import TrainingConfigForm from './TrainingControl/TrainingConfigForm';
-import TrainingStatus from './TrainingControl/TrainingStatus';
 import { AppProvider } from "./AppContext";
 import { CONFIG } from './config';
 import { AppState } from './store';
 import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
-import InputForm from './LearningProcessVisualizer/InputForm';
+import SimulationInputForm from './LearningProcessVisualizer/SimulationInputForm';
 import { Value } from './NeuralNetwork/value';
 import { generateSampleData, DataPoint } from './utils/dataGeneration';
 import FunctionVisualizer from './FunctionVisualizer';
@@ -86,8 +85,8 @@ const App: Component = () => {
             <NetworkConfigForm />
             <TrainingConfigForm />
             <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
-            <InputForm />
-            <button onClick={simulateNetwork}>Simulate Network</button>
+            <SimulationInputForm onSimulateNetwork={simulateNetwork} />
+      
           </div>
         </div>
       
