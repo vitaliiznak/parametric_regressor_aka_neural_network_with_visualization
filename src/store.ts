@@ -1,28 +1,58 @@
 import { createStore } from "solid-js/store";
+import { AppState } from "./types";
+
+import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
-import { VisualNetworkData } from "./NeuralNetworkVisualizer/types";
-import { TrainingConfig, TrainingResult } from "./trainer";
+import { CONFIG } from "./config";
 
-export interface AppState {
-  network: MLP;
-  trainingConfig: TrainingConfig;
-  trainingResult?: TrainingResult;
-  simulationOutput?: SimulationOutput;
-  visualData: VisualNetworkData;
-  dotString: string;
-  lossValue: number;
-  trainingHistory: TrainingResult[];
-  currentInput?: number[];
-  trainingData?: {
-    xs: number[][];
-    ys: number[];
-  };
-}
+const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
+const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
 
-export interface SimulationOutput {
-  input: number[];
-  output: number[];
-  layerOutputs: number[][];
-}
+const initialState: AppState = {
+  network: new MLP(INITIAL_NETWORK),
+  trainingConfig: INITIAL_TRAINING,
+  visualData: { nodes: [], connections: [] },
+  simulationOutput: null,
+  trainingResult: {
+    step: 'forward', 
+    data: {}
+  },
+  trainingData: null,
+  currentInput: null,
+  isTraining: false,
+  currentEpoch: 0,
+  currentLoss: 0,
+};
+
+export const [store, setStore] = createStore(initialState);
+
+
+export const actions = {
+  initializeTrainingData: () => {
+    const trainingData = generateSampleData(100);
+    const xs = trainingData.map(point => [point.x]);
+    const ys = trainingData.map(point => point.y);
+    setStore('trainingData', { xs, ys });
+  },
+  
+  startTraining: () => {
+    setStore('isTraining', true);
+  },
+  
+  stopTraining: () => {
+    setStore('isTraining', false);
+  },
+  
+  updateTrainingProgress: (epoch: number, loss: number) => {
+    setStore({
+      currentEpoch: epoch,
+      currentLoss: loss
+    });
+  },
+  
+  updateNetwork: (network: MLP) => {
+    setStore('network', network);
+  }
+};
 
 export const createAppStore = (initialState: AppState) => createStore(initialState);

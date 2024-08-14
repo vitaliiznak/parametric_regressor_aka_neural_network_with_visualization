@@ -1,10 +1,9 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
-import { useAppStore } from "../AppContext";
 import { css, keyframes } from "@emotion/css";
 import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward } from 'solid-icons/fa';
+import { store } from '../store';
 
-const TrainingStatus: Component = () => {
-  const [state, setState] = useAppStore();
+const TrainingControls: Component = () => {
   const [lossHistory, setLossHistory] = createSignal<number[]>([]);
   const [hoveredBar, setHoveredBar] = createSignal<number | null>(null);
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);
@@ -14,8 +13,8 @@ const TrainingStatus: Component = () => {
   const [isTraining, setIsTraining] = createSignal(false);
 
   createEffect(() => {
-    if (state.trainingResult?.data.loss) {
-      setLossHistory([...lossHistory(), state.trainingResult.data.loss]);
+    if (store.trainingResult?.data.loss) {
+      setLossHistory([...lossHistory(), store.trainingResult.data.loss]);
     }
   });
 
@@ -27,8 +26,8 @@ const TrainingStatus: Component = () => {
   };
 
   const epochProgress = () => {
-    const currentEpoch = state.trainingResult?.data.epoch || 0;
-    const totalEpochs = state.trainingConfig?.epochs || 1;
+    const currentEpoch = store.trainingResult?.data.epoch || 0;
+    const totalEpochs = store.trainingConfig?.epochs || 1;
     return currentEpoch / totalEpochs;
   };
 
@@ -359,7 +358,7 @@ const TrainingStatus: Component = () => {
         <div class={styles.statusItem}>
           <div class={styles.statusLabel}>Epoch</div>
           <div class={styles.statusValue}>
-            {state.trainingResult?.data.epoch || 0} / {state.trainingConfig?.epochs || 0}
+            {store.trainingResult?.data.epoch || 0} / {store.trainingConfig?.epochs || 0}
           </div>
           <div class={styles.progressBar}>
             <div class={styles.progressFill} style={{ width: `${epochProgress() * 100}%` }}></div>
@@ -367,8 +366,8 @@ const TrainingStatus: Component = () => {
         </div>
         <div class={styles.statusItem}>
           <div class={styles.statusLabel}>Current Loss</div>
-          <div class={styles.statusValue} style={{ color: getLossColor(state.trainingResult?.data.loss || 0) }}>
-            {state.trainingResult?.data.loss?.toFixed(4) || 'N/A'}
+          <div class={styles.statusValue} style={{ color: getLossColor(store.trainingResult?.data.loss || 0) }}>
+            {store.trainingResult?.data.loss?.toFixed(4) || 'N/A'}
           </div>
         </div>
       </div>
@@ -457,4 +456,4 @@ const TrainingStatus: Component = () => {
   );
 };
 
-export default TrainingStatus;
+export default TrainingControls;

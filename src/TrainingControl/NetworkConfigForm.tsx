@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal } from "solid-js";
 import { ActivationFunction } from "../NeuralNetwork/types";
 import { MLP } from "../NeuralNetwork/mlp";
-import { useAppStore } from "../AppContext";
+import { setStore, store } from "../store";
 import { css } from "@emotion/css";
 
 const styles = {
@@ -64,14 +64,13 @@ const styles = {
 };
 
 const NetworkConfigForm: Component = () => {
-  const [state, setState] = useAppStore();
   const [layersString, setLayersString] = createSignal(
-    state.network.layers.map(layer => layer.neurons.length).join(',')
+    store.network.layers.map(layer => layer.neurons.length).join(',')
   );
-  const [activations, setActivations] = createSignal(state.network.activations.join(','));
+  const [activations, setActivations] = createSignal(store.network.activations.join(','));
 
   createEffect(() => {
-    console.log("Current network state:", state.network);
+    console.log("Current network store:", store.network);
   });
 
   const handleLayersChange = (e: Event) => {
@@ -94,7 +93,7 @@ const NetworkConfigForm: Component = () => {
       return;
     }
 
-    const inputSize = state.network.layers[0].neurons.length;
+    const inputSize = store.network.layers[0].neurons.length;
 
     if (activationsFunctions.length !== layers.length) {
       alert("The number of activation functions should be equal to the number of layers");
@@ -107,7 +106,7 @@ const NetworkConfigForm: Component = () => {
       activations: activationsFunctions
     });
 
-    setState({ network: newNetwork });
+    setStore({ network: newNetwork });
     console.log("Store updated with new network");
 
     setLayersString(layers.join(','));
@@ -146,8 +145,8 @@ const NetworkConfigForm: Component = () => {
       </form>
       <div class={styles.currentConfig}>
         <p>Current Configuration:</p>
-        <p>Layers: {state.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
-        <p>Activations: {state.network.activations.join(', ')}</p>
+        <p>Layers: {store.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
+        <p>Activations: {store.network.activations.join(', ')}</p>
       </div>
     </div>
   );

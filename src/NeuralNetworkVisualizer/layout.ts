@@ -1,6 +1,6 @@
 import { NetworkData } from '../NeuralNetwork/types';
-import { SimulationOutput } from '../store';
-import { VisualNetworkData, VisualNode, VisualConnection } from './types';
+import { SimulationOutput, VisualConnection, VisualNetworkData, VisualNode } from '../types';
+
 
 export class NetworkLayout {
   public nodeWidth = 60;
@@ -87,7 +87,6 @@ export class NetworkLayout {
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
 
-    
     if (simulationOutput) {
       const { input, output, layerOutputs } = simulationOutput;
     

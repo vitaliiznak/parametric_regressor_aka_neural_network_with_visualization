@@ -1,16 +1,25 @@
-import { VisualNetworkData, VisualNode, VisualConnection } from './types';
+import { VisualConnection, VisualNetworkData, VisualNode } from "../types";
+
 
 export class NetworkRenderer {
   private ctx: CanvasRenderingContext2D;
   public scale: number = 1;
   public offsetX: number = 0;
   public offsetY: number = 0;
+  private lastRenderTime: number = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
   }
 
-  render(data: VisualNetworkData) {
+  render(data: VisualNetworkData, time: number) {
+    console.log('Rendering data:', data);
+    // Limit the frame rate to 58 FPS
+    if (time - this.lastRenderTime < 18) {
+      return;
+    }
+    this.lastRenderTime = time;
+
     this.clear();
     this.ctx.save();
     this.ctx.translate(this.offsetX, this.offsetY);
@@ -120,6 +129,11 @@ export class NetworkRenderer {
   }
 
   private drawConnections(connections: VisualConnection[], nodes: VisualNode[]) {
+    if (!connections || !Array.isArray(connections)) {
+      console.error('Invalid connections array:', connections);
+      return;
+    }
+
     connections.forEach(conn => {
       const fromNode = nodes.find(n => n.id === conn.from)!;
       const toNode = nodes.find(n => n.id === conn.to)!;
@@ -134,17 +148,10 @@ export class NetworkRenderer {
       // Draw weight label
       const midX = (fromX + toX) / 2;
       const midY = (fromY + toY) / 2;
-
-      console.log('conn', conn);
       this.drawLabel(midX, midY - 10, `W: ${conn.weight.toFixed(4)}`, 'blue');
 
       // Draw bias label
       this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(4)}`, 'green');
-
-      // // Draw output value label
-      // if (fromNode.outputValue !== undefined) {
-      //   this.drawLabel(fromX + 24, fromY, `${fromNode.outputValue.toFixed(4)}`, 'red');
-      // }
     });
   }
 

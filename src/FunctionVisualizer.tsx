@@ -1,16 +1,16 @@
 import { Component, createEffect, onMount } from 'solid-js';
-import Plotly from 'plotly.js-dist';
-import { useAppStore } from './AppContext';
+import Plotly from  'plotly.js-dist';
+import { store } from './store';
 import { getTrueFunction } from './utils/dataGeneration';
 
 const FunctionVisualizer: Component = () => {
-  const [state] = useAppStore();
+
   let plotDiv: HTMLDivElement | undefined;
 
   const createPlot = () => {
-    if (!plotDiv || !state.trainingData) return;
+    if (!plotDiv || !store.trainingData) return;
 
-    const { xs, ys } = state.trainingData;
+    const { xs, ys } = store.trainingData;
 
     // Generate points for the true function
     const trueX = Array.from({ length: 100 }, (_, i) => i);
@@ -53,7 +53,7 @@ const FunctionVisualizer: Component = () => {
   });
 
   createEffect(() => {
-    if (state.trainingData) {
+    if (store.trainingData) {
       createPlot();
     }
   });

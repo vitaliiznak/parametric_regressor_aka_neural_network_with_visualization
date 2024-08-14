@@ -1,13 +1,13 @@
 import { Component, Show, For, createMemo } from "solid-js";
-import { useAppStore } from "../AppContext";
+import { store } from "../store";
 
 const LearningProcessVisualizer: Component = () => {
-  const [state] = useAppStore();
+
 
   const renderData = createMemo(() => {
-    if (!state.trainingResult) return null;
+    if (!store.trainingResult) return null;
 
-    const { step, data } = state.trainingResult;
+    const { step, data } = store.trainingResult;
     switch (step) {
       case 'forward':
         return (
@@ -50,8 +50,8 @@ const LearningProcessVisualizer: Component = () => {
   return (
     <div>
       <h3>Learning Process</h3>
-      <Show when={state.trainingResult}>
-        <div>Current Step: {state.trainingResult?.step}</div>
+      <Show when={store.trainingResult}>
+        <div>Current Step: {store.trainingResult?.step}</div>
         {renderData()}
       </Show>
     </div>

@@ -1,16 +1,16 @@
 import { Component, onMount, createSignal, createEffect } from "solid-js";
-import { useAppStore } from "../AppContext";
-import Plotly from 'plotly.js';
+import { store } from "../store";
+import Plotly from 'plotly.js-dist';
 import { css } from '@emotion/css';
 
 const InputDataVisualizer: Component = () => {
-  const [state] = useAppStore();
+
   const [plotRef, setPlotRef] = createSignal<HTMLDivElement | null>(null);
 
   const createPlot = () => {
     const plotEl = plotRef();
-    if (plotEl && state.trainingData) {
-      const { xs, ys } = state.trainingData;
+    if (plotEl && store.trainingData) {
+      const { xs, ys } = store.trainingData;
 
       const trace = {
         x: xs.map(x => x[0]),  // ChatGPT usage percentage
@@ -81,7 +81,7 @@ const InputDataVisualizer: Component = () => {
   });
 
   createEffect(() => {
-    if (state.trainingData) {
+    if (store.trainingData) {
       createPlot();
     }
   });

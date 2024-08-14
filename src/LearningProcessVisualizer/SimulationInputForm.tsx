@@ -1,5 +1,5 @@
 import { Component, createSignal } from "solid-js";
-import { useAppStore } from "../AppContext";
+import { setStore } from "../store";
 import { css } from "@emotion/css";
 
 const styles = {
@@ -54,42 +54,42 @@ const styles = {
       background-color: #2563eb;
     }
   `,
-  buttonGroup: css`
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-  `,
-  secondaryButton: css`
-    background-color: #e5e7eb;
-    color: #4b5563;
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: #d1d5db;
-    }
+  error: css`
+    color: #cc0000;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
   `,
 };
 
 interface SimulationInputFormProps {
-  simulateNetwork: () => void;
+  onSimulateNetwork: () => void;
 }
 
-const SimulationInputForm: Component<SimulationInputFormProps> = ({ simulateNetwork }) => {
-  const [state, setState] = useAppStore();
+const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulateNetwork }) => {
   const [chatGPTUsage, setChatGPTUsage] = createSignal("");
+  const [error, setError] = createSignal<string | null>(null);
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
+    setError(null);
+
     const value = Number(chatGPTUsage());
-    if (isNaN(value) || value < 0 || value > 100) {
-      alert("Please provide a valid percentage between 0 and 100");
+    if (isNaN(value)) {
+      setError("Please enter a valid number.");
       return;
     }
-    setState('currentInput', [value]);
+    if (value < 0 || value > 100) {
+      setError("Please provide a percentage between 0 and 100.");
+      return;
+    }
+
+    try {
+      setStore('currentInput', [value]);
+      onSimulateNetwork();
+    } catch (err) {
+      console.error("Error during simulation:", err);
+      setError("An error occurred during simulation. Please try again.");
+    }
   };
 
   return (
@@ -112,9 +112,9 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ simulateNetw
             placeholder="Enter a value between 0 and 100"
           />
         </div>
-        <div class={styles.buttonGroup}>
+        {error() && <div class={styles.error}>{error()}</div>}
+        <div>
           <button type="submit" class={styles.button}>Set Input</button>
-          <button type="button" onClick={simulateNetwork} class={styles.secondaryButton}>Simulate Network</button>
         </div>
       </form>
     </div>

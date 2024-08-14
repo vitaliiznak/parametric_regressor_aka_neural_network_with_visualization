@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { useAppStore } from "../AppContext";
+import { setStore, store } from "../store";
 import { css } from "@emotion/css";
 
 const styles = {
@@ -57,11 +57,9 @@ const styles = {
 };
 
 const TrainingConfigForm: Component = () => {
-  const [state, setState] = useAppStore();
-
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    console.log("Training config updated:", state.trainingConfig);
+    console.log("Training config updated:", store.trainingConfig);
   };
 
   return (
@@ -74,10 +72,9 @@ const TrainingConfigForm: Component = () => {
             <input
               type="number"
               step="0.001"
-              value={state.trainingConfig.learningRate}
-              onInput={(e) => setState('trainingConfig', 'learningRate', Number(e.currentTarget.value))}
+              value={store.trainingConfig.learningRate}
+              onInput={(e) => setStore('trainingConfig', 'learningRate', Number(e.currentTarget.value))}
               class={styles.input}
-              placeholder="e.g., 0.001"
             />
           </label>
         </div>
@@ -86,10 +83,9 @@ const TrainingConfigForm: Component = () => {
             Epochs:
             <input
               type="number"
-              value={state.trainingConfig.epochs}
-              onInput={(e) => setState('trainingConfig', 'epochs', Number(e.currentTarget.value))}
+              value={store.trainingConfig.epochs}
+              onInput={(e) => setStore('trainingConfig', 'epochs', Number(e.currentTarget.value))}
               class={styles.input}
-              placeholder="e.g., 100"
             />
           </label>
         </div>
@@ -98,10 +94,9 @@ const TrainingConfigForm: Component = () => {
             Batch Size:
             <input
               type="number"
-              value={state.trainingConfig.batchSize}
-              onInput={(e) => setState('trainingConfig', 'batchSize', Number(e.currentTarget.value))}
+              value={store.trainingConfig.batchSize}
+              onInput={(e) => setStore('trainingConfig', 'batchSize', Number(e.currentTarget.value))}
               class={styles.input}
-              placeholder="e.g., 32"
             />
           </label>
         </div>

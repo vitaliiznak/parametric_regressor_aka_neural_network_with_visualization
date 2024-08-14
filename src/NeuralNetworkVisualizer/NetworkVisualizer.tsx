@@ -1,9 +1,8 @@
 import { Component, createEffect, onCleanup, onMount, createSignal, createMemo } from "solid-js";
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
-import { VisualNode, VisualNetworkData } from "./types";
-import { useAppStore } from "../AppContext";
-
+import { store } from "../store";
+import { VisualNetworkData, VisualNode, SimulationOutput } from "../types";
 
 // Create tooltip element
 const tooltip = document.createElement('div');
@@ -27,25 +26,79 @@ const hideTooltip = () => {
   tooltip.style.display = 'none';
 };
 
-
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
   onVisualizationUpdate: () => void;
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
-
-  const [state] = useAppStore();
   const [visualData, setVisualData] = createSignal<VisualNetworkData>({ nodes: [], connections: [] });
-  const [layoutCalculator, setLayoutCalculator] = createSignal<NetworkLayout | undefined>();
-  const [renderer, setRenderer] = createSignal<NetworkRenderer | undefined>();
-  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | undefined>();
-  const [containerRef, setContainerRef] = createSignal<HTMLDivElement | undefined>();
+  const [layoutCalculator, setLayoutCalculator] = createSignal<NetworkLayout | null>(null);
+  const [renderer, setRenderer] = createSignal<NetworkRenderer | null>(null);
+  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null);
+  const [containerRef, setContainerRef] = createSignal<HTMLDivElement | null>(null);
   const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
+
 
   let draggedNode: VisualNode | null = null;
   let isPanning = false;
-  let lastPanPosition = { x: 0, y: 0 };
+  let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
+  let animationFrameId: number | undefined;
+
+  const calculateVisualData = createMemo(() => {
+    const layoutCalculatorValue = layoutCalculator();
+    console.log('layoutCalculatorValue:', layoutCalculatorValue);
+    if (!layoutCalculatorValue || !store.network) return { nodes: [], connections: [] };
+
+    const networkData = store.network.toJSON();
+    let newVisualData = layoutCalculatorValue.calculateLayout(networkData);
+
+    if (store.currentInput) {
+      const currentInput = store.currentInput;
+      newVisualData.nodes.forEach((node, index) => {
+        if (node.layerId === 'input' && currentInput[index] !== undefined) {
+          node.outputValue = currentInput[index];
+        }
+      });
+    }
+
+    if (store.simulationOutput) {
+      const { input, layerOutputs } = store.simulationOutput;
+
+      newVisualData.nodes.forEach((node, _index) => {
+        const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
+        const layerIndex = parseInt(layerIndexStr);
+        const nodeIndex = parseInt(nodeIndexStr);
+        if (nodeType === 'input' && input[nodeIndex] !== undefined) {
+          node.outputValue = input[nodeIndex];
+        } else if (nodeType === 'neuron') {
+          if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
+            node.outputValue = layerOutputs[layerIndex][nodeIndex];
+          }
+        }
+      });
+    }
+    // if (store.includeLossNode) {
+    //   newVisualData = addLossFunctionNodes(newVisualData, store.network);
+    // }
+
+    // Ensure connections array is always initialized
+    if (!newVisualData.connections) {
+      newVisualData.connections = [];
+    }
+
+    return newVisualData;
+  });
+
+  const render = (time: number) => {
+    const rendererValue = renderer();
+    const newVisualData = calculateVisualData();
+    if (rendererValue && newVisualData) {
+      console.log('Calling render with data:', newVisualData);
+      rendererValue.render(newVisualData, time);
+      setVisualData(newVisualData);
+    }
+  };
 
   const setupEventListeners = () => {
     const canvas = canvasRef();
@@ -59,7 +112,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       };
 
       Object.entries(listeners).forEach(([event, handler]) => {
-        canvas.addEventListener(event, handler as EventListener);
+        canvas.addEventListener(event, handler as EventListener/* , { passive: event === 'wheel' } */);
       });
 
       onCleanup(() => {
@@ -81,7 +134,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const y = e.clientY - rect.top;
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       rendererValue.zoom(x, y, delta);
-      rendererValue.render(visualData());
+      rendererValue.render(visualData(), performance.now());
     }
   };
 
@@ -93,6 +146,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       return;
     }
     const { width, height } = container.getBoundingClientRect();
+
+    console.log('initializeCanvas', { width, height })
     if (canvas && width > 0 && height > 0) {
       canvas.width = width;
       canvas.height = height;
@@ -108,55 +163,25 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   createEffect(() => {
     if (isCanvasInitialized()) {
+      console.log('Canvas initialized, setting up event listeners');
       setupEventListeners();
+    } else {
+      console.log('Canvas not initialized');
     }
   });
 
   createEffect(() => {
-    const layoutCalculatorValue = layoutCalculator();
-    const rendererValue = renderer();
-    if (layoutCalculatorValue && rendererValue) {
-
-      const network = state.network;
-      const networkData = network.toJSON();
-
-      let newVisualData = layoutCalculatorValue.calculateLayout(networkData, state.simulationOutput);
-      console.log('state.simulationOutput', state.simulationOutput);
-      if (state.currentInput) {
-        const currentInput = state.currentInput;
-        newVisualData.nodes.forEach((node, index) => {
-          if (node.layerId === 'input' && currentInput[index] !== undefined) {
-            node.outputValue = currentInput[index];
-          }
-        });
-      }
-
-      if (state.simulationOutput) {
-        const { input, layerOutputs } = state.simulationOutput;
-
-        newVisualData.nodes.forEach((node, _index) => {
-          const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
-          const layerIndex = parseInt(layerIndexStr);
-          const nodeIndex = parseInt(nodeIndexStr);
-          if (nodeType === 'input' && input[nodeIndex] !== undefined) {
-            node.outputValue = input[nodeIndex];
-          } else if (nodeType === 'neuron') {
-            if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
-              node.outputValue = layerOutputs[layerIndex][nodeIndex];
-            }
-          }
-        });
-      }
-      if (props.includeLossNode) {
-        newVisualData = addLossFunctionNodes(newVisualData, network);
-      }
-      console.log('Updating visualization with new data:', newVisualData);
-
-      setVisualData(newVisualData);
-      rendererValue.render(newVisualData);
-      props.onVisualizationUpdate();
+    const newVisualData = visualData();
+    if (newVisualData) {
+      render(performance.now());
     }
-  })
+  });
+
+  onCleanup(() => {
+    if (animationFrameId !== undefined) {
+      cancelAnimationFrame(animationFrameId);
+    }
+  });
 
   const addLossFunctionNodes = (visualData: VisualNetworkData, network: any): VisualNetworkData => {
     const outputLayer = network.layers[network.layers.length - 1];
@@ -209,12 +234,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const handleMouseMove = (e: MouseEvent) => {
     const canvas = canvasRef()
     const rendererValue = renderer()
+    const visaulDataVal = visualData()
     if (isPanning && rendererValue) {
       const dx = e.clientX - lastPanPosition.x;
       const dy = e.clientY - lastPanPosition.y;
       rendererValue.pan(dx, dy);
       lastPanPosition = { x: e.clientX, y: e.clientY };
-      rendererValue.render(visualData());
+      rendererValue.render(visaulDataVal, performance.now());
     } else if (draggedNode && canvas && rendererValue) {
       const rect = canvas.getBoundingClientRect();
       const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
@@ -224,11 +250,11 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           draggedNode.x = scaledX;
           draggedNode.y = scaledY;
           setVisualData({
-            ...visualData(), nodes: visualData().nodes
+            ...visaulDataVal, nodes: visaulDataVal.nodes
               .map(node => node.id === draggedNode?.id ? draggedNode : node)
               .filter(node => node !== null) as VisualNode[]
           });
-          renderer()!.render(visualData());
+          rendererValue.render(visaulDataVal, performance.now());
         }
       }
     } else if (canvas && layoutCalculator && rendererValue) {
@@ -238,10 +264,10 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const hoveredNode = layoutCalculator()!.findNodeAt(
         x,
         y,
-        visualData().nodes,
-        renderer()!.scale,
-        renderer()!.offsetX,
-        renderer()!.offsetY
+        visaulDataVal.nodes,
+        rendererValue.scale,
+        rendererValue.offsetX,
+        rendererValue.offsetY
       );
       if (hoveredNode) {
         canvas.style.cursor = 'pointer';
@@ -250,7 +276,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       } else {
         canvas.style.cursor = 'default';
         hideTooltip();
-        rendererValue.render(visualData());
+        rendererValue.render(visaulDataVal, performance.now());
       }
     }
   };
@@ -259,17 +285,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     isPanning = false;
     draggedNode = null;
   };
-
-  createEffect(() => {
-    console.log('Network data in NetworkVisualizer:', state.network);
-    const layoutCalculatorValue = layoutCalculator()
-    if (state.network && layoutCalculatorValue) {
-      const visualData = layoutCalculatorValue.calculateLayout(state.network.toJSON(), state.simulationOutput);
-      console.log('Calculated visual data:', visualData);
-      setVisualData(visualData);
-    }
-  });
-
 
   createEffect(() => {
     const container = containerRef()

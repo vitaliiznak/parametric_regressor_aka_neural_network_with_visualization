@@ -1,25 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-
-export interface TrainingConfig {
-  learningRate: number;
-  epochs: number;
-  batchSize: number;
-}
-
-export interface TrainingResult {
-  step: 'forward' | 'loss' | 'backward' | 'update' | 'epoch';
-  data: {
-    input?: number[];
-    output?: number[];
-    loss?: number;
-    gradients?: number[];
-    oldWeights?: number[];
-    newWeights?: number[];
-    learningRate?: number;
-    epoch?: number;
-  };
-}
+import { TrainingConfig, TrainingResult } from "./types";
 
 export class Trainer {
   private network: MLP;
@@ -49,7 +30,7 @@ export class Trainer {
     return this.network.forward(this.currentInput.map(val => new Value(val)));
   }
 
-  async* train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {
+  async *train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {
     this.xs = xs;
     this.yt = yt;
     this.currentEpoch = 0;
@@ -57,7 +38,7 @@ export class Trainer {
     this.currentStep = 0;
     this.history = [];
 
-    while (this.currentEpoch < this.config.epochs && !this.isPaused) {
+    for (let epoch = 0; epoch < this.config.epochs && !this.isPaused; epoch++) {
       const batchXs = this.xs.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
       const batchYt = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
 
