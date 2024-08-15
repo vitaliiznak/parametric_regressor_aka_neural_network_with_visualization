@@ -38,7 +38,11 @@ export class Trainer {
     this.currentStep = 0;
     this.history = [];
 
-    for (let epoch = 0; epoch < this.config.epochs && !this.isPaused; epoch++) {
+    for (let epoch = 0; epoch < this.config.epochs; epoch++) {
+      while (this.isPaused) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       const batchXs = this.xs.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
       const batchYt = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
 

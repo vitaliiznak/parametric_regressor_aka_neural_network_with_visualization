@@ -353,7 +353,7 @@ const TrainingControls: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h3 class={styles.title}>Training Status</h3>
+      <h3 class={styles.title}>Training Control</h3>
       <div class={styles.statusGrid}>
         <div class={styles.statusItem}>
           <div class={styles.statusLabel}>Epoch</div>

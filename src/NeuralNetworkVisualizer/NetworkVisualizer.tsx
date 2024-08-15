@@ -1,4 +1,5 @@
 import { Component, createEffect, onCleanup, onMount, createSignal, createMemo } from "solid-js";
+import { css } from '@emotion/css';
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
 import { store } from "../store";
@@ -39,7 +40,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [containerRef, setContainerRef] = createSignal<HTMLDivElement | null>(null);
   const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
 
-
   let draggedNode: VisualNode | null = null;
   let isPanning = false;
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
@@ -78,11 +78,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         }
       });
     }
-    // if (store.includeLossNode) {
-    //   newVisualData = addLossFunctionNodes(newVisualData, store.network);
-    // }
 
-    // Ensure connections array is always initialized
     if (!newVisualData.connections) {
       newVisualData.connections = [];
     }
@@ -112,7 +108,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       };
 
       Object.entries(listeners).forEach(([event, handler]) => {
-        canvas.addEventListener(event, handler as EventListener/* , { passive: event === 'wheel' } */);
+        canvas.addEventListener(event, handler as EventListener, { passive: false });
       });
 
       onCleanup(() => {
@@ -125,6 +121,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     console.log("handleWheel called");
     const canvas = canvasRef();
     const rendererValue = renderer()
@@ -297,25 +294,39 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         }
       });
       resizeObserver.observe(container);
-  
+
       // Trigger an initial resize event
       resizeObserver.disconnect();
       resizeObserver.observe(container);
-  
+
       onCleanup(() => {
         resizeObserver.disconnect();
       });
     }
   });
 
-return (
-  <div ref={setContainerRef} style={{ width: '100%', height: '840px', minHeight: '400px', overflow: 'hidden', border: '1px solid black' }}>
-    <canvas ref={el => {
-      setCanvasRef(el);
-      if (el) initializeCanvas(el);
-    }} style={{ width: '100%', height: '100%' }} />
-  </div>
-);
+  const containerStyle = css`
+    width: 100%;
+    height: 840px;
+    min-width: 200px;
+    min-height: 400px;
+    overflow: hidden;
+    border: 1px solid black;
+  `;
+
+  const canvasStyle = css`
+    width: 100%;
+    height: 100%;
+  `;
+
+  return (
+    <div ref={setContainerRef} class={containerStyle}>
+      <canvas ref={el => {
+        setCanvasRef(el);
+        if (el) initializeCanvas(el);
+      }} class={canvasStyle} />
+    </div>
+  );
 };
 
 export default NetworkVisualizer;
