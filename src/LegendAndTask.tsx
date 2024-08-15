@@ -43,21 +43,30 @@ const LegendAndTask: Component = () => {
         padding: 20px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
       `}>
-        <div class={css`text-align: center;`}>
-          <FiCpu size={32} color="#3498db" />
-          <h3 class={css`color: #3498db; margin: 12px 0; font-size: 24px;`}>Input</h3>
-          <p class={css`font-size: 18px; margin-bottom: 8px;`}>ChatGPT Usage (%)</p>
-          <span class={css`font-size: 36px; font-weight: 700; color: #2980b9;`}>0-100</span>
-        </div>
-        <div class={css`text-align: center;`}>
-          <FiTrendingUp size={32} color="#e74c3c" />
-          <h3 class={css`color: #e74c3c; margin: 12px 0; font-size: 24px;`}>Output</h3>
-          <p class={css`font-size: 18px; margin-bottom: 8px;`}>Productivity Score</p>
-          <span class={css`font-size: 36px; font-weight: 700; color: #c0392b;`}>0-100</span>
-        </div>
+        <InfoCard 
+          icon={<FiCpu size={32} color="#3498db" />} 
+          title="Input" 
+          description="ChatGPT Usage (%)" 
+          value="0-100" 
+        />
+        <InfoCard 
+          icon={<FiTrendingUp size={32} color="#e74c3c" />} 
+          title="Output" 
+          description="Productivity Score" 
+          value="0-100" 
+        />
       </div>
     </div>
   );
 };
+
+const InfoCard: Component<{ icon: JSX.Element, title: string, description: string, value: string }> = ({ icon, title, description, value }) => (
+  <div class={css`text-align: center;`}>
+    {icon}
+    <h3 class={css`color: #3498db; margin: 12px 0; font-size: 24px;`}>{title}</h3>
+    <p class={css`font-size: 18px; margin-bottom: 8px;`}>{description}</p>
+    <span class={css`font-size: 36px; font-weight: 700; color: #2980b9;`}>{value}</span>
+  </div>
+);
 
 export default LegendAndTask;

@@ -31,13 +31,6 @@ const App: Component = () => {
     setPredictedPrice(price);
     // Collect outputs from all neurons
     const layerOutputs = store.network.getLayerOutputs();
-    console.log('here store layerOutputs', layerOutputs);
-    // Update the simulationOutput
-    console.log('here simulateNEtwork', {
-      input: store.currentInput,
-      output: output instanceof Value ? [output.data] : output.map(v => v.data),
-      layerOutputs: layerOutputs
-    })
     setStore('simulationOutput', {
       input: store.currentInput,
       output: output.map(v => v.data),
