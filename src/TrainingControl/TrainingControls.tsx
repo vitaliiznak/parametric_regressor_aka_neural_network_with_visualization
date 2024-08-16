@@ -264,12 +264,13 @@ const TrainingControls: Component = () => {
   };
 
   const toggleTraining = () => {
-    setIsTraining(!isTraining());
     if (isTraining()) {
         actions.pauseTraining();
     } else {
+        console.log('resume training')
         actions.resumeTraining();
     }
+    setIsTraining(!isTraining());
   };
 
   const stepForward = () => {

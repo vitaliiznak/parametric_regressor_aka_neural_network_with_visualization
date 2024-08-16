@@ -3,6 +3,7 @@ import { AppState } from "./types";
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -72,15 +73,20 @@ export const actions = {
   },
   
   pauseTraining: () => {
-    if (store.trainingWorker) {
-      store.trainingWorker.postMessage({ type: 'pause' });
+    if (!store.trainingWorker) {
+      console.error("No training worker available");
+      return;
     }
+    store.trainingWorker.postMessage({ type: 'pause' });
+  
   },
 
   resumeTraining: () => {
-    if (store.trainingWorker) {
-      store.trainingWorker.postMessage({ type: 'resume' });
+    if (!store.trainingWorker) {
+      console.error("No training worker available");
+      return;
     }
+    store.trainingWorker.postMessage({ type: 'resume' });
   },
   
   updateTrainingProgress: (epoch: number, loss: number) => {
