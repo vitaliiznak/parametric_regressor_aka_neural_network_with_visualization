@@ -1,9 +1,9 @@
-import { Component, createEffect, onCleanup, onMount, createSignal, createMemo } from "solid-js";
+import { Component, createEffect, onCleanup, createSignal } from "solid-js";
 import { css } from '@emotion/css';
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
 import { store } from "../store";
-import { VisualNetworkData, VisualNode, SimulationOutput } from "../types";
+import { VisualNetworkData, VisualNode } from "../types";
 
 // Create tooltip element
 const tooltip = document.createElement('div');
@@ -45,13 +45,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
   let animationFrameId: number | undefined;
 
-  const calculateVisualData = createMemo(() => {
+  const calculateVisualData = () => {
     const layoutCalculatorValue = layoutCalculator();
     console.log('layoutCalculatorValue:', layoutCalculatorValue);
     if (!layoutCalculatorValue || !store.network) return { nodes: [], connections: [] };
 
     const networkData = store.network.toJSON();
-    let newVisualData = layoutCalculatorValue.calculateLayout(networkData);
+    let newVisualData = layoutCalculatorValue.calculateLayout(networkData, store.simulationOutput);
 
     if (store.currentInput) {
       const currentInput = store.currentInput;
@@ -83,16 +83,17 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       newVisualData.connections = [];
     }
 
+
     return newVisualData;
-  });
+  };
 
   const render = (time: number) => {
     const rendererValue = renderer();
     const newVisualData = calculateVisualData();
+    setVisualData(newVisualData);
     if (rendererValue && newVisualData) {
       console.log('Calling render with data:', newVisualData);
       rendererValue.render(newVisualData, time);
-      setVisualData(newVisualData);
     }
   };
 
@@ -168,9 +169,32 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   });
 
   createEffect(() => {
-    const newVisualData = visualData();
-    if (newVisualData) {
+    // Depend on store values directly
+    const { network, currentInput, simulationOutput } = store;
+    if (network && layoutCalculator()) {
       render(performance.now());
+    }
+    if (currentInput || simulationOutput) {
+      render(performance.now());
+    }
+  });
+
+
+  createEffect(() => {
+    const container = containerRef()
+    const canvas = canvasRef()
+    if (container && canvas) {
+      const resizeObserver = new ResizeObserver(() => {
+        const { width, height } = container.getBoundingClientRect();
+        if (width > 0 && height > 0) {
+          initializeCanvas(canvas);
+        }
+      });
+      resizeObserver.observe(container);
+
+      onCleanup(() => {
+        resizeObserver.disconnect();
+      });
     }
   });
 
@@ -283,27 +307,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     draggedNode = null;
   };
 
-  createEffect(() => {
-    const container = containerRef()
-    const canvas = canvasRef()
-    if (container && canvas) {
-      const resizeObserver = new ResizeObserver(() => {
-        const { width, height } = container.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          initializeCanvas(canvas);
-        }
-      });
-      resizeObserver.observe(container);
-
-      // Trigger an initial resize event
-      resizeObserver.disconnect();
-      resizeObserver.observe(container);
-
-      onCleanup(() => {
-        resizeObserver.disconnect();
-      });
-    }
-  });
+ 
 
   const containerStyle = css`
     width: 100%;
