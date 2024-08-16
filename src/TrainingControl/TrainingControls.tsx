@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import { css, keyframes } from "@emotion/css";
 import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward } from 'solid-icons/fa';
-import { store } from '../store';
+import { actions, store } from '../store';
 
 const TrainingControls: Component = () => {
   const [lossHistory, setLossHistory] = createSignal<number[]>([]);
@@ -266,9 +266,9 @@ const TrainingControls: Component = () => {
   const toggleTraining = () => {
     setIsTraining(!isTraining());
     if (isTraining()) {
-      // TODO: Implement pause training logic
+        actions.pauseTraining();
     } else {
-      // TODO: Implement resume training logic
+        actions.resumeTraining();
     }
   };
 

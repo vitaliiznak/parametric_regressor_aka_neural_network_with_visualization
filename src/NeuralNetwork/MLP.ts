@@ -6,7 +6,7 @@ export class MLP {
   layers: Layer[];
   activations: ActivationFunction[];
   inputSize: number;
-  layerOutputs: Value[][];
+  layerOutputs: Value[][] = [];
 
   constructor(config: MLPConfig) {
     const { inputSize, layers, activations } = config;
@@ -89,5 +89,20 @@ export class MLP {
     });
 
     return newMLP;
+  }
+
+  updateFromJSON(json: any) {
+    // Update the network structure if necessary
+    if (json.layers.length !== this.layers.length) {
+      this.layers = json.layers.map((layer: any) => new Layer(layer.nin, layer.nout, layer.activation));
+    }
+
+    // Update weights and biases for each layer
+    this.layers.forEach((layer, i) => {
+      layer.neurons.forEach((neuron, j) => {
+        neuron.w = json.layers[i].neurons[j].weights.map((w: number) => new Value(w));
+        neuron.b = new Value(json.layers[i].neurons[j].bias);
+      });
+    });
   }
 }

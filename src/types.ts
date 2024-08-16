@@ -11,6 +11,7 @@ export interface AppState {
     isTraining: boolean;
     simulationOutput: SimulationOutput | null;
     currentInput: number[] | null;
+    trainingWorker: Worker | null;
 }
 
 export interface TrainingData {

@@ -1,6 +1,5 @@
 import { createStore } from "solid-js/store";
 import { AppState } from "./types";
-
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
@@ -22,10 +21,10 @@ const initialState: AppState = {
   isTraining: false,
   currentEpoch: 0,
   currentLoss: 0,
+  trainingWorker: null,
 };
 
 export const [store, setStore] = createStore(initialState);
-
 
 export const actions = {
   initializeTrainingData: () => {
@@ -36,11 +35,52 @@ export const actions = {
   },
   
   startTraining: () => {
+    if (!store.trainingData) {
+      console.error("No training data available");
+      return;
+    }
+
+    const trainingWorker = new Worker(new URL('./workers/trainingWorker.ts', document.baseURI).toString(), { type: 'module' });
+
+    setStore('trainingWorker', trainingWorker);
     setStore('isTraining', true);
+
+    trainingWorker.postMessage({
+      network: store.network.toJSON(),
+      config: store.trainingConfig,
+      xs: store.trainingData.xs,
+      yt: store.trainingData.ys
+    });
+
+    trainingWorker.onmessage = (e: MessageEvent) => {
+      if (e.data.type === 'progress') {
+        setStore('trainingResult', e.data.data);
+        store.network.updateFromJSON(e.data.data.network);
+      } else if (e.data.type === 'complete') {
+        store.network.updateFromJSON(e.data.data);
+        setStore('isTraining', false);
+      }
+    };
   },
   
   stopTraining: () => {
+    if (store.trainingWorker) {
+      store.trainingWorker.terminate();
+      setStore('trainingWorker', null);
+    }
     setStore('isTraining', false);
+  },
+  
+  pauseTraining: () => {
+    if (store.trainingWorker) {
+      store.trainingWorker.postMessage({ type: 'pause' });
+    }
+  },
+
+  resumeTraining: () => {
+    if (store.trainingWorker) {
+      store.trainingWorker.postMessage({ type: 'resume' });
+    }
   },
   
   updateTrainingProgress: (epoch: number, loss: number) => {
