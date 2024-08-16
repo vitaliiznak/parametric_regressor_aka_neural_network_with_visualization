@@ -12,12 +12,12 @@ export class MLP {
     const { inputSize, layers, activations } = config;
     this.inputSize = inputSize;
     const sizes = [inputSize, ...layers];
-    this.activations = activations;
+    this.activations = activations || [];
     this.layers = [];
     for (let i = 0; i < layers.length; i++) {
-      this.layers.push(new Layer(sizes[i], layers[i], activations[i] || 'tanh'));
+      this.layers.push(new Layer(sizes[i], layers[i], this.activations[i] || 'identity'));
     }
-    console.log("Creating MLP with layers:", layers, "and activations:", activations);
+    console.log("Creating MLP with layers:", layers, "and activations:", this.activations);
     this.layers.forEach((layer, i) => {
       console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
     });

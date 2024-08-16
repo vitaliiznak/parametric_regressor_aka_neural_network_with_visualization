@@ -264,13 +264,21 @@ const TrainingControls: Component = () => {
   };
 
   const toggleTraining = () => {
-    if (isTraining()) {
-        actions.pauseTraining();
+    if (!store.trainingWorker) {
+      actions.startTraining();
+    } else if (isTraining()) {
+      actions.pauseTraining();
     } else {
-        console.log('resume training')
-        actions.resumeTraining();
+      actions.resumeTraining();
     }
     setIsTraining(!isTraining());
+  };
+
+  const startTraining = () => {
+    if (!store.trainingWorker) {
+      actions.startTraining();
+      setIsTraining(true);
+    }
   };
 
   const stepForward = () => {
@@ -373,11 +381,16 @@ const TrainingControls: Component = () => {
         </div>
       </div>
       <div class={styles.controlsContainer}>
-        <button class={styles.controlButton} onClick={stepBackward}><FaSolidBackward /></button>
-        <button class={styles.controlButton} onClick={toggleTraining}>
-          {isTraining() ? <FaSolidPause /> : <FaSolidPlay />}
-        </button>
-        <button class={styles.controlButton} onClick={stepForward}><FaSolidForward /></button>
+        <Show when={!store.trainingWorker}>
+          <button class={styles.controlButton} onClick={startTraining}>Start Training</button>
+        </Show>
+        <Show when={store.trainingWorker}>
+          <button class={styles.controlButton} onClick={stepBackward}><FaSolidBackward /></button>
+          <button class={styles.controlButton} onClick={toggleTraining}>
+            {isTraining() ? <FaSolidPause /> : <FaSolidPlay />}
+          </button>
+          <button class={styles.controlButton} onClick={stepForward}><FaSolidForward /></button>
+        </Show>
       </div>
       <div class={styles.chartContainer}>
         <h4 class={styles.chartTitle}>Loss History</h4>

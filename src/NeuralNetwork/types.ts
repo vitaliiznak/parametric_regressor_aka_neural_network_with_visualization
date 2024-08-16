@@ -24,3 +24,11 @@ export interface MLPConfig {
   layers: number[];
   activations: ActivationFunction[];
 }
+
+export interface SerializableNetwork {
+  inputSize: number;
+  layers: number[];
+  activations?: ActivationFunction[];
+  weights?: number[][][];
+  biases?: number[][];
+}
