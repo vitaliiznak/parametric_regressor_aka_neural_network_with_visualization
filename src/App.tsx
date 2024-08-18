@@ -38,9 +38,6 @@ const App: Component = () => {
         layerOutputs: layerOutputs
       }});
 
-    console.log("Store updated with new simulationOutput");
-
-    console.log(`Predicted productivity score: ${price.toFixed(2)}`);
     //alert(`Predicted productivity score: ${price.toFixed(2)}`);
   };
 

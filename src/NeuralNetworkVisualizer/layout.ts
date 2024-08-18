@@ -12,7 +12,7 @@ export class NetworkLayout {
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
-  calculateLayout(network: NetworkData, simulationOutput?: SimulationOutput | null): VisualNetworkData {
+  calculateLayout(network: NetworkData, currentInput: number[], simulationOutput?: SimulationOutput | null): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
     console.log('Network data:', network);
@@ -42,6 +42,16 @@ export class NetworkLayout {
         bias: 0
       });
     }
+
+    if (currentInput) {
+      nodes.forEach((node, index) => {
+        if (node.layerId === 'input' && currentInput[index] !== undefined) {
+          node.outputValue = currentInput[index];
+        }
+      });
+    }
+
+
 
     network.layers.forEach((layer, layerIndex) => {
       const x = this.inputValueAndNetworkSpacing + layerIndex * this.layerSpacing + this.layerSpacing / 2;

@@ -26,7 +26,6 @@ export class MLP {
 
   getLayerOutputs(): number[][] {
     return this.layerOutputs.map(layer => {
-      console.log('here layer layerOutputs', layer);
       return layer.map(v => v.data)
     });
   }

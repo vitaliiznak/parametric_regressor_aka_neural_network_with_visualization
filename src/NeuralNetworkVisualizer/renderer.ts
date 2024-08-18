@@ -1,24 +1,25 @@
 import { VisualConnection, VisualNetworkData, VisualNode } from "../types";
-
+import { debounce } from "@solid-primitives/scheduled";
 
 export class NetworkRenderer {
   private ctx: CanvasRenderingContext2D;
   public scale: number = 1;
   public offsetX: number = 0;
   public offsetY: number = 0;
-  private lastRenderTime: number = 0;
+  private debouncedRender: (data: VisualNetworkData) => void;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
+    this.debouncedRender = debounce((data: VisualNetworkData) => {
+      this._render(data);
+    }, 16); // Debounce to ~60fps
   }
 
-  render(data: VisualNetworkData, time: number) {
-    console.log('Rendering data:', data);
-    // Limit the frame rate to 58 FPS
-    if (time - this.lastRenderTime < 18) {
-      return;
-    }
-    this.lastRenderTime = time;
+  render(data: VisualNetworkData) {
+    this.debouncedRender(data);
+  }
+
+  private _render(data: VisualNetworkData) {
 
     this.clear();
     this.ctx.save();

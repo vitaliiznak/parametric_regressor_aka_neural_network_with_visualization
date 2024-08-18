@@ -47,54 +47,26 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const calculateVisualData = () => {
     const layoutCalculatorValue = layoutCalculator();
-    console.log('layoutCalculatorValue:', layoutCalculatorValue);
-    if (!layoutCalculatorValue || !store.network) return { nodes: [], connections: [] };
+    if (!layoutCalculatorValue) {
+      console.error('Layout calculator is not initialized');
+      return { nodes: [], connections: [] };
+    }
 
     const networkData = store.network.toJSON();
-    let newVisualData = layoutCalculatorValue.calculateLayout(networkData, store.simulationOutput);
-
-    if (store.currentInput) {
-      const currentInput = store.currentInput;
-      newVisualData.nodes.forEach((node, index) => {
-        if (node.layerId === 'input' && currentInput[index] !== undefined) {
-          node.outputValue = currentInput[index];
-        }
-      });
-    }
-
-    if (store.simulationOutput) {
-      const { input, layerOutputs } = store.simulationOutput;
-
-      newVisualData.nodes.forEach((node, _index) => {
-        const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
-        const layerIndex = parseInt(layerIndexStr);
-        const nodeIndex = parseInt(nodeIndexStr);
-        if (nodeType === 'input' && input[nodeIndex] !== undefined) {
-          node.outputValue = input[nodeIndex];
-        } else if (nodeType === 'neuron') {
-          if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
-            node.outputValue = layerOutputs[layerIndex][nodeIndex];
-          }
-        }
-      });
-    }
-
-    if (!newVisualData.connections) {
-      newVisualData.connections = [];
-    }
-
-
+    const newVisualData = layoutCalculatorValue.calculateLayout(networkData, store.currentInput, store.simulationOutput);
     return newVisualData;
   };
 
   const render = (time: number) => {
-    const rendererValue = renderer();
+    const rendererValue = renderer()
     const newVisualData = calculateVisualData();
     setVisualData(newVisualData);
-    if (rendererValue && newVisualData) {
-      console.log('Calling render with data:', newVisualData);
-      rendererValue.render(newVisualData, time);
+    if(!rendererValue){
+      console.warn('Renderer is not initialized');
+      return
     }
+    rendererValue.render(newVisualData, time);
+    
   };
 
   const setupEventListeners = () => {
@@ -132,7 +104,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const y = e.clientY - rect.top;
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       rendererValue.zoom(x, y, delta);
-      rendererValue.render(visualData(), performance.now());
+      rendererValue.render(visualData());
     }
   };
 
@@ -173,12 +145,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const currentInput = store.currentInput;
     const simulationOutput = store.simulationOutput;
 
-
-  
-    if (network) {
-      render(performance.now());
-    }
-    if (currentInput || simulationOutput) {
+    if (network || currentInput || simulationOutput) {
       render(performance.now());
     }
   });
@@ -265,7 +232,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const dy = e.clientY - lastPanPosition.y;
       rendererValue.pan(dx, dy);
       lastPanPosition = { x: e.clientX, y: e.clientY };
-      rendererValue.render(visaulDataVal, performance.now());
+      rendererValue.render(visaulDataVal);
     } else if (draggedNode && canvas && rendererValue) {
       const rect = canvas.getBoundingClientRect();
       const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
@@ -279,7 +246,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
               .map(node => node.id === draggedNode?.id ? draggedNode : node)
               .filter(node => node !== null) as VisualNode[]
           });
-          rendererValue.render(visaulDataVal, performance.now());
+          rendererValue.render(visaulDataVal);
         }
       }
     } else if (canvas && layoutCalculator && rendererValue) {
@@ -301,7 +268,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       } else {
         canvas.style.cursor = 'default';
         hideTooltip();
-        rendererValue.render(visaulDataVal, performance.now());
+        rendererValue.render(visaulDataVal);
       }
     }
   };
