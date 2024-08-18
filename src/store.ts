@@ -13,13 +13,17 @@ const initialState: AppState = {
   network: new MLP(INITIAL_NETWORK),
   trainingConfig: INITIAL_TRAINING,
   visualData: { nodes: [], connections: [] },
-  simulationOutput: null,
+  simulationOutput: {
+    input: [],
+    output: [],
+    layerOutputs: []
+  },
   trainingResult: {
     step: 'forward', 
     data: {}
   },
   trainingData: null,
-  currentInput: null,
+  currentInput: [],
   isTraining: false,
   currentEpoch: 0,
   currentLoss: 0,
@@ -27,6 +31,9 @@ const initialState: AppState = {
 };
 
 export const [store, setStore] = createStore(initialState);
+
+globalThis.store = store;
+globalThis.setStore = setStore;
 
 export const actions = {
   initializeTrainingData: () => {
@@ -61,9 +68,9 @@ export const actions = {
     };
 
     const serializableConfig = {
-      learningRate: store.trainingConfig.learningRate,
-      epochs: store.trainingConfig.epochs,
-      batchSize: store.trainingConfig.batchSize
+      learningRate: store.trainingConfig?.learningRate,
+      epochs: store.trainingConfig?.epochs,
+      batchSize: store.trainingConfig?.batchSize
     };
 
     const sendMessage = (type: string, data: any) => {

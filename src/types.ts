@@ -2,16 +2,16 @@ import { MLP } from "./NeuralNetwork/mlp";
 
 export interface AppState {
     network: MLP;
-    visualData?: VisualNetworkData;
-    trainingData?: TrainingData;
-    trainingConfig: TrainingConfig
+    visualData: VisualNetworkData;
+    trainingData: TrainingData | null;
+    trainingConfig: TrainingConfig | null;
     trainingResult: TrainingResult;
     currentEpoch: number;
     currentLoss: number;
     isTraining: boolean;
-    simulationOutput?: SimulationOutput;
-    currentInput?: number[];
-    trainingWorker?: Worker;
+    simulationOutput: SimulationOutput | null;
+    currentInput: number[];
+    trainingWorker: Worker | null;
 }
 
 export interface TrainingData {
@@ -29,7 +29,7 @@ export interface SimulationOutput {
     input: number[];
     output: number[];
     layerOutputs: number[][];
-}
+} 
 
 export interface VisualNode {
   id: string;

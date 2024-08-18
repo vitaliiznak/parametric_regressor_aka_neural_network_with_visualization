@@ -12,7 +12,7 @@ export class NetworkLayout {
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
-  calculateLayout(network: NetworkData, simulationOutput?: SimulationOutput): VisualNetworkData {
+  calculateLayout(network: NetworkData, simulationOutput?: SimulationOutput | null): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
     console.log('Network data:', network);

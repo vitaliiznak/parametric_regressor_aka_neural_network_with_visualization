@@ -3,7 +3,13 @@ import { css, keyframes } from "@emotion/css";
 import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward } from 'solid-icons/fa';
 import { actions, store } from '../store';
 
-const TrainingControls: Component = () => {
+
+
+const TrainingControls: Component<{
+  onVisualizationUpdate: () => void
+}> = (
+  onVisualizationUpdate
+) => {
   const [lossHistory, setLossHistory] = createSignal<number[]>([]);
   const [hoveredBar, setHoveredBar] = createSignal<number | null>(null);
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);

@@ -31,14 +31,17 @@ const App: Component = () => {
     setPredictedPrice(price);
     // Collect outputs from all neurons
     const layerOutputs = store.network.getLayerOutputs();
-    setStore('simulationOutput', {
-      input: store.currentInput,
-      output: output.map(v => v.data),
-      layerOutputs: layerOutputs
-    });
+    setStore('simulationOutput', () => { 
+      return {
+        input: store.currentInput,
+        output: output.map(v => v.data),
+        layerOutputs: layerOutputs
+      }});
+
+    console.log("Store updated with new simulationOutput");
 
     console.log(`Predicted productivity score: ${price.toFixed(2)}`);
-    alert(`Predicted productivity score: ${price.toFixed(2)}`);
+    //alert(`Predicted productivity score: ${price.toFixed(2)}`);
   };
 
   return (

@@ -169,9 +169,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   });
 
   createEffect(() => {
-    // Depend on store values directly
-    const { network, currentInput, simulationOutput } = store;
-    if (network && layoutCalculator()) {
+    const network = store.network;
+    const currentInput = store.currentInput;
+    const simulationOutput = store.simulationOutput;
+
+
+  
+    if (network) {
       render(performance.now());
     }
     if (currentInput || simulationOutput) {

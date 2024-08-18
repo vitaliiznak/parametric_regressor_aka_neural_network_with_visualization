@@ -84,7 +84,7 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulateNe
     }
 
     try {
-      setStore('simulationOutput', undefined); // Reset simulation output
+      // setStore('simulationOutput', null); // Reset simulation output
       setStore('currentInput', [value]);
       onSimulateNetwork();
     } catch (err) {
