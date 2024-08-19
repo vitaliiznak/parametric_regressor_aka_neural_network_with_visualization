@@ -9,9 +9,9 @@ export default defineConfig({
     //   conditions: ['development', 'browser'],
     // },
   },
-  worker: {
-    format: 'es',
-  },
+  // worker: {
+  //   format: 'es',
+  // },
   server: {
     port: 3000,
   },

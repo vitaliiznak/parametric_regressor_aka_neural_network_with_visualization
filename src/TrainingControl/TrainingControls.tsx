@@ -7,9 +7,7 @@ import { actions, store } from '../store';
 
 const TrainingControls: Component<{
   onVisualizationUpdate: () => void
-}> = (
-  onVisualizationUpdate
-) => {
+}> = (props) => {
   const [lossHistory, setLossHistory] = createSignal<number[]>([]);
   const [hoveredBar, setHoveredBar] = createSignal<number | null>(null);
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);
@@ -270,7 +268,7 @@ const TrainingControls: Component<{
   };
 
   const toggleTraining = () => {
-    if (!store.trainingWorker) {
+    if (!store.trainer) {
       actions.startTraining();
     } else if (isTraining()) {
       actions.pauseTraining();
@@ -281,18 +279,27 @@ const TrainingControls: Component<{
   };
 
   const startTraining = () => {
-    if (!store.trainingWorker) {
+    if (!store.trainer) {
       actions.startTraining();
       setIsTraining(true);
     }
   };
 
+
+
   const stepForward = () => {
-    // TODO: Implement step forward logic
+    actions.stepForward();
+    props.onVisualizationUpdate();
   };
 
   const stepBackward = () => {
-    // TODO: Implement step backward logic
+    actions.stepBackward();
+    props.onVisualizationUpdate();
+  };
+
+  const updateWeights = () => {
+    actions.updateWeights();
+    props.onVisualizationUpdate();
   };
 
   const renderChart = () => {
@@ -311,7 +318,7 @@ const TrainingControls: Component<{
                   height: `${(loss / maxY) * 100}%`,
                   left: `${index() * width}%`,
                   width: `${width * 0.8}%`,
-                  backgroundColor: color,
+                  'background-color': color,
                   opacity: 0.7,
                 }}
                 onMouseEnter={() => setHoveredBar(index())}
@@ -387,15 +394,10 @@ const TrainingControls: Component<{
         </div>
       </div>
       <div class={styles.controlsContainer}>
-        <Show when={!store.trainingWorker}>
-          <button class={styles.controlButton} onClick={startTraining}>Start Training</button>
-        </Show>
-        <Show when={store.trainingWorker}>
-          <button class={styles.controlButton} onClick={toggleTraining}>
-            {isTraining() ? <FaSolidPause /> : <FaSolidPlay />}
-          </button>
-          <button class={styles.controlButton} onClick={actions.stopTraining}><FaSolidStop /></button>
-        </Show>
+  
+        <button class={styles.controlButton} onClick={stepForward}>Forward Step</button>
+        <button class={styles.controlButton} onClick={stepBackward}>Backward Step</button>
+        <button class={styles.controlButton} onClick={updateWeights}>Update Weights</button>
       </div>
       <div class={styles.chartContainer}>
         <h4 class={styles.chartTitle}>Loss History</h4>

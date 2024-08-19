@@ -1,17 +1,22 @@
 import { MLP } from "./NeuralNetwork/mlp";
+import { Trainer } from "./trainer";
 
 export interface AppState {
     network: MLP;
     visualData: VisualNetworkData;
-    trainingData: TrainingData | null;
-    trainingConfig: TrainingConfig | null;
-    trainingResult: TrainingResult;
+ 
+
+    simulationOutput: SimulationOutput | null;
+    currentInput: number[];
     currentEpoch: number;
     currentLoss: number;
     isTraining: boolean;
-    simulationOutput: SimulationOutput | null;
-    currentInput: number[];
-    trainingWorker: Worker | null;
+
+    trainingData: TrainingData | null;
+    trainingConfig: TrainingConfig | null;
+    trainingResult: TrainingResult;
+
+    trainer: Trainer | null;
 }
 
 export interface TrainingData {

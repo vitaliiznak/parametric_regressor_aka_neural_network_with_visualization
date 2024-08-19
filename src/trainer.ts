@@ -12,10 +12,12 @@ export class Trainer {
   private yt: number[] = [];
   private history: TrainingResult[] = [];
   private currentInput: number[] | null = null;
+  private currentOutput: Value[] | null = null;
+  private currentLoss: Value | null = null;
   private isPaused: boolean = false;
 
   constructor(network: MLP, config: TrainingConfig) {
-    this.network = network.clone(); 
+    this.network = network.clone();
     this.config = config;
   }
 
@@ -23,12 +25,15 @@ export class Trainer {
     return this.network;
   }
 
-  getCurrentOutput(): Value[] | null {
-    if (this.currentInput === null) {
-      return null;
-    }
-    return this.network.forward(this.currentInput.map(val => new Value(val)));
+  setTrainingData(xs: number[][], yt: number[]): void {
+    this.xs = xs;
+    this.yt = yt;
+    this.currentEpoch = 0;
+    this.currentBatch = 0;
+    this.currentStep = 0;
+    this.history = [];
   }
+
 
   async *train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {
     this.xs = xs;
@@ -128,29 +133,90 @@ export class Trainer {
     return epochResult;
   }
 
+
   stepForward(): TrainingResult | null {
-    if (this.currentStep >= this.history.length) {
+    if (this.currentBatch >= this.xs.length) {
+      this.currentBatch = 0;
+      this.currentEpoch++;
+    }
+
+    if (this.currentEpoch >= this.config.epochs) {
       return null;
     }
-    return this.history[this.currentStep++];
+
+    const x = this.xs[this.currentBatch];
+    this.currentInput = x;
+    this.currentOutput = this.network.forward(x.map(val => new Value(val)));
+
+    const result: TrainingResult = {
+      step: 'forward',
+      data: {
+        input: x,
+        output: this.currentOutput.map(v => v.data),
+      }
+    };
+
+    this.history.push(result);
+    return result;
   }
 
   stepBackward(): TrainingResult | null {
-    if (this.currentStep <= 0) {
+    if (!this.currentOutput || !this.currentInput) {
       return null;
     }
-    return this.history[--this.currentStep];
+
+    const target = new Value(this.yt[this.currentBatch]);
+    this.currentLoss = this.currentOutput[0].sub(target).pow(2);
+    this.network.zeroGrad();
+    this.currentLoss.backward();
+
+    const result: TrainingResult = {
+      step: 'backward',
+      data: {
+        loss: this.currentLoss.data,
+        gradients: this.network.parameters().map(p => p.grad),
+      }
+    };
+
+    this.history.push(result);
+    return result;
   }
 
-  pause() {
-    this.isPaused = true;
+  updateWeights(): TrainingResult | null {
+    if (!this.currentLoss) {
+      return null;
+    }
+
+    const oldWeights = this.network.parameters().map(p => p.data);
+    this.network.parameters().forEach(p => {
+      p.data -= this.config.learningRate * p.grad;
+    });
+
+    const result: TrainingResult = {
+      step: 'update',
+      data: {
+        oldWeights,
+        newWeights: this.network.parameters().map(p => p.data),
+        learningRate: this.config.learningRate,
+      }
+    };
+
+    this.history.push(result);
+    this.currentBatch++;
+    this.currentStep++;
+
+    return result;
   }
 
-  resume() {
-    this.isPaused = false;
-  }
-
-  getCurrentEpoch() {
+  getCurrentEpoch(): number {
     return this.currentEpoch;
+  }
+
+  getCurrentBatch(): number {
+    return this.currentBatch;
+  }
+
+  getCurrentStep(): number {
+    return this.currentStep;
   }
 }

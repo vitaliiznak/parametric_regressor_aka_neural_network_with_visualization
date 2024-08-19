@@ -14,8 +14,6 @@ import LegendAndTask from './LegendAndTask';
 const App: Component = () => {
 
 
-  const [predictedPrice, setPredictedPrice] = createSignal<number | null>(null);
-
   createEffect(() => {
     actions.initializeTrainingData();
   });
@@ -25,20 +23,8 @@ const App: Component = () => {
       alert("Please set input values first");
       return;
     }
-    const input = store.currentInput.map(val => new Value(val));
-    const output = store.network.forward(input);
-    const price = output instanceof Value ? output.data : output[0].data;
-    setPredictedPrice(price);
-    // Collect outputs from all neurons
-    const layerOutputs = store.network.getLayerOutputs();
-    setStore('simulationOutput', () => { 
-      return {
-        input: store.currentInput,
-        output: output.map(v => v.data),
-        layerOutputs: layerOutputs
-      }});
-
     //alert(`Predicted productivity score: ${price.toFixed(2)}`);
+    actions.simulateInput(store.currentInput)
   };
 
   return (
