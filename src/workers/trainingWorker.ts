@@ -8,6 +8,7 @@ let network: SerializableNetwork;
 let config: TrainingConfig;
 let xs: number[][] = [];
 let ys: number[] = [];
+let trainer: Trainer | null = null;
 
 self.onmessage = async (e: MessageEvent) => {
   const { type, data } = e.data;
@@ -27,6 +28,15 @@ self.onmessage = async (e: MessageEvent) => {
       ys = parsedData.ys;
       console.log('Received training data:', { xsLength: xs.length, ysLength: ys.length });
       startTraining();
+      break;
+    case 'pause':
+      if (trainer) trainer.pause();
+      break;
+    case 'resume':
+      if (trainer) trainer.resume();
+      break;
+    case 'stop':
+      if (trainer) trainer.stop();
       break;
   }
 };
@@ -60,7 +70,7 @@ async function startTraining() {
     });
   });
 
-  const trainer = new Trainer(mlp, config);
+  trainer = new Trainer(mlp, config);
 
   for await (const result of trainer.train(xs, ys)) {
     self.postMessage({ 
@@ -70,7 +80,11 @@ async function startTraining() {
         network: mlp.toJSON()
       }
     });
+
+    // Add a small delay to prevent UI freezing
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 
   self.postMessage({ type: 'complete', data: mlp.toJSON() });
+  trainer = null;
 }

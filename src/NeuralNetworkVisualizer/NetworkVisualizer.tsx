@@ -95,7 +95,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("handleWheel called");
     const canvas = canvasRef();
     const rendererValue = renderer()
     if (rendererValue && canvas) {

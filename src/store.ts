@@ -86,8 +86,6 @@ export const actions = {
 
     sendMessage('network', serializableNetwork);
     sendMessage('config', serializableConfig);
-
-    // Send all training data at once
     sendMessage('trainingData', { 
       xs: store.trainingData.xs, 
       ys: store.trainingData.ys
@@ -101,12 +99,14 @@ export const actions = {
         setStore('network', new MLP(data));
         setStore('isTraining', false);
         trainingWorker.terminate();
+        setStore('trainingWorker', null);
       }
     };
   },
   
   stopTraining: () => {
     if (store.trainingWorker) {
+      store.trainingWorker.postMessage({ type: 'stop' });
       store.trainingWorker.terminate();
       setStore('trainingWorker', null);
     }
@@ -114,20 +114,15 @@ export const actions = {
   },
   
   pauseTraining: () => {
-    if (!store.trainingWorker) {
-      console.error("No training worker available");
-      return;
+    if (store.trainingWorker) {
+      store.trainingWorker.postMessage({ type: 'pause' });
     }
-    store.trainingWorker.postMessage({ type: 'pause' });
-  
   },
 
   resumeTraining: () => {
-    if (!store.trainingWorker) {
-      console.error("No training worker available");
-      return;
+    if (store.trainingWorker) {
+      store.trainingWorker.postMessage({ type: 'resume' });
     }
-    store.trainingWorker.postMessage({ type: 'resume' });
   },
   
   updateTrainingProgress: (epoch: number, loss: number) => {

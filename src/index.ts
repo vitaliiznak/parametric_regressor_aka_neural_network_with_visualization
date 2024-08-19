@@ -12,7 +12,7 @@ const yt: number[] = [1.0, -1.0, -1.0, 1.0];
 
 // Create MLP
 const n = new MLP({
-  inputSize: 3,
+  inputSize: 1,
   layers: [4, 4, 1],
   activations: ['tanh', 'tanh', 'tanh']
 });

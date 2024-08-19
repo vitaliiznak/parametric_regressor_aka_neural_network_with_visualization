@@ -3,6 +3,7 @@ import { ActivationFunction } from "../NeuralNetwork/types";
 import { MLP } from "../NeuralNetwork/mlp";
 import { setStore, store } from "../store";
 import { css } from "@emotion/css";
+import { CONFIG } from "../config";
 
 const styles = {
   container: css`
@@ -93,7 +94,7 @@ const NetworkConfigForm: Component = () => {
       return;
     }
 
-    const inputSize = store.network.layers[0].neurons.length;
+    const inputSize = CONFIG.INITIAL_NETWORK.inputSize;
 
     if (activationsFunctions.length !== layers.length) {
       alert("The number of activation functions should be equal to the number of layers");

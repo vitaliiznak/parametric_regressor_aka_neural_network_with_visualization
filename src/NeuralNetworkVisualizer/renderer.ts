@@ -26,8 +26,8 @@ export class NetworkRenderer {
     this.ctx.translate(this.offsetX, this.offsetY);
     this.ctx.scale(this.scale, this.scale);
     this.drawConnections(data.connections, data.nodes);
+    // this.drawInputConnections(data);
     this.drawNodes(data.nodes);
-    this.drawInputConnections(data);
     this.ctx.restore();
   }
 
@@ -93,40 +93,94 @@ export class NetworkRenderer {
 
   private drawNodes(nodes: VisualNode[]) {
     nodes.forEach(node => {
-      this.ctx.fillStyle = node.layerId === 'input' ? 'lightblue' : 'white';
-      this.ctx.strokeStyle = 'black';
-      this.ctx.lineWidth = 2;
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      this.ctx.shadowBlur = 10;
-      this.ctx.shadowOffsetX = 5;
-      this.ctx.shadowOffsetY = 5;
-      this.ctx.beginPath();
-      this.ctx.roundRect(node.x, node.y, 60, 40, 10); // Use roundRect for rounded corners
-      this.ctx.fill();
-      this.ctx.stroke();
-      this.ctx.shadowColor = 'transparent'; // Reset shadow
-  
-      // Draw activation function with bigger font
-      if (node.layerId !== 'input' && node.activation) {
-        this.ctx.fillStyle = 'black';
-        this.ctx.font = '16px Arial'; // Increase font size
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
+      switch (node.layerId) {
+        case 'input':
+          this.drawInputNode(node);
+          break;
+        // case 'output':
+        //   this.drawOutputNode(node);
+        //   break;
+        default:
+          this.drawHiddenNode(node);
+          break;
       }
-  
-      // Draw neuron label with smaller font
+
+
+     
+    });
+  }
+
+  private drawHiddenNode(node: VisualNode) {
+    this.ctx.fillStyle =  'white';
+    this.ctx.strokeStyle = 'black';
+    this.ctx.lineWidth = 2;
+    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.shadowBlur = 10;
+    this.ctx.shadowOffsetX = 5;
+    this.ctx.shadowOffsetY = 5;
+    this.ctx.beginPath();
+    this.ctx.roundRect(node.x, node.y, 60, 40, 10); // Use roundRect for rounded corners
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.shadowColor = 'transparent'; // Reset shadow
+
+    // Draw activation function with bigger font
+    if (node.layerId !== 'input' && node.activation) {
       this.ctx.fillStyle = 'black';
-      this.ctx.font = '12px Arial'; // Increase font size
+      this.ctx.font = '16px Arial'; // Increase font size
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(node.label, node.x + 30, node.y + 30);
+      this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
+    }
+
+    // Draw neuron label with smaller font
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = '12px Arial'; // Increase font size
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(node.label, node.x + 30, node.y + 30);
+
+    // Draw output value for all nodes, including the last layer
+    if (node.outputValue !== undefined) {
+      this.drawOutputValue(node);
+    }
+  }
+
+  private drawInputNode(node: VisualNode) {
+    this.ctx.fillStyle = 'lightgreen' 
+    this.ctx.strokeStyle = 'black';
+    this.ctx.lineWidth = 2;
+    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.shadowBlur = 10;
+    this.ctx.shadowOffsetX = 5;
+    this.ctx.shadowOffsetY = 5;
+    this.ctx.beginPath();
+    this.ctx.rect(node.x, node.y, 84, 35); // Use roundRect for rounded corners
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.shadowColor = 'transparent'; // Reset shadow
+
+    // Draw activation function with bigger font
+    if (node.activation) {
+      this.ctx.fillStyle = 'black';
+      this.ctx.font = '16px Arial'; // Increase font size
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(node.activation, node.x + 30, node.y + 15);
+    }
+
+    // Draw neuron label with smaller font
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = '10px Arial'; // Increase font size
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(node.label, node.x + 42, node.y + 24);
+
+    // Draw output value for all nodes, including the last layer
+    if (node.outputValue !== undefined) {
+      this.drawOutputValue(node);
+    }
   
-      // Draw output value for all nodes, including the last layer
-      if (node.outputValue !== undefined) {
-        this.drawOutputValue(node);
-      }
-    });
   }
 
   private drawConnections(connections: VisualConnection[], nodes: VisualNode[]) {

@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import { css, keyframes } from "@emotion/css";
-import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward } from 'solid-icons/fa';
+import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward, FaSolidStop } from 'solid-icons/fa';
 import { actions, store } from '../store';
 
 
@@ -391,11 +391,10 @@ const TrainingControls: Component<{
           <button class={styles.controlButton} onClick={startTraining}>Start Training</button>
         </Show>
         <Show when={store.trainingWorker}>
-          <button class={styles.controlButton} onClick={stepBackward}><FaSolidBackward /></button>
           <button class={styles.controlButton} onClick={toggleTraining}>
             {isTraining() ? <FaSolidPause /> : <FaSolidPlay />}
           </button>
-          <button class={styles.controlButton} onClick={stepForward}><FaSolidForward /></button>
+          <button class={styles.controlButton} onClick={actions.stopTraining}><FaSolidStop /></button>
         </Show>
       </div>
       <div class={styles.chartContainer}>
