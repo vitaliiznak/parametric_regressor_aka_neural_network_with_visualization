@@ -97,9 +97,15 @@ export class NetworkLayout {
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
 
+  
+
     if (simulationOutput) {
-      const { input, output, layerOutputs } = simulationOutput;
-    
+      const { input, layerOutputs } = simulationOutput;
+      console.log('here', {
+        input,
+        layerOutputs
+      }
+      )
       nodes.forEach((node) => {
         const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
         const layerIndex = parseInt(layerIndexStr);
@@ -111,13 +117,11 @@ export class NetworkLayout {
           if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
             node.outputValue = layerOutputs[layerIndex][nodeIndex];
           }
-          // Set output values for the last layer
-          if (layerIndex === layerOutputs.length - 1 && output[nodeIndex] !== undefined) {
-            node.outputValue = output[nodeIndex];
-          }
         }
       });
     }
+
+    console.log('nodes', nodes)
 
     return { nodes, connections };
   }

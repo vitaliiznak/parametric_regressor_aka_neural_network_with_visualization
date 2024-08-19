@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import { css, keyframes } from "@emotion/css";
-import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward, FaSolidStop } from 'solid-icons/fa';
+import { FaSolidPlay, FaSolidPause, FaSolidForward, FaSolidBackward, FaSolidStop, FaSolidArrowRight, FaSolidCalculator } from 'solid-icons/fa';
 import { actions, store } from '../store';
 
 
@@ -29,10 +29,10 @@ const TrainingControls: Component<{
     return allLosses.reduce((sum, loss) => sum + loss, 0) / allLosses.length;
   };
 
-  const epochProgress = () => {
-    const currentEpoch = store.trainingResult?.data.epoch || 0;
-    const totalEpochs = store.trainingConfig?.epochs || 1;
-    return currentEpoch / totalEpochs;
+  const iterationProgress = () => {
+    const currentIteration = store.trainingResult?.data.iteration || 0;
+    const totalIterations = store.trainingConfig?.iterations || 1;
+    return currentIteration / totalIterations;
   };
 
   const getLossColor = (loss: number) => {
@@ -80,6 +80,7 @@ const TrainingControls: Component<{
       background-color: #f3f4f6;
       position: relative;
       border: 1px solid #d1d5db;
+      overflow: hidden;
     `,
     yAxis: css`
       position: absolute;
@@ -239,6 +240,35 @@ const TrainingControls: Component<{
         background-color: #2563EB;
       }
     `,
+    forwardStepsContainer: css`
+      margin-top: 1rem;
+      background-color: #f3f4f6;
+      border-radius: 0.5rem;
+      padding: 1rem;
+    `,
+    stepsVisualization: css`
+      display: flex;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding: 1rem 0;
+    `,
+    step: css`
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 1rem;
+      font-size: 0.8rem;
+      color: #4B5563;
+      background-color: white;
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+      min-width: 120px;
+    `,
+    stepDetails: css`
+      margin-top: 0.5rem;
+      text-align: left;
+      width: 100%;
+    `,
   };
 
   const exportCSV = () => {
@@ -287,8 +317,8 @@ const TrainingControls: Component<{
 
 
 
-  const stepForward = () => {
-    actions.stepForward();
+  const singleStepForward = () => {
+    actions.singleStepForward();
     props.onVisualizationUpdate();
   };
 
@@ -300,6 +330,18 @@ const TrainingControls: Component<{
   const updateWeights = () => {
     actions.updateWeights();
     props.onVisualizationUpdate();
+  };
+
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 1.1 : 0.9;
+    const [start, end] = zoomRange();
+    const range = end - start;
+    const newRange = range * delta;
+    const center = (start + end) / 2;
+    const newStart = Math.max(0, center - newRange / 2);
+    const newEnd = Math.min(100, center + newRange / 2);
+    setZoomRange([newStart, newEnd]);
   };
 
   const renderChart = () => {
@@ -373,17 +415,30 @@ const TrainingControls: Component<{
     );
   };
 
+  const renderForwardSteps = () => {
+    return store.forwardStepResults.map((step, index) => (
+      <div class={styles.step}>
+        <FaSolidArrowRight />
+        <span>Step {index + 1}</span>
+        <div class={styles.stepDetails}>
+          <div>Input: {step.input.map(v => v.toFixed(2)).join(', ')}</div>
+          <div>Output: {step.output.map(v => v.toFixed(2)).join(', ')}</div>
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <div class={styles.container}>
       <h3 class={styles.title}>Training Control</h3>
       <div class={styles.statusGrid}>
         <div class={styles.statusItem}>
-          <div class={styles.statusLabel}>Epoch</div>
+          <div class={styles.statusLabel}>Iteration</div>
           <div class={styles.statusValue}>
-            {store.trainingResult?.data.epoch || 0} / {store.trainingConfig?.epochs || 0}
+            {store.trainingResult?.data.iteration || 0} / {store.trainingConfig?.iterations || 0}
           </div>
           <div class={styles.progressBar}>
-            <div class={styles.progressFill} style={{ width: `${epochProgress() * 100}%` }}></div>
+            <div class={styles.progressFill} style={{ width: `${iterationProgress() * 100}%` }}></div>
           </div>
         </div>
         <div class={styles.statusItem}>
@@ -395,10 +450,24 @@ const TrainingControls: Component<{
       </div>
       <div class={styles.controlsContainer}>
   
-        <button class={styles.controlButton} onClick={stepForward}>Forward Step</button>
+        <button class={styles.controlButton} onClick={singleStepForward}>Forward Step</button>
         <button class={styles.controlButton} onClick={stepBackward}>Backward Step</button>
         <button class={styles.controlButton} onClick={updateWeights}>Update Weights</button>
       </div>
+
+      <div class={styles.forwardStepsContainer}>
+        <h4>Forward Steps: {store.forwardStepsCount}</h4>
+        <div class={styles.stepsVisualization}>
+          {renderForwardSteps()}
+          <Show when={store.forwardStepsCount >= store.trainingConfig.batchSize}>
+            <div class={styles.step}>
+              <FaSolidCalculator />
+              <span>Loss Calculation</span>
+            </div>
+          </Show>
+        </div>
+      </div>
+      
       <div class={styles.chartContainer}>
         <h4 class={styles.chartTitle}>Loss History</h4>
         <div class={styles.chartTypeSelect}>
@@ -407,7 +476,7 @@ const TrainingControls: Component<{
             <option value="line">Line Chart</option>
           </select>
         </div>
-        <div class={styles.chart}>
+        <div class={styles.chart} onWheel={handleWheel}>
           <div class={styles.yAxis}>
             <span>{maxLoss().toFixed(2)}</span>
             <span>{(maxLoss() / 2).toFixed(2)}</span>
@@ -457,6 +526,7 @@ const TrainingControls: Component<{
         </div>
         <button onClick={saveCurrentRun}>Save Current Run</button>
       </div>
+  
       <Show when={lossHistory().length > 0}>
         <div class={styles.statsGrid}>
           <div class={styles.statItem}>
@@ -473,6 +543,7 @@ const TrainingControls: Component<{
           </div>
         </div>
       </Show>
+     
     </div>
   );
 };

@@ -3,7 +3,6 @@ import { AppState } from "./types";
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
-import { SerializableNetwork } from "./NeuralNetwork/types";
 import { Trainer } from "./trainer";
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
@@ -23,25 +22,6 @@ function startTraining() {
     console.error("No training data available");
     return;
   }
-
-  const serializableNetwork: SerializableNetwork = {
-    inputSize: store.network.inputSize,
-    layers: store.network.layers.map(layer => layer.neurons.length),
-    activations: store.network.activations,
-    weights: store.network.layers.map(layer => 
-      layer.neurons.map(neuron => neuron.w.map(w => w.data))
-    ),
-    biases: store.network.layers.map(layer => 
-      layer.neurons.map(neuron => neuron.b.data)
-    )
-  };
-
-  const serializableConfig = {
-    learningRate: store.trainingConfig?.learningRate,
-    epochs: store.trainingConfig?.epochs,
-    batchSize: store.trainingConfig?.batchSize
-  };
-
   // TODO: Implement training logic
 }
 
@@ -57,9 +37,9 @@ function resumeTraining() {
   // TODO: Implement resume logic
 }
 
-function updateTrainingProgress(epoch: number, loss: number) {
+function updateTrainingProgress(iteration: number, loss: number) {
   setStore({
-    currentEpoch: epoch,
+    currentIteration: iteration,
     currentLoss: loss
   });
 }
@@ -70,28 +50,54 @@ function updateNetwork(network: MLP) {
 
 function initializeTrainer() {
   if (!store.trainingData || !store.trainingConfig) {
-    console.error("Training data or config not available");
-    return;
+    throw new Error("Training data or configuration not available");
   }
 
   const trainer = new Trainer(store.network, store.trainingConfig);
   trainer.setTrainingData(store.trainingData.xs, store.trainingData.ys);
   setStore('trainer', trainer);
+
+  return trainer;
 }
 
-function stepForward() {
-  if (!store.trainer) {
-    console.error("Trainer not initialized");
-    return;
+function singleStepForward() {
+  setStore('forwardStepsCount', store.forwardStepsCount + 1);
+  const { trainer } = store;
+  let trainerAux = trainer
+  if (!trainer) {
+    trainerAux = initializeTrainer()
+  }
+  if(!trainerAux){
+    throw new Error("Trainer not available");
   }
 
   console.log("Starting forward step...");
-  const result = store.trainer.stepForward();
+  const result = trainerAux.singleStepForward();
+  const layerOutputs = trainerAux.network.getLayerOutputs();
+
   if (result) {
     console.log("Forward step completed. Result:", result);
     setStore('trainingResult', result);
+    setStore('forwardStepsCount', store.forwardStepsCount + 1);
+    setStore('forwardStepResults', [
+      ...store.forwardStepResults,
+      { input: result.data.input, output: result.data.output }
+    ]);
+    // Update the trainingResult with the simulation input
+    // Perform simulation using the simulationInput
+    // Update the simulationOutput in the store
+    setStore('simulationOutput', {
+      input: result.data.input,
+      output: result.data.output,
+      layerOutputs: layerOutputs,
+    });
   } else {
     console.log("Training completed");
+  }
+
+  if (trainerAux.isReadyForLossCalculation()) {
+    setStore('forwardStepsCount', 0);
+    setStore('forwardStepResults', []);
   }
 }
 
@@ -116,7 +122,7 @@ function updateWeights() {
   const result = store.trainer.updateWeights();
   if (result) {
     setStore('trainingResult', result);
-    setStore('network', store.trainer.getNetwork());
+    setStore('network', store.trainer.network);
   }
 }
 
@@ -127,10 +133,13 @@ function simulateInput(input: number[]) {
   }
   const output = store.network.forward(input);
   const layerOutputs = store.network.getLayerOutputs();
-  setStore('simulationOutput', {
-    input: store.currentInput,
-    output: output.map(v => v.data),
-    layerOutputs: layerOutputs
+  setStore({
+    simulationOutput: {
+      input: store.currentInput,
+      output: output.map(v => v.data),
+      layerOutputs: layerOutputs
+    },
+    currentInput: input
   });
 }
 
@@ -139,7 +148,7 @@ const initialState: AppState = {
   network: new MLP(INITIAL_NETWORK),
   visualData: { nodes: [], connections: [] },
   trainingConfig: INITIAL_TRAINING,
-  currentEpoch: 0,
+  currentIteration: 0,
   currentLoss: 0,
   isTraining: false,
   currentInput: [],
@@ -149,11 +158,13 @@ const initialState: AppState = {
     layerOutputs: []
   },
   trainingResult: {
-    step: 'forward', 
+    step: 'forward',
     data: {}
   },
   trainingData: null,
-  trainer: null
+  trainer: null,
+  forwardStepsCount: 0,
+  forwardStepResults: []
 };
 
 export const [store, setStore] = createStore(initialState);
@@ -167,7 +178,7 @@ export const actions = {
   resumeTraining,
   updateTrainingProgress,
   updateNetwork,
-  stepForward,
+  singleStepForward,
   stepBackward,
   updateWeights,
   simulateInput

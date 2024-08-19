@@ -3,10 +3,9 @@ import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import TrainingControls from './TrainingControl/TrainingControls';
 import NetworkConfigForm from './TrainingControl/NetworkConfigForm';
 import TrainingConfigForm from './TrainingControl/TrainingConfigForm';
-import { store, setStore, actions} from './store';
+import { store, actions} from './store';
 import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
 import SimulationInputForm from './LearningProcessVisualizer/SimulationInputForm';
-import { Value } from './NeuralNetwork/value';
 import FunctionVisualizer from './FunctionVisualizer';
 import LegendAndTask from './LegendAndTask';
 

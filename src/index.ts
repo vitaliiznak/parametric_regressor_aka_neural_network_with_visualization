@@ -19,11 +19,11 @@ const n = new MLP({
 
 // Hyperparameters
 const learningRate = 0.01;
-const epochs = 100;
+const iterations = 100;
 const batchSize = 2;
 
 // Training loop
-for (let epoch = 0; epoch < epochs; epoch++) {
+for (let iteration = 0; iteration < iterations; iteration++) {
     let totalLoss = new Value(0);
 
     // Mini-batch training
@@ -57,12 +57,12 @@ for (let epoch = 0; epoch < epochs; epoch++) {
         console.log(loss.toDot());
     }
 
-    // Log average loss for the epoch
-    console.log(`Epoch ${epoch + 1}, Average Loss: ${totalLoss.data / xs.length}`);
+    // Log average loss for the iteration
+    console.log(`Iteration ${iteration + 1}, Average Loss: ${totalLoss.data / xs.length}`);
 
     // Early stopping (optional)
     if (totalLoss.data / xs.length < 0.01) {
-        console.log(`Converged at epoch ${epoch + 1}`);
+        console.log(`Converged at iteration ${iteration + 1}`);
         break;
     }
 }

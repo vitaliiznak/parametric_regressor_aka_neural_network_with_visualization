@@ -3,9 +3,9 @@ import { Value } from "./NeuralNetwork/value";
 import { TrainingConfig, TrainingResult } from "./types";
 
 export class Trainer {
-  private network: MLP;
+  _network: MLP;
   private config: TrainingConfig;
-  private currentEpoch: number = 0;
+  private currentIteration: number = 0;
   private currentBatch: number = 0;
   private currentStep: number = 0;
   private xs: number[][] = [];
@@ -17,18 +17,18 @@ export class Trainer {
   private isPaused: boolean = false;
 
   constructor(network: MLP, config: TrainingConfig) {
-    this.network = network.clone();
+    this._network = network.clone();
     this.config = config;
   }
 
-  getNetwork(): MLP {
-    return this.network;
+  get network(): MLP {
+    return this._network;
   }
 
   setTrainingData(xs: number[][], yt: number[]): void {
     this.xs = xs;
     this.yt = yt;
-    this.currentEpoch = 0;
+    this.currentIteration = 0;
     this.currentBatch = 0;
     this.currentStep = 0;
     this.history = [];
@@ -38,12 +38,12 @@ export class Trainer {
   async *train(xs: number[][], yt: number[]): AsyncGenerator<TrainingResult, void, unknown> {
     this.xs = xs;
     this.yt = yt;
-    this.currentEpoch = 0;
+    this.currentIteration = 0;
     this.currentBatch = 0;
     this.currentStep = 0;
     this.history = [];
 
-    for (let epoch = 0; epoch < this.config.epochs; epoch++) {
+    while (this.currentIteration < this.config.iterations) {
       while (this.isPaused) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
@@ -56,9 +56,12 @@ export class Trainer {
       yield result;
 
       this.currentBatch += this.config.batchSize;
+      this.currentStep++;
+
       if (this.currentBatch >= this.xs.length) {
         this.currentBatch = 0;
-        this.currentEpoch++;
+        this.currentIteration++;
+        yield { step: 'iteration', data: { iteration: this.currentIteration, loss: result.data.loss } };
       }
     }
   }
@@ -66,13 +69,13 @@ export class Trainer {
   private async trainStep(batchXs: number[][], batchYt: number[]): Promise<TrainingResult> {
     console.log('batchXs', batchXs);
     console.log(`\n--- Training Step ${this.currentStep} ---`);
-    console.log(`Epoch: ${this.currentEpoch + 1}/${this.config.epochs}, Batch: ${this.currentBatch / this.config.batchSize + 1}`);
+    console.log(`Iteration: ${this.currentIteration + 1}/${this.config.iterations}, Batch: ${this.currentBatch / this.config.batchSize + 1}`);
 
     // Update currentInput with the first input of the batch
     this.currentInput = batchXs[0];
 
     const ypred = batchXs.map(x => {
-      const result = this.network.forward(x.map(val => new Value(val)));
+      const result = this._network.forward(x.map(val => new Value(val)));
       return result[0]; // Update here
     });
 
@@ -92,71 +95,70 @@ export class Trainer {
 
     this.currentStep++;
 
-    this.network.zeroGrad();
+    this._network.zeroGrad();
     loss.backward();
 
     console.log('Backward pass completed');
-    console.log('Gradients:', this.network.parameters().map(p => p.grad));
+    console.log('Gradients:', this._network.parameters().map(p => p.grad));
 
     const backwardResult: TrainingResult = {
       step: 'backward',
-      data: { gradients: this.network.parameters().map(p => p.grad) }
+      data: { gradients: this._network.parameters().map(p => p.grad) }
     };
     this.currentStep++;
 
-    const oldWeights = this.network.parameters().map(p => p.data);
-    this.network.parameters().forEach(p => {
+    const oldWeights = this._network.parameters().map(p => p.data);
+    this._network.parameters().forEach(p => {
       p.data -= this.config.learningRate * p.grad;
     });
 
     console.log('Weights updated');
     console.log('Old weights:', oldWeights);
-    console.log('New weights:', this.network.parameters().map(p => p.data));
+    console.log('New weights:', this._network.parameters().map(p => p.data));
 
     const updateResult: TrainingResult = {
       step: 'update',
       data: {
         oldWeights,
-        newWeights: this.network.parameters().map(p => p.data),
+        newWeights: this._network.parameters().map(p => p.data),
         learningRate: this.config.learningRate
       }
     };
     this.currentStep++;
 
-    const epochResult: TrainingResult = {
-      step: 'epoch',
-      data: { epoch: this.currentEpoch, loss: loss.data }
+    const iterationResult: TrainingResult = {
+      step: 'iteration',
+      data: { iteration: this.currentIteration, loss: loss.data }
     };
 
     console.log(`--- End of Training Step ${this.currentStep} ---\n`);
 
-    return epochResult;
+    return iterationResult;
   }
 
 
-  stepForward(): TrainingResult | null {
-    if (this.currentBatch >= this.xs.length) {
-      this.currentBatch = 0;
-      this.currentEpoch++;
-    }
-
-    if (this.currentEpoch >= this.config.epochs) {
+  singleStepForward(): TrainingResult | null {
+    if (this.currentIteration >= this.config.iterations) {
       return null;
     }
 
     const x = this.xs[this.currentBatch];
     this.currentInput = x;
-    this.currentOutput = this.network.forward(x.map(val => new Value(val)));
+    this.currentOutput = this._network.forward(x.map(val => new Value(val)));
 
     const result: TrainingResult = {
       step: 'forward',
       data: {
         input: x,
         output: this.currentOutput.map(v => v.data),
+        iteration: this.currentIteration,
+        batchIndex: this.currentBatch,
+        stepIndex: this.currentStep
       }
     };
 
     this.history.push(result);
+    this.currentStep++;
     return result;
   }
 
@@ -167,14 +169,14 @@ export class Trainer {
 
     const target = new Value(this.yt[this.currentBatch]);
     this.currentLoss = this.currentOutput[0].sub(target).pow(2);
-    this.network.zeroGrad();
+    this._network.zeroGrad();
     this.currentLoss.backward();
 
     const result: TrainingResult = {
       step: 'backward',
       data: {
         loss: this.currentLoss.data,
-        gradients: this.network.parameters().map(p => p.grad),
+        gradients: this._network.parameters().map(p => p.grad),
       }
     };
 
@@ -187,8 +189,8 @@ export class Trainer {
       return null;
     }
 
-    const oldWeights = this.network.parameters().map(p => p.data);
-    this.network.parameters().forEach(p => {
+    const oldWeights = this._network.parameters().map(p => p.data);
+    this._network.parameters().forEach(p => {
       p.data -= this.config.learningRate * p.grad;
     });
 
@@ -196,7 +198,7 @@ export class Trainer {
       step: 'update',
       data: {
         oldWeights,
-        newWeights: this.network.parameters().map(p => p.data),
+        newWeights: this._network.parameters().map(p => p.data),
         learningRate: this.config.learningRate,
       }
     };
@@ -208,8 +210,35 @@ export class Trainer {
     return result;
   }
 
-  getCurrentEpoch(): number {
-    return this.currentEpoch;
+  completeIteration(): TrainingResult | null {
+    if (this.currentIteration >= this.config.iterations) {
+      return null;
+    }
+
+    while (this.currentBatch < this.xs.length) {
+      this.singleStepForward();
+      this.stepBackward();
+      this.updateWeights();
+      this.currentBatch++;
+    }
+
+    this.currentBatch = 0;
+    this.currentIteration++;
+
+    const result: TrainingResult = {
+      step: 'iteration',
+      data: {
+        iteration: this.currentIteration,
+        loss: this.currentLoss?.data
+      }
+    };
+
+    this.history.push(result);
+    return result;
+  }
+
+  getCurrentIteration(): number {
+    return this.currentIteration;
   }
 
   getCurrentBatch(): number {
@@ -218,5 +247,9 @@ export class Trainer {
 
   getCurrentStep(): number {
     return this.currentStep;
+  }
+
+  isReadyForLossCalculation(): boolean {
+    return this.currentBatch >= this.config.batchSize;
   }
 }

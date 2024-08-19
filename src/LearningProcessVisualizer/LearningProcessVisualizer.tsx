@@ -40,8 +40,8 @@ const LearningProcessVisualizer: Component = () => {
             <p>Learning Rate: {data.learningRate}</p>
           </div>
         );
-      case 'epoch':
-        return <div>Epoch {data.epoch} completed, Loss: {data.loss?.toFixed(4)}</div>;
+      case 'iteration':
+        return <div>Iteration {data.iteration} completed, Loss: {data.loss?.toFixed(4)}</div>;
       default:
         return null;
     }

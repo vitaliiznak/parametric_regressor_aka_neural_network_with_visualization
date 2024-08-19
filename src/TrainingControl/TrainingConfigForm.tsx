@@ -80,11 +80,11 @@ const TrainingConfigForm: Component = () => {
         </div>
         <div class={styles.inputGroup}>
           <label class={styles.label}>
-            Epochs:
+            Iterations:
             <input
               type="number"
-              value={store.trainingConfig.epochs}
-              onInput={(e) => setStore('trainingConfig', 'epochs', Number(e.currentTarget.value))}
+              value={store.trainingConfig.iterations}
+              onInput={(e) => setStore('trainingConfig', 'iterations', Number(e.currentTarget.value))}
               class={styles.input}
             />
           </label>

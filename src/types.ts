@@ -8,15 +8,17 @@ export interface AppState {
 
     simulationOutput: SimulationOutput | null;
     currentInput: number[];
-    currentEpoch: number;
+    currentIteration: number;
     currentLoss: number;
     isTraining: boolean;
 
     trainingData: TrainingData | null;
-    trainingConfig: TrainingConfig | null;
+    trainingConfig: TrainingConfig;
     trainingResult: TrainingResult;
 
     trainer: Trainer | null;
+
+    forwardStepsCount: number;
 }
 
 export interface TrainingData {
@@ -26,7 +28,7 @@ export interface TrainingData {
 
 export interface TrainingConfig {
   learningRate: number;
-  epochs: number;
+  iterations: number;
   batchSize: number;
 }
 
@@ -83,7 +85,7 @@ export interface VisualConnection {
 }
 
 export interface TrainingResult {
-  step: 'forward' | 'loss' | 'backward' | 'update' | 'epoch';
+  step: 'forward' | 'backward' | 'update' | 'iteration';
   data: {
     input?: number[];
     output?: number[];
@@ -92,6 +94,8 @@ export interface TrainingResult {
     oldWeights?: number[];
     newWeights?: number[];
     learningRate?: number;
-    epoch?: number;
+    iteration?: number;
+    batchIndex?: number;
+    stepIndex?: number;
   };
 }
