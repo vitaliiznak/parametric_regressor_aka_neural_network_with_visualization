@@ -19,6 +19,7 @@ export class NetworkRenderer {
     this.debouncedRender(data);
   }
 
+
   private _render(data: VisualNetworkData) {
 
     this.clear();
@@ -30,40 +31,6 @@ export class NetworkRenderer {
     this.drawNodes(data.nodes);
     this.ctx.restore();
   }
-
-  private drawInputConnections(data: VisualNetworkData) {
-
-    console.log('Drawing input connections');
-    console.log('Input nodes:', data.nodes.filter(node => node.layerId === 'input'));
-    console.log('First layer nodes:', data.nodes.filter(node => node.layerId === 'layer_0'));
-
-
-    const inputNodes = data.nodes.filter(node => node.layerId === 'input');
-    // const firstLayerNodes = data.nodes.filter(node => node.layerId === 'layer_0');
-
-    inputNodes.forEach((inputNode, index) => {
-      console.log(`Processing input node ${index}:`, inputNode);
-      // Draw input node
-      this.ctx.fillStyle = 'lightgreen';
-      this.ctx.strokeStyle = 'black';
-      this.ctx.lineWidth = 2;
-      this.ctx.beginPath();
-      this.ctx.rect(inputNode.x, inputNode.y, 60, 40);
-      this.ctx.fill();
-      this.ctx.stroke();
-
-      // Draw input value
-      this.ctx.fillStyle = 'black';
-      this.ctx.font = '14px Arial';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(inputNode.outputValue?.toFixed(4) || 'Input', inputNode.x + 30, inputNode.y + 20);
-
-
-    });
-  }
-
-
 
   pan(dx: number, dy: number) {
     this.offsetX += dx / this.scale; // Adjust for current scale

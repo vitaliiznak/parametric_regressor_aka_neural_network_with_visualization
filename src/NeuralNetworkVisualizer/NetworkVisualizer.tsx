@@ -39,9 +39,10 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null);
   const [containerRef, setContainerRef] = createSignal<HTMLDivElement | null>(null);
   const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
+  const [isPanning, setIsPanning] = createSignal(false);
 
   let draggedNode: VisualNode | null = null;
-  let isPanning = false;
+
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
   let animationFrameId: number | undefined;
 
@@ -61,12 +62,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const rendererValue = renderer()
     const newVisualData = calculateVisualData();
     setVisualData(newVisualData);
-    if(!rendererValue){
+    if (!rendererValue) {
       console.warn('Renderer is not initialized');
       return
     }
     rendererValue.render(newVisualData, time);
-    
+
   };
 
   const setupEventListeners = () => {
@@ -203,11 +204,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    const canvas = canvasRef()
-    if (e.button === 2) { // Right mouse button
-      isPanning = true;
-      lastPanPosition = { x: e.clientX, y: e.clientY };
-    } else if (canvas && layoutCalculator && renderer) {
+    const canvas = canvasRef();
+    if (canvas && layoutCalculator && renderer) {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -219,6 +217,10 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         renderer()!.offsetX,
         renderer()!.offsetY
       );
+      if (!draggedNode) {
+        setIsPanning(true);
+        lastPanPosition = { x: e.clientX, y: e.clientY };
+      }
     }
   };
 
@@ -226,7 +228,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const canvas = canvasRef()
     const rendererValue = renderer()
     const visaulDataVal = visualData()
-    if (isPanning && rendererValue) {
+    if (isPanning() && rendererValue) {
       const dx = e.clientX - lastPanPosition.x;
       const dy = e.clientY - lastPanPosition.y;
       rendererValue.pan(dx, dy);
@@ -265,7 +267,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         // Show tooltip
         showTooltip(e.clientX, e.clientY, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue}`);
       } else {
-        canvas.style.cursor = 'default';
+        canvas.style.cursor = 'grab';
         hideTooltip();
         rendererValue.render(visaulDataVal);
       }
@@ -273,11 +275,15 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   const handleMouseUp = () => {
-    isPanning = false;
-    draggedNode = null;
+    const canvas = canvasRef()
+    if (canvas) {
+      setIsPanning(false);
+      draggedNode = null;
+      canvas.style.cursor = 'grab';
+    }
   };
 
- 
+
 
   const containerStyle = css`
     width: 100%;

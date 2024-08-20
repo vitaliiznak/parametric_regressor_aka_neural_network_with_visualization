@@ -23,7 +23,7 @@ const LegendAndTask: Component = () => {
         font-size: 32px;
         font-weight: 700;
         text-align: center;
-      `}>The ChatGPT Productivity Paradox</h2>
+      `}>Neural Network Visualizer: The ChatGPT Productivity Paradox</h2>
       <p class={css`
         color: #34495e;
         line-height: 1.8;

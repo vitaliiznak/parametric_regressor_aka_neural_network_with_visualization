@@ -15,6 +15,7 @@ export class Trainer {
   private currentOutput: Value[] | null = null;
   private currentLoss: Value | null = null;
   private isPaused: boolean = false;
+  private currentDataIndex: number = 0;
 
   constructor(network: MLP, config: TrainingConfig) {
     this._network = network.clone();
@@ -138,11 +139,12 @@ export class Trainer {
 
 
   singleStepForward(): TrainingResult | null {
-    if (this.currentIteration >= this.config.iterations) {
-      return null;
+    if (this.currentDataIndex >= this.xs.length) {
+      this.currentDataIndex = 0; // Reset if we've gone through all data
+      return null; // Indicate that we've completed an epoch
     }
 
-    const x = this.xs[this.currentBatch];
+    const x = this.xs[this.currentDataIndex];
     this.currentInput = x;
     this.currentOutput = this._network.forward(x.map(val => new Value(val)));
 
@@ -159,6 +161,7 @@ export class Trainer {
 
     this.history.push(result);
     this.currentStep++;
+    this.currentDataIndex = (this.currentDataIndex + 1) % this.xs.length;
     return result;
   }
 

@@ -75,25 +75,31 @@ function singleStepForward() {
   const result = trainerAux.singleStepForward();
   const layerOutputs = trainerAux.network.getLayerOutputs();
 
-  if (result) {
-    console.log("Forward step completed. Result:", result);
-    setStore('trainingResult', result);
-    setStore('forwardStepsCount', store.forwardStepsCount + 1);
-    setStore('forwardStepResults', [
-      ...store.forwardStepResults,
-      { input: result.data.input, output: result.data.output }
-    ]);
-    // Update the trainingResult with the simulation input
-    // Perform simulation using the simulationInput
-    // Update the simulationOutput in the store
-    setStore('simulationOutput', {
-      input: result.data.input,
-      output: result.data.output,
-      layerOutputs: layerOutputs,
-    });
-  } else {
-    console.log("Training completed");
+  if (result === null) {
+    console.log("Completed one epoch of training");
+    setStore('forwardStepsCount', 0);
+    setStore('forwardStepResults', []);
+    return;
   }
+
+  console.log("Forward step completed. Result:", result);
+  setStore('trainingResult', result);
+  setStore('forwardStepsCount', store.forwardStepsCount + 1);
+  setStore('forwardStepResults', [
+    ...store.forwardStepResults,
+    { 
+      input: Array.isArray(result.data.input) ? result.data.input : [], 
+      output: Array.isArray(result.data.output) ? result.data.output : []
+    }
+  ]);
+  // Update the trainingResult with the simulation input
+  // Perform simulation using the simulationInput
+  // Update the simulationOutput in the store
+  setStore('simulationOutput', {
+    input: result.data.input,
+    output: result.data.output,
+    layerOutputs: layerOutputs,
+  });
 
   if (trainerAux.isReadyForLossCalculation()) {
     setStore('forwardStepsCount', 0);

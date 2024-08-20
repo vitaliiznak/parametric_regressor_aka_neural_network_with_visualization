@@ -29,7 +29,6 @@ const App: Component = () => {
   return (
    
       <div>
-        <h1>Neural Network Visualizer: ChatGPT Productivity Paradox</h1>
         <LegendAndTask/>
         <div style={{ display: 'flex' }}>
         
@@ -42,7 +41,7 @@ const App: Component = () => {
             <NetworkConfigForm />
             <TrainingConfigForm />
             <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
-            <SimulationInputForm onSimulateNetwork={simulateNetwork} />
+            <SimulationInputForm onSimulate={simulateNetwork} />
       
           </div>
         </div>

@@ -19,6 +19,7 @@ export interface AppState {
     trainer: Trainer | null;
 
     forwardStepsCount: number;
+    forwardStepResults: number[][];
 }
 
 export interface TrainingData {

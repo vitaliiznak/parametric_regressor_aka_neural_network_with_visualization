@@ -101,11 +101,6 @@ export class NetworkLayout {
 
     if (simulationOutput) {
       const { input, layerOutputs } = simulationOutput;
-      console.log('here', {
-        input,
-        layerOutputs
-      }
-      )
       nodes.forEach((node) => {
         const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
         const layerIndex = parseInt(layerIndexStr);
@@ -120,8 +115,6 @@ export class NetworkLayout {
         }
       });
     }
-
-    console.log('nodes', nodes)
 
     return { nodes, connections };
   }
