@@ -6,21 +6,21 @@ export class NetworkRenderer {
   public scale: number = 1;
   public offsetX: number = 0;
   public offsetY: number = 0;
-  private debouncedRender: (data: VisualNetworkData) => void;
+  private debouncedRender: (data: VisualNetworkData, selectedNode: VisualNode | null) => void;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    this.debouncedRender = debounce((data: VisualNetworkData) => {
-      this._render(data);
+    this.debouncedRender = debounce((data: VisualNetworkData, selectedNode: VisualNode | null) => {
+      this._render(data, selectedNode);
     }, 16); // Debounce to ~60fps
   }
 
-  render(data: VisualNetworkData) {
-    this.debouncedRender(data);
+  render(data: VisualNetworkData, selectedNode: VisualNode | null) {
+    this.debouncedRender(data, selectedNode);
   }
 
 
-  private _render(data: VisualNetworkData) {
+  private _render(data: VisualNetworkData, selectedNode: VisualNode | null) {
 
     this.clear();
     this.ctx.save();
@@ -28,7 +28,7 @@ export class NetworkRenderer {
     this.ctx.scale(this.scale, this.scale);
     this.drawConnections(data.connections, data.nodes);
     // this.drawInputConnections(data);
-    this.drawNodes(data.nodes);
+    this.drawNodes(data.nodes, selectedNode);
     this.ctx.restore();
   }
 
@@ -58,7 +58,7 @@ export class NetworkRenderer {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  private drawNodes(nodes: VisualNode[]) {
+  private drawNodes(nodes: VisualNode[], selectedNode: VisualNode | null) {
     nodes.forEach(node => {
       switch (node.layerId) {
         case 'input':
@@ -68,7 +68,7 @@ export class NetworkRenderer {
         //   this.drawOutputNode(node);
         //   break;
         default:
-          this.drawHiddenNode(node);
+          this.drawHiddenNode(node, selectedNode);
           break;
       }
 
@@ -77,7 +77,7 @@ export class NetworkRenderer {
     });
   }
 
-  private drawHiddenNode(node: VisualNode) {
+  private drawHiddenNode(node: VisualNode, selectedNode: VisualNode | null) {
     this.ctx.fillStyle =  'white';
     this.ctx.strokeStyle = 'black';
     this.ctx.lineWidth = 2;
@@ -110,6 +110,10 @@ export class NetworkRenderer {
     // Draw output value for all nodes, including the last layer
     if (node.outputValue !== undefined) {
       this.drawOutputValue(node);
+    }
+
+    if (selectedNode && node.id === selectedNode.id) {
+      this.highlightSelectedNeuron(node);
     }
   }
 
@@ -237,5 +241,17 @@ export class NetworkRenderer {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(text, x, y);
+  }
+
+  highlightSelectedNeuron(node: VisualNode) {
+    this.ctx.save();
+    this.ctx.strokeStyle = '#FF4500';
+    this.ctx.lineWidth = 4;
+    this.ctx.shadowColor = '#FF4500';
+    this.ctx.shadowBlur = 15;
+    this.ctx.beginPath();
+    this.ctx.roundRect(node.x - 2, node.y - 2, 64, 44, 10);
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 }

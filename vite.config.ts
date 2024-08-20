@@ -2,7 +2,11 @@ import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
-  plugins: [solidPlugin()],
+  plugins: [solidPlugin({
+    babel: {
+      plugins: ['@emotion/babel-plugin']
+    }
+  })],
   resolve: {
     // alias: {
     //   'solid-js/store': 'node_modules/solid-js/store/dist/store.cjs',

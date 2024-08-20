@@ -1,4 +1,6 @@
 /* @refresh reload */
+
+globalThis.EMOTION_RUNTIME_AUTO_LABEL = true
 import { render } from 'solid-js/web';
 import App from './App';
 const root = document.getElementById('root');
