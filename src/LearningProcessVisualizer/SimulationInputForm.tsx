@@ -1,6 +1,7 @@
 import { Component, createSignal } from "solid-js";
 import { colors } from '../styles/colors';
 import { css } from "@emotion/css";
+import Tooltip from '../components/Tooltip';
 
 const styles = {
   title: css`
@@ -29,6 +30,8 @@ const styles = {
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     width: 100%;
+    background-color: ${colors.surface}; /* Add background color */
+    color: ${colors.text}; /* Add text color */
     &:focus {
       outline: none;
       border-color: ${colors.primary};
@@ -83,9 +86,11 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulate }
       <h3 class={styles.title}>Simulate ChatGPT Usage</h3>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>
-          <label htmlFor="chatGPTUsage" class={styles.label}>
-            ChatGPT Usage (%)
-          </label>
+          <Tooltip content="Enter a value between 0 and 100 to represent the percentage of ChatGPT usage">
+            <label htmlFor="chatGPTUsage" class={styles.label}>
+              ChatGPT Usage (%)
+            </label>
+          </Tooltip>
           <input
             id="chatGPTUsage"
             type="number"
@@ -99,9 +104,11 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulate }
           />
           {error() && <div class={styles.errorMessage}>{error()}</div>}
         </div>
-        <button type="submit" class={styles.button}>
-          Simulate
-        </button>
+        <Tooltip content="Run the simulation with the entered ChatGPT usage percentage">
+          <button type="submit" class={styles.button}>
+            Simulate
+          </button>
+        </Tooltip>
       </form>
     </div>
   );

@@ -140,8 +140,8 @@ export class Trainer {
 
   singleStepForward(): TrainingResult | null {
     if (this.currentDataIndex >= this.xs.length) {
-      this.currentDataIndex = 0; // Reset if we've gone through all data
-      return null; // Indicate that we've completed an epoch
+      this.currentDataIndex = 0;
+      return null;
     }
 
     const x = this.xs[this.currentDataIndex];
@@ -161,24 +161,49 @@ export class Trainer {
 
     this.history.push(result);
     this.currentStep++;
-    this.currentDataIndex = (this.currentDataIndex + 1) % this.xs.length;
+    this.currentDataIndex++;
+    return result;
+  }
+
+  calculateLoss(): TrainingResult | null {
+    if (this.currentDataIndex < this.config.batchSize) {
+      console.error("Not enough forward steps to calculate loss");
+      return null;
+    }
+
+    const batchInputs = this.xs.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
+    const batchTargets = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
+
+    const predictions = batchInputs.map(x => this._network.forward(x.map(val => new Value(val))));
+    this.currentLoss = this.calculateBatchLoss(predictions, batchTargets);
+
+    const result: TrainingResult = {
+      step: 'loss',
+      data: {
+        loss: this.currentLoss.data,
+        iteration: this.currentIteration,
+        batchIndex: this.currentBatch,
+        stepIndex: this.currentStep
+      }
+    };
+
+    this.history.push(result);
+    this.currentStep++;
     return result;
   }
 
   stepBackward(): TrainingResult | null {
-    if (!this.currentOutput || !this.currentInput) {
+    if (!this.currentLoss) {
+      console.error("Loss not calculated");
       return null;
     }
 
-    const target = new Value(this.yt[this.currentBatch]);
-    this.currentLoss = this.currentOutput[0].sub(target).pow(2);
     this._network.zeroGrad();
     this.currentLoss.backward();
 
     const result: TrainingResult = {
       step: 'backward',
       data: {
-        loss: this.currentLoss.data,
         gradients: this._network.parameters().map(p => p.grad),
       }
     };
@@ -189,6 +214,7 @@ export class Trainer {
 
   updateWeights(): TrainingResult | null {
     if (!this.currentLoss) {
+      console.error("Backward step not performed");
       return null;
     }
 
@@ -207,10 +233,26 @@ export class Trainer {
     };
 
     this.history.push(result);
-    this.currentBatch++;
+    this.currentBatch += this.config.batchSize;
     this.currentStep++;
 
+    if (this.currentBatch >= this.xs.length) {
+      this.currentBatch = 0;
+      this.currentIteration++;
+    }
+
     return result;
+  }
+
+  private calculateBatchLoss(predictions: Value[][], targets: number[]): Value {
+    let totalLoss = new Value(0);
+    for (let i = 0; i < predictions.length; i++) {
+      const pred = predictions[i][0];
+      const target = new Value(targets[i]);
+      const loss = pred.sub(target).pow(2);
+      totalLoss = totalLoss.add(loss);
+    }
+    return totalLoss.div(new Value(predictions.length));
   }
 
   completeIteration(): TrainingResult | null {

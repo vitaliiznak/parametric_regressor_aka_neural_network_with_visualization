@@ -4,11 +4,37 @@ import { actions, store } from '../store';
 import LossHistoryChart from './LossHistoryChart';
 import ForwardStepsVisualizer from './ForwardStepsVisualizer';
 
-import TrainingControlButtons from "./TrainingControlButtons";
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
+import Tooltip from '../components/Tooltip';
+import { FaSolidBackward, FaSolidCalculator, FaSolidForward } from "solid-icons/fa";
 
 export const styles = {
+  controlsContainer: css`
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
+`,
+  controlButton: css`
+  background-color: #3B82F6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  &:hover {
+    background-color: #2563EB;
+  }
+  &:disabled {
+    background-color: #E5E7EB;
+    cursor: not-allowed;
+  }
+`,
   container: css`
     background-color: ${colors.surface};
     padding: 1.5rem;
@@ -21,12 +47,6 @@ export const styles = {
     font-weight: bold;
     margin-bottom: 1rem;
     color: ${colors.text};
-  `,
-  controlsContainer: css`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
   `,
   button: css`
     background-color: ${colors.primary};
@@ -95,19 +115,31 @@ export const styles = {
   `,
 };
 
-const TrainingControls: Component<{
-  onVisualizationUpdate: () => void
-}> = (props) => {
+const TrainingControls: Component = () => {
   const [lossHistory, setLossHistory] = createSignal<number[]>([]);
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);
   const [chartType, setChartType] = createSignal<'bar' | 'line'>('line');
   const [trainingRuns, setTrainingRuns] = createSignal<{ id: string; lossHistory: number[] }[]>([]);
   const [selectedRuns, setSelectedRuns] = createSignal<string[]>([]);
   const [isTraining, setIsTraining] = createSignal(false);
+  const [forwardStepsCount, setForwardStepsCount] = createSignal(0);
+  const [isLossCalculated, setIsLossCalculated] = createSignal(false);
 
   createEffect(() => {
     if (store.trainingResult?.data.loss) {
       setLossHistory([...lossHistory(), store.trainingResult.data.loss]);
+    }
+  });
+
+  createEffect(() => {
+    if (store.trainingResult?.step === 'forward') {
+      setForwardStepsCount(prev => prev + 1);
+      setIsLossCalculated(false);
+    } else if (store.trainingResult?.step === 'loss') {
+      setIsLossCalculated(true);
+    } else if (store.trainingResult?.step === 'backward') {
+      setForwardStepsCount(0);
+      setIsLossCalculated(false);
     }
   });
 
@@ -138,7 +170,7 @@ const TrainingControls: Component<{
   };
 
   const exportCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + lossHistory().map((loss, index) => `${index},${loss}`).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -176,17 +208,18 @@ const TrainingControls: Component<{
 
   const singleStepForward = () => {
     actions.singleStepForward();
-    props.onVisualizationUpdate();
+  };
+
+  const calculateLoss = () => {
+    actions.calculateLoss();
   };
 
   const stepBackward = () => {
     actions.stepBackward();
-    props.onVisualizationUpdate();
   };
 
   const updateWeights = () => {
     actions.updateWeights();
-    props.onVisualizationUpdate();
   };
 
   const handleWheel = (e: WheelEvent) => {
@@ -211,39 +244,55 @@ const TrainingControls: Component<{
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
       />
-      <TrainingControlButtons
-        onSingleStepForward={singleStepForward}
-        onStepBackward={stepBackward}
-        onUpdateWeights={updateWeights}
-      />
+
+
+
       <ForwardStepsVisualizer
         forwardStepsCount={store.forwardStepsCount}
         forwardStepResults={store.forwardStepResults}
         batchSize={store.trainingConfig.batchSize}
       />
-      <LossHistoryChart
-        lossHistory={visibleLossHistory()}
-        trainingRuns={trainingRuns()}
-        selectedRuns={selectedRuns()}
-        chartType={chartType()}
-        zoomRange={zoomRange()}
-        maxLoss={maxLoss()}
-        handleWheel={handleWheel}
-        onChartTypeChange={(type) => setChartType(type)}
-        onZoomRangeChange={setZoomRange}
-      />
-      <button class={styles.exportButton} onClick={exportCSV}>Export CSV</button>
-      {/* <RunSelector
-        trainingRuns={trainingRuns()}
-        selectedRuns={selectedRuns()}
-        onToggleRunSelection={toggleRunSelection}
-        onSaveCurrentRun={saveCurrentRun}
-      />
-      <LossStatistics
-        minLoss={minLoss()}
-        maxLoss={maxLoss()}
-        avgLoss={avgLoss()}
-      /> */}
+
+      <div class={styles.controlsContainer}>
+        <button class={styles.controlButton} onClick={singleStepForward}>
+          <FaSolidForward /> Forward Step
+        </button>
+        <Show when={forwardStepsCount() >= 2}>
+          <button
+            class={styles.controlButton}
+            onClick={calculateLoss}
+            disabled={isLossCalculated()}
+          >
+            <FaSolidCalculator /> Calculate Loss
+          </button>
+        </Show>
+
+        <button class={styles.button} onClick={calculateLoss} disabled={store.forwardStepsCount < store.trainingConfig.batchSize}>
+          Calculate Loss
+        </button>
+        <Show when={isLossCalculated()}>
+          <button class={styles.controlButton} onClick={stepBackward}>
+            <FaSolidBackward /> Backward Step
+          </button>
+        </Show>
+      </div>
+
+      {/* <Tooltip content="View the loss history over training iterations">
+        <LossHistoryChart
+          lossHistory={visibleLossHistory()}
+          trainingRuns={trainingRuns()}
+          selectedRuns={selectedRuns()}
+          chartType={chartType()}
+          zoomRange={zoomRange()}
+          maxLoss={maxLoss()}
+          handleWheel={handleWheel}
+          onChartTypeChange={(type) => setChartType(type)}
+          onZoomRangeChange={setZoomRange}
+        />
+      </Tooltip>
+      <Tooltip content="Export the loss history data as a CSV file">
+        <button class={styles.exportButton} onClick={exportCSV}>Export CSV</button>
+    */}
     </div>
   );
 };

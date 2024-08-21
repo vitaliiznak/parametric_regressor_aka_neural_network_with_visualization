@@ -10,6 +10,7 @@ import FunctionVisualizer from './FunctionVisualizer';
 import LegendAndTask from './LegendAndTask';
 import { css } from '@emotion/css';
 import { colors } from './styles/colors';
+import Tooltip from './components/Tooltip';
 
 const App: Component = () => {
   createEffect(() => {
@@ -57,6 +58,11 @@ const App: Component = () => {
         width: 100%;
       }
     `,
+    helpIcon: css`
+      cursor: help;
+      margin-left: 5px;
+      color: ${colors.primary};
+    `,
   };
 
   return (
@@ -64,18 +70,25 @@ const App: Component = () => {
       <LegendAndTask />
       <div class={styles.contentWrapper}>
         <div class={styles.leftPanel}>
+      
           <NetworkVisualizer
             includeLossNode={false}
             onVisualizationUpdate={() => console.log("Visualization updated")}
             onSidebarToggle={handleSidebarToggle}
           />
+       
           <LearningProcessVisualizer />
+       
           <FunctionVisualizer />
         </div>
         <div class={styles.rightPanel}>
+       
           <NetworkConfigForm />
+    
           <TrainingConfigForm />
+    
           <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
+      
           <SimulationInputForm onSimulate={simulateNetwork} />
         </div>
       </div>

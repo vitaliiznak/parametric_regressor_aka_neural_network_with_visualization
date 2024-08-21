@@ -1,4 +1,4 @@
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { AppState } from "./types";
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
@@ -61,6 +61,7 @@ function initializeTrainer() {
 }
 
 function singleStepForward() {
+  console.log("Starting singleStepForward");
   setStore('forwardStepsCount', store.forwardStepsCount + 1);
   const { trainer } = store;
   let trainerAux = trainer
@@ -105,18 +106,64 @@ function singleStepForward() {
     setStore('forwardStepsCount', 0);
     setStore('forwardStepResults', []);
   }
+  console.log("Finished singleStepForward");
+}
+
+function calculateLoss() {
+  console.log("Starting calculateLoss");
+  if (!store.trainer || store.forwardStepsCount < store.trainingConfig.batchSize) {
+    console.error("Cannot calculate loss");
+    return;
+  }
+
+  console.log("Before calling trainer.calculateLoss()");
+  const result = store.trainer.calculateLoss();
+  console.log("After calling trainer.calculateLoss(). Result:", result);
+
+  if (result) {
+    console.log("Before updating store");
+    const newTrainingResult = { step: 'loss', data: result.data };
+    
+    // Use batch update to avoid multiple re-renders
+    setStore( produce((s) => {
+      s.trainingResult = newTrainingResult;
+      s.forwardStepsCount = 0;
+    }));
+    
+    console.log("After updating store");
+  }
+  console.log("Finished calculateLoss");
 }
 
 function stepBackward() {
+  console.log("Starting stepBackward");
   if (!store.trainer) {
     console.error("Trainer not initialized");
     return;
   }
 
-  const result = store.trainer.stepBackward();
-  if (result) {
-    setStore('trainingResult', result);
+  console.log("Calling trainer.stepBackward()");
+  let result;
+  try {
+    result = store.trainer.stepBackward();
+    console.log("Result from stepBackward:", result);
+  } catch (error) {
+    console.error("Error in stepBackward:", error);
+    return;
   }
+
+  if (result) {
+    console.log("Updating store with result");
+    try {
+      setStore('trainingResult', result);
+      console.log("Store updated successfully");
+    } catch (error) {
+      console.error("Error updating store:", error);
+    }
+  } else {
+    console.log("No result from stepBackward");
+  }
+  console.log("Finished stepBackward");
 }
 
 function updateWeights() {
@@ -175,7 +222,13 @@ const initialState: AppState = {
 
 export const [store, setStore] = createStore(initialState);
 
-// Actions object
+// Add a log after each store update
+const loggedSetStore = (updater) => {
+  setStore(updater);
+  console.log("Store updated:", JSON.parse(JSON.stringify(store)));
+};
+
+// Replace setStore with loggedSetStore in your actions
 export const actions = {
   initializeTrainingData,
   startTraining,
@@ -185,6 +238,7 @@ export const actions = {
   updateTrainingProgress,
   updateNetwork,
   singleStepForward,
+  calculateLoss,
   stepBackward,
   updateWeights,
   simulateInput

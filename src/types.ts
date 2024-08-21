@@ -19,7 +19,7 @@ export interface AppState {
     trainer: Trainer | null;
 
     forwardStepsCount: number;
-    forwardStepResults: number[][];
+    forwardStepResults: { input: number[], output: number[] }[];
 }
 
 export interface TrainingData {
@@ -86,7 +86,7 @@ export interface VisualConnection {
 }
 
 export interface TrainingResult {
-  step: 'forward' | 'backward' | 'update' | 'iteration';
+  step: 'forward' | 'backward' | 'update' | 'iteration' | 'loss';
   data: {
     input?: number[];
     output?: number[];

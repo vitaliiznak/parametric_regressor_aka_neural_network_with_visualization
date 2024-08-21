@@ -36,6 +36,8 @@ const styles = {
     border: 1px solid ${colors.border};
     border-radius: 0.25rem;
     font-size: 1rem;
+    background-color: ${colors.surface}; /* Add background color */
+    color: ${colors.text}; /* Add text color */
     &:focus {
       outline: none;
       border-color: ${colors.primary};
