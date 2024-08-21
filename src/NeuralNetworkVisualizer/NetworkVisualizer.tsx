@@ -43,6 +43,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
   const [isPanning, setIsPanning] = createSignal(false);
   const [selectedNeuron, setSelectedNeuron] = createSignal<VisualNode | null>(null);
+  const [customNodePositions, setCustomNodePositions] = createSignal<Record<string, { x: number, y: number }>>({});
 
   let draggedNode: VisualNode | null = null;
   let mouseDownTimer: number | null = null;
@@ -58,7 +59,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     }
 
     const networkData = store.network.toJSON();
-    const newVisualData = layoutCalculatorValue.calculateLayout(networkData, store.currentInput, store.simulationOutput);
+    const newVisualData = layoutCalculatorValue.calculateLayout(
+      networkData,
+      store.currentInput,
+      store.simulationOutput,
+      customNodePositions()
+    );
     return newVisualData;
   };
 
@@ -257,6 +263,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       const scaledY = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
       draggedNode.x = scaledX;
       draggedNode.y = scaledY;
+      
+      // Save the custom position
+      setCustomNodePositions(prev => ({
+        ...prev,
+        [draggedNode.id]: { x: scaledX, y: scaledY }
+      }));
+
       setVisualData({
         ...visualDataVal,
         nodes: visualDataVal.nodes.map(node => node.id === draggedNode?.id ? draggedNode : node)

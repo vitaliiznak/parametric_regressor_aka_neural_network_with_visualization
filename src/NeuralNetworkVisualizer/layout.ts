@@ -12,7 +12,12 @@ export class NetworkLayout {
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
-  calculateLayout(network: NetworkData, currentInput: number[], simulationOutput?: SimulationOutput | null): VisualNetworkData {
+  calculateLayout(
+    network: NetworkData,
+    currentInput: number[],
+    simulationOutput?: SimulationOutput | null,
+    customPositions?: Record<string, { x: number, y: number }>
+  ): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
     console.log('Network data:', network);
@@ -59,12 +64,15 @@ export class NetworkLayout {
       const startY = (this.canvasHeight - layerHeight) / 2;
 
       layer.neurons.forEach((neuron, neuronIndex) => {
+        const nodeId = `neuron_${layerIndex}_${neuronIndex}`;
+        const customPosition = customPositions?.[nodeId];
+
         const node: VisualNode = {
-          id: neuron.id,
+          id: nodeId,
           label: `N${neuronIndex}`,
           layerId: layer.id,
-          x: x - this.nodeWidth / 2,
-          y: startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
+          x: customPosition ? customPosition.x : x - this.nodeWidth / 2,
+          y: customPosition ? customPosition.y : startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
           activation: neuron.activation,
           weights: neuron.weights,
           bias: neuron.bias
