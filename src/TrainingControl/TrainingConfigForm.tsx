@@ -1,10 +1,11 @@
 import { Component } from "solid-js";
 import { setStore, store } from "../store";
 import { css } from "@emotion/css";
+import { colors } from '../styles/colors';
 
 const styles = {
   container: css`
-    background-color: white;
+    background-color: ${colors.surface};
     padding: 1.5rem;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -14,7 +15,7 @@ const styles = {
     font-size: 1.25rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    color: #2c3e50;
+    color: ${colors.text};
   `,
   form: css`
     display: flex;
@@ -27,23 +28,23 @@ const styles = {
   `,
   label: css`
     font-size: 0.875rem;
-    color: #4b5563;
+    color: ${colors.textLight};
     margin-bottom: 0.25rem;
   `,
   input: css`
     padding: 0.5rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid ${colors.border};
     border-radius: 0.25rem;
     font-size: 1rem;
     &:focus {
       outline: none;
-      border-color: #3b82f6;
+      border-color: ${colors.primary};
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
     }
   `,
   button: css`
-    background-color: #3b82f6;
-    color: white;
+    background-color: ${colors.primary};
+    color: ${colors.surface};
     border: none;
     border-radius: 0.25rem;
     padding: 0.5rem 1rem;
@@ -51,7 +52,7 @@ const styles = {
     cursor: pointer;
     transition: background-color 0.2s;
     &:hover {
-      background-color: #2563eb;
+      background-color: ${colors.primaryDark};
     }
   `,
 };

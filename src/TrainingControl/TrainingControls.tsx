@@ -6,21 +6,21 @@ import ForwardStepsVisualizer from './ForwardStepsVisualizer';
 
 import TrainingControlButtons from "./TrainingControlButtons";
 import TrainingStatus from "./TrainingStatus";
-
+import { colors } from '../styles/colors';
 
 export const styles = {
   container: css`
-    background-color: white;
+    background-color: ${colors.surface};
     padding: 1.5rem;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin-top: 1rem;
   `,
   title: css`
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    color: #2c3e50;
+    color: ${colors.text};
   `,
   controlsContainer: css`
     display: flex;
@@ -29,8 +29,8 @@ export const styles = {
     margin-bottom: 1rem;
   `,
   button: css`
-    background-color: #3B82F6;
-    color: white;
+    background-color: ${colors.primary};
+    color: ${colors.surface};
     border: none;
     border-radius: 0.25rem;
     padding: 0.5rem 1rem;
@@ -38,16 +38,16 @@ export const styles = {
     cursor: pointer;
     transition: background-color 0.2s;
     &:hover {
-      background-color: #2563EB;
+      background-color: ${colors.primaryDark};
     }
     &:disabled {
-      background-color: #9CA3AF;
+      background-color: ${colors.border};
       cursor: not-allowed;
     }
   `,
   exportButton: css`
-    background-color: #10B981;
-    color: white;
+    background-color: ${colors.secondary};
+    color: ${colors.surface};
     border: none;
     border-radius: 0.25rem;
     padding: 0.5rem 1rem;
@@ -56,7 +56,7 @@ export const styles = {
     transition: background-color 0.2s;
     margin-top: 1rem;
     &:hover {
-      background-color: #059669;
+      background-color: ${colors.secondaryDark};
     }
   `,
   progressContainer: css`
@@ -64,19 +64,19 @@ export const styles = {
   `,
   progressLabel: css`
     font-size: 0.875rem;
-    color: #4B5563;
+    color: ${colors.textLight};
     margin-bottom: 0.25rem;
   `,
   progressBar: css`
     width: 100%;
     height: 0.5rem;
-    background-color: #E5E7EB;
+    background-color: ${colors.border};
     border-radius: 0.25rem;
     overflow: hidden;
   `,
   progressFill: css`
     height: 100%;
-    background-color: #3B82F6;
+    background-color: ${colors.primary};
     transition: width 300ms ease-in-out;
   `,
   lossContainer: css`
@@ -86,7 +86,7 @@ export const styles = {
   `,
   lossLabel: css`
     font-size: 0.875rem;
-    color: #4B5563;
+    color: ${colors.textLight};
     margin-right: 0.5rem;
   `,
   lossValue: css`
@@ -125,9 +125,9 @@ const TrainingControls: Component<{
   };
 
   const getLossColor = (loss: number) => {
-    if (loss < 0.2) return '#10B981';
-    if (loss < 0.5) return '#FBBF24';
-    return '#EF4444';
+    if (loss < 0.2) return colors.success;
+    if (loss < 0.5) return colors.error;
+    return colors.error;
   };
 
   const visibleLossHistory = () => {

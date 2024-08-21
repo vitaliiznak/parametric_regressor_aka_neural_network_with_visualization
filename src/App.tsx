@@ -9,6 +9,7 @@ import SimulationInputForm from './LearningProcessVisualizer/SimulationInputForm
 import FunctionVisualizer from './FunctionVisualizer';
 import LegendAndTask from './LegendAndTask';
 import { css } from '@emotion/css';
+import { colors } from './styles/colors';
 
 const App: Component = () => {
   createEffect(() => {
@@ -29,24 +30,40 @@ const App: Component = () => {
     actions.simulateInput(store.currentInput)
   };
 
-  const rightPanelStyle = css`
-    flex: 1;
-    min-width: 250px;
-    max-width: 550px;
-    padding: 20px;
-    box-sizing: border-box;
-  `;
-
-  const mainContentStyle = css`
-    transition: margin-right 0.3s ease-in-out;
-    ${isSidebarOpen() ? 'margin-right: 10px;' : ''}
-  `;
+  const styles = {
+    mainContainer: css`
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      
+      @media (max-width: 768px) {
+        padding: 10px;
+      }
+    `,
+    contentWrapper: css`
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    `,
+    leftPanel: css`
+      flex: 2;
+      min-width: 300px;
+    `,
+    rightPanel: css`
+      flex: 1;
+      min-width: 250px;
+      
+      @media (max-width: 768px) {
+        width: 100%;
+      }
+    `,
+  };
 
   return (
-    <div class={mainContentStyle}>
+    <div class={styles.mainContainer}>
       <LegendAndTask />
-      <div style={{ display: 'flex' }}>
-        <div style={{ flex: 2 }}>
+      <div class={styles.contentWrapper}>
+        <div class={styles.leftPanel}>
           <NetworkVisualizer
             includeLossNode={false}
             onVisualizationUpdate={() => console.log("Visualization updated")}
@@ -55,7 +72,7 @@ const App: Component = () => {
           <LearningProcessVisualizer />
           <FunctionVisualizer />
         </div>
-        <div class={rightPanelStyle}>
+        <div class={styles.rightPanel}>
           <NetworkConfigForm />
           <TrainingConfigForm />
           <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />

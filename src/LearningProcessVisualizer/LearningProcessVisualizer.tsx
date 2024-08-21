@@ -1,8 +1,9 @@
 import { Component, Show, For, createMemo } from "solid-js";
 import { store } from "../store";
+import { colors } from '../styles/colors';
+import { css } from "@emotion/css";
 
 const LearningProcessVisualizer: Component = () => {
-
 
   const renderData = createMemo(() => {
     if (!store.trainingResult) return null;
@@ -17,8 +18,6 @@ const LearningProcessVisualizer: Component = () => {
             <p>Output: {JSON.stringify(data.output)}</p>
           </div>
         );
-      case 'loss':
-        return <div>Loss: {data.loss?.toFixed(4)}</div>;
       case 'backward':
         return (
           <div>
@@ -47,12 +46,49 @@ const LearningProcessVisualizer: Component = () => {
     }
   });
 
+  const styles = {
+    container: css`
+      background-color: ${colors.surface};
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-top: 1rem;
+      
+      @media (max-width: 768px) {
+        padding: 1rem;
+      }
+    `,
+    title: css`
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: ${colors.text};
+    `,
+    stepInfo: css`
+      margin-bottom: 1rem;
+      color: ${colors.textLight};
+    `,
+    dataDisplay: css`
+      background-color: ${colors.background};
+      padding: 1rem;
+      border-radius: 0.25rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      color: ${colors.text};
+      font-size: 0.875rem;
+      
+      @media (max-width: 768px) {
+        font-size: 0.75rem;
+      }
+    `,
+  };
+
   return (
-    <div>
-      <h3>Learning Process</h3>
+    <div class={styles.container}>
+      <h3 class={styles.title}>Learning Process</h3>
       <Show when={store.trainingResult}>
-        <div>Current Step: {store.trainingResult?.step}</div>
-        {renderData()}
+        <div class={styles.stepInfo}>Current Step: {store.trainingResult?.step}</div>
+        <div class={styles.dataDisplay}>{JSON.stringify(renderData(), null, 2)}</div>
       </Show>
     </div>
   );

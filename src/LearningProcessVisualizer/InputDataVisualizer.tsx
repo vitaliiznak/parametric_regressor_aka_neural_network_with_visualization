@@ -2,6 +2,7 @@ import { Component, onMount, createSignal, createEffect } from "solid-js";
 import { store } from "../store";
 import Plotly from 'plotly.js-dist';
 import { css } from '@emotion/css';
+import { colors } from '../styles/colors';
 
 const InputDataVisualizer: Component = () => {
 
@@ -39,18 +40,18 @@ const InputDataVisualizer: Component = () => {
         },
         xaxis: { 
           title: 'ChatGPT Usage (%)',
-          gridcolor: 'lightgray',
-          zerolinecolor: 'lightgray',
+          gridcolor: colors.border,
+          zerolinecolor: colors.border,
         },
         yaxis: { 
           title: 'Productivity Score',
-          gridcolor: 'lightgray',
-          zerolinecolor: 'lightgray',
+          gridcolor: colors.border,
+          zerolinecolor: colors.border,
         },
         height: 600,
         margin: { l: 50, r: 50, b: 50, t: 80 },
-        paper_bgcolor: 'rgb(250, 250, 250)',
-        plot_bgcolor: 'rgb(250, 250, 250)',
+        paper_bgcolor: colors.background,
+        plot_bgcolor: colors.background,
         hovermode: 'closest',
         dragmode: 'pan',
       };
@@ -88,16 +89,17 @@ const InputDataVisualizer: Component = () => {
 
   return (
     <div class={css`
-      background-color: rgb(250, 250, 250);
-      border-radius: 8px;
+      background-color: ${colors.surface};
+      border-radius: 0.5rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
     `}>
       <h3 class={css`
-        font-size: 1.5em;
-        margin-bottom: 15px;
-        color: #333;
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: ${colors.text};
       `}>Input Data Visualization</h3>
       <div 
         ref={setPlotRef} 
@@ -108,9 +110,9 @@ const InputDataVisualizer: Component = () => {
       ></div>
       <div class={css`
         text-align: center;
-        margin-top: 10px;
-        font-size: 14px;
-        color: #666;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: ${colors.textLight};
       `}>
         <p>Drag to pan, scroll to zoom, or use the buttons in the top-right corner.</p>
         <p>Double-click to reset the view.</p>

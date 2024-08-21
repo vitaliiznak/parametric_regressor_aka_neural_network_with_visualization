@@ -1,4 +1,5 @@
 import { Component, createSignal } from "solid-js";
+import { colors } from '../styles/colors';
 import { css } from "@emotion/css";
 
 const styles = {
@@ -6,6 +7,7 @@ const styles = {
     font-size: 1.25rem;
     font-weight: 500;
     margin-bottom: 1rem;
+    color: ${colors.text};
   `,
   form: css`
     display: flex;
@@ -19,33 +21,38 @@ const styles = {
   `,
   label: css`
     font-weight: 500;
+    color: ${colors.textLight};
   `,
   input: css`
-    border: 1px solid #ccc;
+    border: 1px solid ${colors.border};
     border-radius: 0.25rem;
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     width: 100%;
+    &:focus {
+      outline: none;
+      border-color: ${colors.primary};
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
   `,
   inputError: css`
-    border-color: #e53e3e;
+    border-color: ${colors.error};
   `,
   errorMessage: css`
-    color: #e53e3e;
+    color: ${colors.error};
     font-size: 0.875rem;
   `,
   button: css`
-    background-color: #3b82f6;
-    color: white;
+    background-color: ${colors.primary};
+    color: ${colors.surface};
     border: none;
     border-radius: 0.25rem;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-
+    transition: background-color 0.2s;
     &:hover {
-      background-color: #2563eb;
+      background-color: ${colors.primaryDark};
     }
   `,
 };
@@ -72,7 +79,7 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulate }
   };
 
   return (
-    <div>
+    <div class={styles.container}>
       <h3 class={styles.title}>Simulate ChatGPT Usage</h3>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>

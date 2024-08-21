@@ -5,6 +5,7 @@ import { NetworkRenderer } from "./renderer";
 import NeuronInfoSidebar from "./NeuronInfoSidebar";
 import { store } from "../store";
 import { VisualNetworkData, VisualNode } from "../types";
+import { colors } from '../styles/colors';
 
 // Create tooltip element
 const tooltip = document.createElement('div');
@@ -322,14 +323,23 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const containerStyle = css`
     width: 100%;
-    height: 840px;
-    min-width: 200px;
+    height: 0;
+    padding-bottom: 75%; // 4:3 aspect ratio
+    position: relative;
     min-height: 400px;
     overflow: hidden;
-    border: 1px solid black;
+    border: 1px solid ${colors.border};
+    background-color: ${colors.surface};
+    
+    @media (max-width: 768px) {
+      padding-bottom: 100%; // 1:1 aspect ratio on smaller screens
+    }
   `;
 
   const canvasStyle = css`
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
   `;
