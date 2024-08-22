@@ -27,14 +27,10 @@ const initialState: AppState = {
     iteration: 0,
     currentLoss: null,
     forwardStepResults: [],
+    backwardStepGradients:  [],
     lossHistory: [],
   },
-  currentInput: [],
-  simulationResult: {
-    input: [],
-    output: [],
-    layerOutputs: []
-  },
+
   trainingResult: {
     gradients: [],
     oldWeights: [],
@@ -42,6 +38,14 @@ const initialState: AppState = {
   },
 
   trainer: null,
+
+  currentInput: [],
+  simulationResult: {
+    input: [],
+    output: [],
+    layerOutputs: []
+  },
+
 
 
 };
@@ -152,7 +156,7 @@ function calculateLoss() {
       setStore('trainingState', 'currentPhase', 'loss');
       setStore('trainingState', 'currentLoss', currentLoss);
       setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
-      setStore('forwardStepResults', []);
+ 
     });
   });
 
@@ -170,22 +174,22 @@ function stepBackward() {
   let result;
   try {
     result = store.trainer.stepBackward();
-    console.log("Result from stepBackward:", result);
   } catch (error) {
     console.error("Error in stepBackward:", error);
     return;
   }
+  console.log("After calling trainer.stepBackward(). Result:", result);
 
-  if (result) {
+  if (result && Array.isArray(result)) {
     console.log("Updating store with result");
     try {
-      setStore('trainingResult', result);
+      setStore('trainingState', 'backwardStepGradients', result);
       console.log("Store updated successfully");
     } catch (error) {
       console.error("Error updating store:", error);
     }
   } else {
-    console.log("No result from stepBackward");
+    console.log("No valid result from stepBackward");
   }
   console.log("Finished stepBackward");
 }

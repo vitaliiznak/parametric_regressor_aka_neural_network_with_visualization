@@ -17,54 +17,22 @@ export interface AppState {
     iteration: number;
     currentLoss: number | null;
     forwardStepResults: Prediction[];
+    backwardStepGradients: BackwardStepGradients
     lossHistory: number[];
   };
 
   // training process data
   trainingResult: TrainingResult
 
-
-  simulationResult: SimulationResult | null;
-  currentInput: number[];
-
-
-
-
   trainer: Trainer | null;
-
-  forwardStepResults: Prediction[];
-}
-/*
-@TODO 
-CHANGE TO 
-
-export interface AppState {
-  // Network configuration
-  network: MLP;
-  visualData: VisualNetworkData;
-
-  // Training configuration
-  trainingConfig: TrainingConfig;
-  trainingData: TrainingData | null;
-
-
-  // Current batch data
-  currentBatch: {
-    inputs: number[][];
-    outputs: number[][];
-    predictions: number[][];
-  };
-
+  
   // Simulation
-  simulationInput: number[];
+  currentInput: number[];
   simulationResult: SimulationResult | null;
 
-
-
-  // Trainer instance
-  trainer: Trainer | null;
 }
-*/
+
+export type BackwardStepGradients = number[]
 
 export interface TrainingResult {
   gradients: number[] | null;
@@ -138,4 +106,3 @@ export interface VisualConnection {
   weight: number;
   bias: number;
 }
-

@@ -121,12 +121,10 @@ const TrainingControls: Component = () => {
 
   createEffect(() => {
     const {currentPhase} = store.trainingState 
-    if (currentPhase === 'forward') {
+    if (currentPhase === 'forward' || currentPhase === 'backward') {
       setIsLossCalculated(false);
     } else if (currentPhase === 'loss') {
       setIsLossCalculated(true);
-    } else if (currentPhase === 'backward') {
-      setIsLossCalculated(false);
     }
   });
 
@@ -197,6 +195,7 @@ const TrainingControls: Component = () => {
         forwardStepResults={store.trainingState.forwardStepResults}
         batchSize={store.trainingState.forwardStepResults.length}
         currentLoss={store.trainingState.currentLoss}
+        backwardStepResults={ store.trainingState.backwardStepGradients}
       />
 
       <div class={styles.controlsContainer}>
