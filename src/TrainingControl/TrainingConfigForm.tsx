@@ -92,17 +92,6 @@ const TrainingConfigForm: Component = () => {
             />
           </label>
         </div>
-        <div class={styles.inputGroup}>
-          <label class={styles.label}>
-            Batch Size:
-            <input
-              type="number"
-              value={store.trainingConfig.batchSize}
-              onInput={(e) => setStore('trainingConfig', 'batchSize', Number(e.currentTarget.value))}
-              class={styles.input}
-            />
-          </label>
-        </div>
         <button type="submit" class={styles.button}>Update Training Config</button>
       </form>
     </div>

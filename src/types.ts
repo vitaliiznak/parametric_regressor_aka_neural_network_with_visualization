@@ -17,6 +17,7 @@ export interface AppState {
     iteration: number;
     currentLoss: number | null;
     forwardStepsCount: number;
+    forwardStepResults: Prediction[];
     lossHistory: number[];
   };
 
@@ -85,7 +86,6 @@ export interface TrainingData {
 export interface TrainingConfig {
   learningRate: number;
   iterations: number;
-  batchSize: number;
 }
 
 export interface SimulationResult {

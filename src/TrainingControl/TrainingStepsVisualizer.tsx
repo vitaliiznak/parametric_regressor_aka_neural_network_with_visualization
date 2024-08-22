@@ -3,7 +3,6 @@ import { css } from "@emotion/css";
 import { FaSolidArrowRight, FaSolidCalculator } from 'solid-icons/fa';
 
 interface TrainingStepsVisualizerProps {
-  forwardStepsCount: number;
   forwardStepResults: { input: number[], output: number[] }[];
   batchSize: number;
   currentLoss: number | null;
@@ -73,7 +72,7 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
 
   return (
     <div class={styles.container}>
-      <h4>Forward Steps: {props.forwardStepsCount}</h4>
+      <h4>Forward Steps: {props.forwardStepResults.length}</h4>
       <div class={styles.stepsVisualization}>
         <For each={props.forwardStepResults}>
           {(step, index) => (
@@ -89,7 +88,7 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
             </div>
           )}
         </For>
-        <Show when={props.forwardStepsCount >= props.batchSize}>
+        <Show when={props.forwardStepResults.length >= props.batchSize}>
           <div class={styles.lossStep}>
             <div class={styles.stepIcon}>
               <FaSolidCalculator />

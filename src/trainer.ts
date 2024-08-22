@@ -15,6 +15,8 @@ export class Trainer {
   private currentLoss: Value | null = null;
   private isPaused: boolean = false;
   private currentDataIndex: number = 0;
+  private currentBatchInputs: number[][] = [];
+  private currentBatchTargets: number[] = [];
 
   constructor(network: MLP, config: TrainingConfig) {
     this._network = network.clone();
@@ -128,8 +130,12 @@ export class Trainer {
     }
 
     const x = this.xs[this.currentDataIndex];
+    const y = this.yt[this.currentDataIndex];
     this.currentInput = x;
     this.currentOutput = this._network.forward(x.map(val => new Value(val)));
+
+    this.currentBatchInputs.push(x);
+    this.currentBatchTargets.push(y);
 
     const result: Prediction = {
         input: x,
@@ -141,29 +147,35 @@ export class Trainer {
     return result;
   }
 
-  calculateLoss(predictions: Prediction[]): Value | number | null {
-    if (predictions.length < this.config.batchSize) {
-      console.error("Not enough predictions to calculate loss");
+  calculateLoss(): Value | number | null {
+    if (this.currentBatchInputs.length === 0) {
+      console.error("No data in the current batch");
       return null;
     }
 
-    const batchTargets = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
+    this.currentLoss = this.calculateBatchLoss(this.currentBatchInputs, this.currentBatchTargets);
 
-    this.currentLoss = this.calculateBatchLoss(predictions, batchTargets);
+    console.log('Calculated loss:', this.currentLoss.data);
 
     this.currentStep++;
+
     return this.currentLoss;
   }
 
-  private calculateBatchLoss(predictions: Prediction[], targets: number[]): Value {
+
+  private calculateBatchLoss(inputs: number[][], targets: number[]): Value {
     let totalLoss = new Value(0);
-    for (let i = 0; i < predictions.length; i++) {
-      const pred = new Value(predictions[i].output[0]);
+    for (let i = 0; i < inputs.length; i++) {
+      const pred = this._network.forward(inputs[i].map(val => new Value(val)))[0];
       const target = new Value(targets[i]);
-      const loss = pred.sub(target).pow(2);
-      totalLoss = totalLoss.add(loss);
+      const diff = pred.sub(target);
+      const squaredDiff = diff.mul(diff);
+      console.log(`Prediction: ${pred.data}, Target: ${target.data}, Squared Diff: ${squaredDiff.data}`);
+      totalLoss = totalLoss.add(squaredDiff);
     }
-    return totalLoss.div(new Value(predictions.length));
+    const avgLoss = totalLoss.div(new Value(inputs.length));
+    console.log(`Total Loss: ${totalLoss.data}, Avg Loss: ${avgLoss.data}`);
+    return avgLoss;
   }
 
   stepBackward(): TrainingResult | null {
@@ -242,7 +254,7 @@ export class Trainer {
     return this.currentStep;
   }
 
-  isReadyForLossCalculation(): boolean {
-    return this.currentBatch >= this.config.batchSize;
+  moveToNextBatch(): void {
+    this.loadNewBatch();
   }
 }

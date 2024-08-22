@@ -8,8 +8,7 @@ export const CONFIG = {
   } as MLPConfig,
   INITIAL_TRAINING: {
     learningRate: 0.01,
-    iterations: 1,
-    batchSize: 2
+    iterations: 1
   },
   VISUALIZATION: {
     width: 1000,

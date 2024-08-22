@@ -27,6 +27,7 @@ const initialState: AppState = {
     iteration: 0,
     currentLoss: null,
     forwardStepsCount: 0,
+    forwardStepResults: [],
     lossHistory: [],
   },
   currentInput: [],
@@ -43,7 +44,7 @@ const initialState: AppState = {
 
   trainer: null,
 
-  forwardStepResults: []
+
 };
 
 
@@ -109,51 +110,32 @@ function singleStepForward() {
 
   if (result === null) {
     console.log("Completed one epoch of training");
-    setStore('trainingState', 'forwardStepsCount', 0);
-    setStore('forwardStepResults', []);
+    batch(() => {
+      setStore('trainingState', 'forwardStepsCount', 0);
+      setStore('trainingState', 'forwardStepResults', []);
+    });
     return;
   }
 
   console.log("Forward step completed. Result:", result);
-  setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
-  setStore('forwardStepResults', [
-    ...store.forwardStepResults,
-    {
-      input: result.input,
-      output: result.output
-    }
-  ]);
-  // Update the trainingResult with the simulation input
-  // Perform simulation using the simulationInput
-  // Update the simulationResult in the store
-  setStore('simulationResult', {
-    input: result.input,
-    output: result.output,
-    layerOutputs: layerOutputs,
+  batch(() => {
+    setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
+    setStore('trainingState', 'forwardStepResults', [...store.trainingState.forwardStepResults, { input: result.input, output: result.output }]);
+    setStore('simulationResult', { input: result.input, output: result.output, layerOutputs: layerOutputs });
   });
 
-  if (trainerAux.isReadyForLossCalculation()) {
-    setStore('trainingState', 'forwardStepsCount', 0);
-    setStore('forwardStepResults', []);
-  }
   console.log("Finished singleStepForward");
 }
 
-let isCalculatingLoss = false;
+
 function calculateLoss() {
-  if (isCalculatingLoss) return;
-  isCalculatingLoss = true;
   console.log("Starting calculateLoss");
-  if (!store.trainer || store.trainingState.forwardStepsCount < store.trainingConfig.batchSize) {
-    console.error("Cannot calculate loss");
+  if (!store.trainer) {
+    console.error("Trainer not initialized");
     return;
   }
 
-  console.log("Before calling trainer.calculateLoss()");
-  console.log({
-    forwardStepResults: store.forwardStepResults,
-  })
-  const result = store.trainer.calculateLoss(store.forwardStepResults);
+  const result = store.trainer.calculateLoss();
   console.log("After calling trainer.calculateLoss(). Result:", result);
 
   let currentLoss: number;
@@ -164,20 +146,21 @@ function calculateLoss() {
   } else {
     currentLoss = result;
   }
-  console.log("Here Current loss:", {
+  console.log("Current loss:", {
     currentLoss
   });
-  // Defer the state update to the next microtask
+
   queueMicrotask(() => {
     batch(() => {
       setStore('trainingState', 'currentPhase', 'loss');
       setStore('trainingState', 'currentLoss', currentLoss);
       setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
+      setStore('trainingState', 'forwardStepsCount', 0);
+      setStore('forwardStepResults', []);
     });
   });
 
   console.log("Finished calculateLoss");
-  isCalculatingLoss = false;
 }
 
 function stepBackward() {

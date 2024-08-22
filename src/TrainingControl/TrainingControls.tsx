@@ -156,6 +156,10 @@ const TrainingControls: Component = () => {
   };
 
   const calculateLoss = () => {
+    if (store.trainingState.forwardStepsCount === 0) {
+      console.error("No forward steps taken");
+      return;
+    }
     actions.calculateLoss();
     setIsLossCalculated(true);
   };
@@ -192,9 +196,8 @@ const TrainingControls: Component = () => {
       />
 
       <TrainingStepsVisualizer
-        forwardStepsCount={store.trainingState.forwardStepsCount}
-        forwardStepResults={store.forwardStepResults}
-        batchSize={store.trainingConfig.batchSize}
+        forwardStepResults={store.trainingState.forwardStepResults}
+        batchSize={store.trainingState.forwardStepResults.length}
         currentLoss={store.trainingState.currentLoss}
       />
 
@@ -205,9 +208,9 @@ const TrainingControls: Component = () => {
       
 
       
-        <Show when={store.trainingState.forwardStepsCount >= 2}>
-          <button class={styles.button} onClick={calculateLoss} disabled={store.trainingState.forwardStepsCount < store.trainingConfig.batchSize}>
-          <FaSolidCalculator /> Calculate Loss
+        <Show when={store.trainingState.forwardStepsCount > 0}>
+          <button class={styles.button} onClick={calculateLoss}>
+            <FaSolidCalculator /> Calculate Loss
           </button>
         </Show>
         <Show when={isLossCalculated()}>
