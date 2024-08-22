@@ -4,9 +4,9 @@ import { css } from "@emotion/css";
 interface TrainingStatusProps {
   iteration: number;
   totalIterations: number;
-  currentLoss: number;
+  currentLoss: number | null;
   iterationProgress: number;
-  getLossColor: (loss: number) => string;
+  getLossColor: (loss: number | null) => string;
 }
 
 const TrainingStatus: Component<TrainingStatusProps> = (props) => {
@@ -64,7 +64,7 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
       <div class={styles.statusItem}>
         <div class={styles.statusLabel}>Current Loss</div>
         <div class={styles.statusValue} style={{ color: props.getLossColor(props.currentLoss) }}>
-          {props.currentLoss.toFixed(4)}
+          {props.currentLoss !== null ? props.currentLoss.toFixed(4) : 'N/A' }
         </div>
       </div>
     </div>

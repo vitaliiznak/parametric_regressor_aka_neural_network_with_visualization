@@ -1,5 +1,5 @@
 import { NetworkData } from '../NeuralNetwork/types';
-import { SimulationOutput, VisualConnection, VisualNetworkData, VisualNode } from '../types';
+import { SimulationResult, VisualConnection, VisualNetworkData, VisualNode } from '../types';
 
 
 export class NetworkLayout {
@@ -15,7 +15,7 @@ export class NetworkLayout {
   calculateLayout(
     network: NetworkData,
     currentInput: number[],
-    simulationOutput?: SimulationOutput | null,
+    simulationResult?: SimulationResult | null,
     customPositions?: Record<string, { x: number, y: number }>
   ): VisualNetworkData {
     const nodes: VisualNode[] = [];
@@ -107,8 +107,8 @@ export class NetworkLayout {
 
   
 
-    if (simulationOutput) {
-      const { input, layerOutputs } = simulationOutput;
+    if (simulationResult) {
+      const { input, layerOutputs } = simulationResult;
       nodes.forEach((node) => {
         const [nodeType, layerIndexStr, nodeIndexStr] = node.id.split('_');
         const layerIndex = parseInt(layerIndexStr);

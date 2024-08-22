@@ -14,18 +14,18 @@ const LearningProcessVisualizer: Component = () => {
       return null;
     }
 
-    const { step, data } = store.trainingResult;
-    console.log("Rendering step:", step, "with data:", data);
+    const { currentPhase } = store.trainingState;
+    console.log("Rendering step:", currentPhase, "with data:");
 
     try {
-      switch (step) {
+      switch (currentPhase) {
         case 'forward':
           console.log("Rendering forward step");
           return (
             <div>
               <h4>Forward Pass</h4>
-              <p>Input: {JSON.stringify(data.input)}</p>
-              <p>Output: {JSON.stringify(data.output)}</p>
+              {/* <p>Input: {JSON.stringify(data.input)}</p>
+              <p>Output: {JSON.stringify(data.output)}</p> */}
             </div>
           );
         case 'loss':
@@ -33,7 +33,7 @@ const LearningProcessVisualizer: Component = () => {
           return (
             <div>
               <h4>Loss Calculation</h4>
-              <p>Loss: {data.loss?.toFixed(4)}</p>
+              {/* <p>Loss: {data.loss?.toFixed(4)}</p> */}
             </div>
           );
         case 'backward':
@@ -41,7 +41,7 @@ const LearningProcessVisualizer: Component = () => {
           return (
             <div>
               <h4>Backward Pass</h4>
-              <p>Gradients: {data.gradients?.map(g => g.toFixed(4)).join(', ')}</p>
+              {/* <p>Gradients: {data.gradients?.map(g => g.toFixed(4)).join(', ')}</p> */}
             </div>
           );
         case 'update':
@@ -49,21 +49,21 @@ const LearningProcessVisualizer: Component = () => {
           return (
             <div>
               <h4>Weight Update</h4>
-              <For each={data.oldWeights}>
+              {/* <For each={data.oldWeights}>
                 {(oldWeight, index) => (
                   <p>
                     Weight {index()}: {oldWeight.toFixed(4)} → {data.newWeights?.[index()].toFixed(4)}
                   </p>
                 )}
               </For>
-              <p>Learning Rate: {data.learningRate}</p>
+              <p>Learning Rate: {data.learningRate}</p> */}
             </div>
           );
         case 'iteration':
           console.log("Rendering iteration step");
-          return <div>Iteration {data.iteration} completed, Loss: {data.loss?.toFixed(4)}</div>;
+          return {/* <div>Iteration {data.iteration} completed, Loss: {data.loss?.toFixed(4)}</div>; */}
         default:
-          console.log("Unknown step:", step);
+          console.log("Unknown step:", currentPhase);
           return null;
       }
     } catch (error) {

@@ -1,12 +1,10 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import { css } from "@emotion/css";
-import { actions, store } from '../store';
-import LossHistoryChart from './LossHistoryChart';
+import { actions, setStore, store } from '../store';
 import ForwardStepsVisualizer from './ForwardStepsVisualizer';
 
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
-import Tooltip from '../components/Tooltip';
 import { FaSolidBackward, FaSolidCalculator, FaSolidForward } from "solid-icons/fa";
 
 export const styles = {
@@ -121,24 +119,23 @@ const TrainingControls: Component = () => {
   const [chartType, setChartType] = createSignal<'bar' | 'line'>('line');
   const [trainingRuns, setTrainingRuns] = createSignal<{ id: string; lossHistory: number[] }[]>([]);
   const [selectedRuns, setSelectedRuns] = createSignal<string[]>([]);
-  const [isTraining, setIsTraining] = createSignal(false);
-  const [forwardStepsCount, setForwardStepsCount] = createSignal(0);
   const [isLossCalculated, setIsLossCalculated] = createSignal(false);
 
   createEffect(() => {
-    if (store.trainingResult?.data.loss) {
-      setLossHistory([...lossHistory(), store.trainingResult.data.loss]);
+    if (store.trainingState.currentLoss) {
+      setLossHistory([...lossHistory(), store.trainingState.currentLoss]);
     }
   });
 
   createEffect(() => {
-    if (store.trainingResult?.step === 'forward') {
-      setForwardStepsCount(prev => prev + 1);
+    const {currentPhase} = store.trainingState 
+    if (currentPhase === 'forward') {
+      setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
       setIsLossCalculated(false);
-    } else if (store.trainingResult?.step === 'loss') {
+    } else if (currentPhase === 'loss') {
       setIsLossCalculated(true);
-    } else if (store.trainingResult?.step === 'backward') {
-      setForwardStepsCount(0);
+    } else if (currentPhase === 'backward') {
+      setStore('trainingState', 'forwardStepsCount', 0);
       setIsLossCalculated(false);
     }
   });
@@ -151,7 +148,7 @@ const TrainingControls: Component = () => {
   };
 
   const iterationProgress = () => {
-    const currentIteration = store.trainingResult?.data.iteration || 0;
+    const currentIteration = store.trainingState.iteration || 0;
     const totalIterations = store.trainingConfig?.iterations || 1;
     return currentIteration / totalIterations;
   };
@@ -198,12 +195,12 @@ const TrainingControls: Component = () => {
   const toggleTraining = () => {
     if (!store.trainer) {
       actions.startTraining();
-    } else if (isTraining()) {
+    } else if (store.trainingState.isTraining) {
       actions.pauseTraining();
     } else {
       actions.resumeTraining();
     }
-    setIsTraining(!isTraining());
+    setStore({ trainingState: { isTraining: !store.trainingState.isTraining } });
   };
 
   const singleStepForward = () => {
@@ -238,9 +235,9 @@ const TrainingControls: Component = () => {
     <div class={styles.container}>
       <h3 class={styles.title}>Training Control</h3>
       <TrainingStatus
-        iteration={store.trainingResult?.data.iteration || 0}
+        iteration={store.trainingState.iteration || 0}
         totalIterations={store.trainingConfig?.iterations || 0}
-        currentLoss={store.trainingResult?.data.loss || 0}
+        currentLoss={store.trainingState.currentLoss}
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
       />
@@ -248,7 +245,7 @@ const TrainingControls: Component = () => {
 
 
       <ForwardStepsVisualizer
-        forwardStepsCount={store.forwardStepsCount}
+        forwardStepsCount={store.trainingState.forwardStepsCount}
         forwardStepResults={store.forwardStepResults}
         batchSize={store.trainingConfig.batchSize}
       />
@@ -257,7 +254,7 @@ const TrainingControls: Component = () => {
         <button class={styles.controlButton} onClick={singleStepForward}>
           <FaSolidForward /> Forward Step
         </button>
-        <Show when={forwardStepsCount() >= 2}>
+        <Show when={store.trainingState.forwardStepsCount >= 2}>
           <button
             class={styles.controlButton}
             onClick={calculateLoss}
@@ -267,7 +264,7 @@ const TrainingControls: Component = () => {
           </button>
         </Show>
 
-        <button class={styles.button} onClick={calculateLoss} disabled={store.forwardStepsCount < store.trainingConfig.batchSize}>
+        <button class={styles.button} onClick={calculateLoss} disabled={store.trainingState.forwardStepsCount < store.trainingConfig.batchSize}>
           Calculate Loss
         </button>
         <Show when={isLossCalculated()}>

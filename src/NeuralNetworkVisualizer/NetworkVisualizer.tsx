@@ -63,7 +63,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const newVisualData = layoutCalculatorValue.calculateLayout(
       networkData,
       store.currentInput,
-      store.simulationOutput,
+      store.simulationResult,
       customNodePositions()
     );
     return newVisualData;
@@ -153,9 +153,9 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   createEffect(() => {
     const network = store.network;
     const currentInput = store.currentInput;
-    const simulationOutput = store.simulationOutput;
+    const simulationResult = store.simulationResult;
 
-    if (network || currentInput || simulationOutput) {
+    if (network || currentInput || simulationResult) {
       render(performance.now());
     }
   });

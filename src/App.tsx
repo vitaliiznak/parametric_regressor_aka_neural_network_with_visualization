@@ -10,7 +10,6 @@ import FunctionVisualizer from './FunctionVisualizer';
 import LegendAndTask from './LegendAndTask';
 import { css } from '@emotion/css';
 import { colors } from './styles/colors';
-import Tooltip from './components/Tooltip';
 
 const App: Component = () => {
   createEffect(() => {

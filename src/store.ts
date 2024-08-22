@@ -26,7 +26,9 @@ function startTraining() {
 }
 
 function stopTraining() {
-  setStore('isTraining', false);
+  setStore('trainingState', produce(state => {
+    state.isTraining = false;
+  }));
 }
 
 function pauseTraining() {
@@ -38,10 +40,7 @@ function resumeTraining() {
 }
 
 function updateTrainingProgress(iteration: number, loss: number) {
-  setStore({
-    currentIteration: iteration,
-    currentLoss: loss
-  });
+  setStore('trainingState', { iteration, currentLoss: loss });
 }
 
 function updateNetwork(network: MLP) {
@@ -62,7 +61,6 @@ function initializeTrainer() {
 
 function singleStepForward() {
   console.log("Starting singleStepForward");
-  setStore('forwardStepsCount', store.forwardStepsCount + 1);
   const { trainer } = store;
   let trainerAux = trainer
   if (!trainer) {
@@ -78,32 +76,32 @@ function singleStepForward() {
 
   if (result === null) {
     console.log("Completed one epoch of training");
-    setStore('forwardStepsCount', 0);
+    setStore('trainingState', 'forwardStepsCount', 0);
     setStore('forwardStepResults', []);
     return;
   }
 
   console.log("Forward step completed. Result:", result);
   setStore('trainingResult', result);
-  setStore('forwardStepsCount', store.forwardStepsCount + 1);
+  setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
   setStore('forwardStepResults', [
     ...store.forwardStepResults,
     { 
-      input: Array.isArray(result.data.input) ? result.data.input : [], 
-      output: Array.isArray(result.data.output) ? result.data.output : []
+      input: result.input, 
+      output: result.output 
     }
   ]);
   // Update the trainingResult with the simulation input
   // Perform simulation using the simulationInput
-  // Update the simulationOutput in the store
-  setStore('simulationOutput', {
-    input: result.data.input,
-    output: result.data.output,
+  // Update the simulationResult in the store
+  setStore('simulationResult', {
+    input: result.input,
+    output: result.output,
     layerOutputs: layerOutputs,
   });
 
   if (trainerAux.isReadyForLossCalculation()) {
-    setStore('forwardStepsCount', 0);
+    setStore('trainingState', 'forwardStepsCount', 0);
     setStore('forwardStepResults', []);
   }
   console.log("Finished singleStepForward");
@@ -111,7 +109,7 @@ function singleStepForward() {
 
 function calculateLoss() {
   console.log("Starting calculateLoss");
-  if (!store.trainer || store.forwardStepsCount < store.trainingConfig.batchSize) {
+  if (!store.trainer || store.trainingState.forwardStepsCount < store.trainingConfig.batchSize) {
     console.error("Cannot calculate loss");
     return;
   }
@@ -120,18 +118,6 @@ function calculateLoss() {
   const result = store.trainer.calculateLoss();
   console.log("After calling trainer.calculateLoss(). Result:", result);
 
-  if (result) {
-    console.log("Before updating store");
-    const newTrainingResult = { step: 'loss', data: result.data };
-    
-    // Use batch update to avoid multiple re-renders
-    setStore( produce((s) => {
-      s.trainingResult = newTrainingResult;
-      s.forwardStepsCount = 0;
-    }));
-    
-    console.log("After updating store");
-  }
   console.log("Finished calculateLoss");
 }
 
@@ -187,7 +173,7 @@ function simulateInput(input: number[]) {
   const output = store.network.forward(input);
   const layerOutputs = store.network.getLayerOutputs();
   setStore({
-    simulationOutput: {
+    simulationResult: {
       input: store.currentInput,
       output: output.map(v => v.data),
       layerOutputs: layerOutputs
@@ -198,35 +184,50 @@ function simulateInput(input: number[]) {
 
 // Initial state
 const initialState: AppState = {
+  // Network configuration
   network: new MLP(INITIAL_NETWORK),
   visualData: { nodes: [], connections: [] },
+
+  // Training configuration
   trainingConfig: INITIAL_TRAINING,
-  currentIteration: 0,
-  currentLoss: 0,
-  isTraining: false,
+  trainingData: null,
+
+  // Training state
+  trainingState:{
+    isTraining: false,
+    currentPhase: 'idle',
+    iteration: 0,
+    currentLoss: null,
+    forwardStepsCount: 0,
+  },
+
+
+
+
+
+
   currentInput: [],
-  simulationOutput: {
+  simulationResult: {
     input: [],
     output: [],
     layerOutputs: []
   },
   trainingResult: {
-    step: 'forward',
-    data: {}
+    input: [],
+    output: [],
+    gradients: [],
+    oldWeights: [],
+    newWeights: [],
+
   },
-  trainingData: null,
+
   trainer: null,
-  forwardStepsCount: 0,
+
   forwardStepResults: []
 };
 
 export const [store, setStore] = createStore(initialState);
 
-// Add a log after each store update
-const loggedSetStore = (updater) => {
-  setStore(updater);
-  console.log("Store updated:", JSON.parse(JSON.stringify(store)));
-};
 
 // Replace setStore with loggedSetStore in your actions
 export const actions = {

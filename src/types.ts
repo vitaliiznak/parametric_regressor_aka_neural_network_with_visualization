@@ -2,24 +2,82 @@ import { MLP } from "./NeuralNetwork/mlp";
 import { Trainer } from "./trainer";
 
 export interface AppState {
-    network: MLP;
-    visualData: VisualNetworkData;
- 
+  // Network configuration
+  network: MLP;
+  visualData: VisualNetworkData;
 
-    simulationOutput: SimulationOutput | null;
-    currentInput: number[];
-    currentIteration: number;
-    currentLoss: number;
+  // Training configuration
+  trainingConfig: TrainingConfig;
+  trainingData: TrainingData | null;
+
+  // Training state
+  trainingState: {
     isTraining: boolean;
-
-    trainingData: TrainingData | null;
-    trainingConfig: TrainingConfig;
-    trainingResult: TrainingResult;
-
-    trainer: Trainer | null;
-
+    currentPhase: 'idle' | 'forward' | 'loss' | 'backward' | 'update' | 'iteration';
+    iteration: number;
+    currentLoss: number | null;
     forwardStepsCount: number;
-    forwardStepResults: { input: number[], output: number[] }[];
+  };
+
+  // training process data
+  TrainingResult: {
+    gradients: number[] | null;
+    oldWeights: number[] | null;
+    newWeights: number[] | null;
+  };
+
+
+  trainingResult: TrainingResult;
+  simulationResult: SimulationResult | null;
+  currentInput: number[];
+
+
+
+
+  trainer: Trainer | null;
+
+  forwardStepResults: { input: number[], output: number[] }[];
+}
+/*
+@TODO 
+CHANGE TO 
+
+export interface AppState {
+  // Network configuration
+  network: MLP;
+  visualData: VisualNetworkData;
+
+  // Training configuration
+  trainingConfig: TrainingConfig;
+  trainingData: TrainingData | null;
+
+
+  // Current batch data
+  currentBatch: {
+    inputs: number[][];
+    outputs: number[][];
+    predictions: number[][];
+  };
+
+  // Simulation
+  simulationInput: number[];
+  simulationResult: SimulationResult | null;
+
+
+
+  // Trainer instance
+  trainer: Trainer | null;
+}
+*/
+
+
+
+export interface TrainingResult {
+  input: number[];
+  output: number[];
+  gradients: number[];
+  oldWeights: number[];
+  newWeights: number[];
 }
 
 export interface TrainingData {
@@ -33,11 +91,11 @@ export interface TrainingConfig {
   batchSize: number;
 }
 
-export interface SimulationOutput {
-    input: number[];
-    output: number[];
-    layerOutputs: number[][];
-} 
+export interface SimulationResult {
+  input: number[];
+  output: number[];
+  layerOutputs: number[][];
+}
 
 export interface VisualNode {
   id: string;
@@ -85,18 +143,3 @@ export interface VisualConnection {
   bias: number;
 }
 
-export interface TrainingResult {
-  step: 'forward' | 'backward' | 'update' | 'iteration' | 'loss';
-  data: {
-    input?: number[];
-    output?: number[];
-    loss?: number;
-    gradients?: number[];
-    oldWeights?: number[];
-    newWeights?: number[];
-    learningRate?: number;
-    iteration?: number;
-    batchIndex?: number;
-    stepIndex?: number;
-  };
-}

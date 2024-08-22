@@ -62,7 +62,7 @@ export class Trainer {
       if (this.currentBatch >= this.xs.length) {
         this.currentBatch = 0;
         this.currentIteration++;
-        yield { step: 'iteration', data: { iteration: this.currentIteration, loss: result.data.loss } };
+        yield {};
       }
     }
   }
@@ -102,10 +102,6 @@ export class Trainer {
     console.log('Backward pass completed');
     console.log('Gradients:', this._network.parameters().map(p => p.grad));
 
-    const backwardResult: TrainingResult = {
-      step: 'backward',
-      data: { gradients: this._network.parameters().map(p => p.grad) }
-    };
     this.currentStep++;
 
     const oldWeights = this._network.parameters().map(p => p.data);
@@ -117,19 +113,10 @@ export class Trainer {
     console.log('Old weights:', oldWeights);
     console.log('New weights:', this._network.parameters().map(p => p.data));
 
-    const updateResult: TrainingResult = {
-      step: 'update',
-      data: {
-        oldWeights,
-        newWeights: this._network.parameters().map(p => p.data),
-        learningRate: this.config.learningRate
-      }
-    };
     this.currentStep++;
 
     const iterationResult: TrainingResult = {
-      step: 'iteration',
-      data: { iteration: this.currentIteration, loss: loss.data }
+      data: { }
     };
 
     console.log(`--- End of Training Step ${this.currentStep} ---\n`);
@@ -149,14 +136,8 @@ export class Trainer {
     this.currentOutput = this._network.forward(x.map(val => new Value(val)));
 
     const result: TrainingResult = {
-      step: 'forward',
-      data: {
         input: x,
         output: this.currentOutput.map(v => v.data),
-        iteration: this.currentIteration,
-        batchIndex: this.currentBatch,
-        stepIndex: this.currentStep
-      }
     };
 
     this.history.push(result);
@@ -178,13 +159,6 @@ export class Trainer {
     this.currentLoss = this.calculateBatchLoss(predictions, batchTargets);
 
     const result: TrainingResult = {
-      step: 'loss',
-      data: {
-        loss: this.currentLoss.data,
-        iteration: this.currentIteration,
-        batchIndex: this.currentBatch,
-        stepIndex: this.currentStep
-      }
     };
 
     this.history.push(result);
@@ -202,10 +176,7 @@ export class Trainer {
     this.currentLoss.backward();
 
     const result: TrainingResult = {
-      step: 'backward',
-      data: {
         gradients: this._network.parameters().map(p => p.grad),
-      }
     };
 
     this.history.push(result);
@@ -224,12 +195,8 @@ export class Trainer {
     });
 
     const result: TrainingResult = {
-      step: 'update',
-      data: {
         oldWeights,
         newWeights: this._network.parameters().map(p => p.data),
-        learningRate: this.config.learningRate,
-      }
     };
 
     this.history.push(result);
@@ -271,11 +238,7 @@ export class Trainer {
     this.currentIteration++;
 
     const result: TrainingResult = {
-      step: 'iteration',
-      data: {
-        iteration: this.currentIteration,
-        loss: this.currentLoss?.data
-      }
+  
     };
 
     this.history.push(result);
