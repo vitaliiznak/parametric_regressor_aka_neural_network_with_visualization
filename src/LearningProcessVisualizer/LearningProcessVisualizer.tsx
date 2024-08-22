@@ -117,7 +117,7 @@ const LearningProcessVisualizer: Component = () => {
           console.log("Rendering training result");
           return (
             <>
-              <div class={styles.stepInfo}>Current Step: {store.trainingResult?.step}</div>
+              <div class={styles.stepInfo}>Current Step: {store.trainingState.currentPhase}</div>
               <Show when={store.trainingResult}>
                 <div class={styles.dataDisplay}>
                   {JSON.stringify(renderData(), null, 2)}

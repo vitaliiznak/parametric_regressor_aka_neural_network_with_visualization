@@ -1,6 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-import { TrainingConfig, TrainingResult } from "./types";
+import { Prediction, TrainingConfig, TrainingResult } from "./types";
 
 export class Trainer {
   _network: MLP;
@@ -10,7 +10,6 @@ export class Trainer {
   private currentStep: number = 0;
   private xs: number[][] = [];
   private yt: number[] = [];
-  private history: TrainingResult[] = [];
   private currentInput: number[] | null = null;
   private currentOutput: Value[] | null = null;
   private currentLoss: Value | null = null;
@@ -32,7 +31,6 @@ export class Trainer {
     this.currentIteration = 0;
     this.currentBatch = 0;
     this.currentStep = 0;
-    this.history = [];
   }
 
 
@@ -42,7 +40,6 @@ export class Trainer {
     this.currentIteration = 0;
     this.currentBatch = 0;
     this.currentStep = 0;
-    this.history = [];
 
     while (this.currentIteration < this.config.iterations) {
       while (this.isPaused) {
@@ -53,7 +50,6 @@ export class Trainer {
       const batchYt = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
 
       const result = await this.trainStep(batchXs, batchYt);
-      this.history.push(result);
       yield result;
 
       this.currentBatch += this.config.batchSize;
@@ -125,7 +121,7 @@ export class Trainer {
   }
 
 
-  singleStepForward(): TrainingResult | null {
+  singleStepForward(): Prediction | null {
     if (this.currentDataIndex >= this.xs.length) {
       this.currentDataIndex = 0;
       return null;
@@ -135,35 +131,39 @@ export class Trainer {
     this.currentInput = x;
     this.currentOutput = this._network.forward(x.map(val => new Value(val)));
 
-    const result: TrainingResult = {
+    const result: Prediction = {
         input: x,
         output: this.currentOutput.map(v => v.data),
     };
 
-    this.history.push(result);
     this.currentStep++;
     this.currentDataIndex++;
     return result;
   }
 
-  calculateLoss(): TrainingResult | null {
-    if (this.currentDataIndex < this.config.batchSize) {
-      console.error("Not enough forward steps to calculate loss");
+  calculateLoss(predictions: Prediction[]): Value | number | null {
+    if (predictions.length < this.config.batchSize) {
+      console.error("Not enough predictions to calculate loss");
       return null;
     }
 
-    const batchInputs = this.xs.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
     const batchTargets = this.yt.slice(this.currentBatch, this.currentBatch + this.config.batchSize);
 
-    const predictions = batchInputs.map(x => this._network.forward(x.map(val => new Value(val))));
     this.currentLoss = this.calculateBatchLoss(predictions, batchTargets);
 
-    const result: TrainingResult = {
-    };
-
-    this.history.push(result);
     this.currentStep++;
-    return result;
+    return this.currentLoss;
+  }
+
+  private calculateBatchLoss(predictions: Prediction[], targets: number[]): Value {
+    let totalLoss = new Value(0);
+    for (let i = 0; i < predictions.length; i++) {
+      const pred = new Value(predictions[i].output[0]);
+      const target = new Value(targets[i]);
+      const loss = pred.sub(target).pow(2);
+      totalLoss = totalLoss.add(loss);
+    }
+    return totalLoss.div(new Value(predictions.length));
   }
 
   stepBackward(): TrainingResult | null {
@@ -179,7 +179,6 @@ export class Trainer {
         gradients: this._network.parameters().map(p => p.grad),
     };
 
-    this.history.push(result);
     return result;
   }
 
@@ -198,8 +197,6 @@ export class Trainer {
         oldWeights,
         newWeights: this._network.parameters().map(p => p.data),
     };
-
-    this.history.push(result);
     this.currentBatch += this.config.batchSize;
     this.currentStep++;
 
@@ -209,17 +206,6 @@ export class Trainer {
     }
 
     return result;
-  }
-
-  private calculateBatchLoss(predictions: Value[][], targets: number[]): Value {
-    let totalLoss = new Value(0);
-    for (let i = 0; i < predictions.length; i++) {
-      const pred = predictions[i][0];
-      const target = new Value(targets[i]);
-      const loss = pred.sub(target).pow(2);
-      totalLoss = totalLoss.add(loss);
-    }
-    return totalLoss.div(new Value(predictions.length));
   }
 
   completeIteration(): TrainingResult | null {
@@ -241,7 +227,6 @@ export class Trainer {
   
     };
 
-    this.history.push(result);
     return result;
   }
 

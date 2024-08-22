@@ -1,11 +1,12 @@
 import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import { css } from "@emotion/css";
 import { actions, setStore, store } from '../store';
-import ForwardStepsVisualizer from './ForwardStepsVisualizer';
+import TrainingStepsVisualizer from './TrainingStepsVisualizer';
 
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
 import { FaSolidBackward, FaSolidCalculator, FaSolidForward } from "solid-icons/fa";
+import LossHistoryChart from "./LossHistoryChart";
 
 export const styles = {
   controlsContainer: css`
@@ -114,18 +115,9 @@ export const styles = {
 };
 
 const TrainingControls: Component = () => {
-  const [lossHistory, setLossHistory] = createSignal<number[]>([]);
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);
   const [chartType, setChartType] = createSignal<'bar' | 'line'>('line');
-  const [trainingRuns, setTrainingRuns] = createSignal<{ id: string; lossHistory: number[] }[]>([]);
-  const [selectedRuns, setSelectedRuns] = createSignal<string[]>([]);
   const [isLossCalculated, setIsLossCalculated] = createSignal(false);
-
-  createEffect(() => {
-    if (store.trainingState.currentLoss) {
-      setLossHistory([...lossHistory(), store.trainingState.currentLoss]);
-    }
-  });
 
   createEffect(() => {
     const {currentPhase} = store.trainingState 
@@ -140,12 +132,7 @@ const TrainingControls: Component = () => {
     }
   });
 
-  const maxLoss = () => Math.max(...trainingRuns().flatMap(run => run.lossHistory), ...lossHistory(), 1);
-  const minLoss = () => Math.min(...trainingRuns().flatMap(run => run.lossHistory), ...lossHistory(), 0);
-  const avgLoss = () => {
-    const allLosses = [...trainingRuns().flatMap(run => run.lossHistory), ...lossHistory()];
-    return allLosses.reduce((sum, loss) => sum + loss, 0) / allLosses.length;
-  };
+  
 
   const iterationProgress = () => {
     const currentIteration = store.trainingState.iteration || 0;
@@ -159,56 +146,18 @@ const TrainingControls: Component = () => {
     return colors.error;
   };
 
-  const visibleLossHistory = () => {
-    const [start, end] = zoomRange();
-    const startIndex = Math.floor(lossHistory().length * start / 100);
-    const endIndex = Math.ceil(lossHistory().length * end / 100);
-    return lossHistory().slice(startIndex, endIndex);
-  };
 
-  const exportCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + lossHistory().map((loss, index) => `${index},${loss}`).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "loss_history.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
-  const saveCurrentRun = () => {
-    const newRun = { id: Date.now().toString(), lossHistory: [...lossHistory()] };
-    setTrainingRuns([...trainingRuns(), newRun]);
-    setSelectedRuns([...selectedRuns(), newRun.id]);
-  };
 
-  const toggleRunSelection = (id: string) => {
-    if (selectedRuns().includes(id)) {
-      setSelectedRuns(selectedRuns().filter(runId => runId !== id));
-    } else {
-      setSelectedRuns([...selectedRuns(), id]);
-    }
-  };
-
-  const toggleTraining = () => {
-    if (!store.trainer) {
-      actions.startTraining();
-    } else if (store.trainingState.isTraining) {
-      actions.pauseTraining();
-    } else {
-      actions.resumeTraining();
-    }
-    setStore({ trainingState: { isTraining: !store.trainingState.isTraining } });
-  };
 
   const singleStepForward = () => {
     actions.singleStepForward();
+    setIsLossCalculated(false);
   };
 
   const calculateLoss = () => {
     actions.calculateLoss();
+    setIsLossCalculated(true);
   };
 
   const stepBackward = () => {
@@ -242,31 +191,25 @@ const TrainingControls: Component = () => {
         getLossColor={getLossColor}
       />
 
-
-
-      <ForwardStepsVisualizer
+      <TrainingStepsVisualizer
         forwardStepsCount={store.trainingState.forwardStepsCount}
         forwardStepResults={store.forwardStepResults}
         batchSize={store.trainingConfig.batchSize}
+        currentLoss={store.trainingState.currentLoss}
       />
 
       <div class={styles.controlsContainer}>
         <button class={styles.controlButton} onClick={singleStepForward}>
           <FaSolidForward /> Forward Step
         </button>
+      
+
+      
         <Show when={store.trainingState.forwardStepsCount >= 2}>
-          <button
-            class={styles.controlButton}
-            onClick={calculateLoss}
-            disabled={isLossCalculated()}
-          >
-            <FaSolidCalculator /> Calculate Loss
+          <button class={styles.button} onClick={calculateLoss} disabled={store.trainingState.forwardStepsCount < store.trainingConfig.batchSize}>
+          <FaSolidCalculator /> Calculate Loss
           </button>
         </Show>
-
-        <button class={styles.button} onClick={calculateLoss} disabled={store.trainingState.forwardStepsCount < store.trainingConfig.batchSize}>
-          Calculate Loss
-        </button>
         <Show when={isLossCalculated()}>
           <button class={styles.controlButton} onClick={stepBackward}>
             <FaSolidBackward /> Backward Step
@@ -274,22 +217,17 @@ const TrainingControls: Component = () => {
         </Show>
       </div>
 
-      {/* <Tooltip content="View the loss history over training iterations">
-        <LossHistoryChart
-          lossHistory={visibleLossHistory()}
-          trainingRuns={trainingRuns()}
-          selectedRuns={selectedRuns()}
-          chartType={chartType()}
-          zoomRange={zoomRange()}
-          maxLoss={maxLoss()}
-          handleWheel={handleWheel}
-          onChartTypeChange={(type) => setChartType(type)}
-          onZoomRangeChange={setZoomRange}
-        />
-      </Tooltip>
-      <Tooltip content="Export the loss history data as a CSV file">
-        <button class={styles.exportButton} onClick={exportCSV}>Export CSV</button>
-    */}
+      <LossHistoryChart
+        lossHistory={store.trainingState.lossHistory}
+        trainingRuns={store.trainingRuns}
+        selectedRuns={[]}
+        chartType={chartType()}
+        zoomRange={zoomRange()}
+        maxLoss={5}
+        handleWheel={handleWheel}
+        onChartTypeChange={(type) => setChartType(type)}
+        onZoomRangeChange={(range) => setZoomRange(range)}
+      />
     </div>
   );
 };

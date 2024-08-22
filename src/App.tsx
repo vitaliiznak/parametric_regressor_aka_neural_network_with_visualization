@@ -4,7 +4,7 @@ import TrainingControls from './TrainingControl/TrainingControls';
 import NetworkConfigForm from './TrainingControl/NetworkConfigForm';
 import TrainingConfigForm from './TrainingControl/TrainingConfigForm';
 import { store, actions } from './store';
-import LearningProcessVisualizer from './LearningProcessVisualizer/LearningProcessVisualizer';
+
 import SimulationInputForm from './LearningProcessVisualizer/SimulationInputForm';
 import FunctionVisualizer from './FunctionVisualizer';
 import LegendAndTask from './LegendAndTask';
@@ -76,8 +76,7 @@ const App: Component = () => {
             onSidebarToggle={handleSidebarToggle}
           />
        
-          <LearningProcessVisualizer />
-       
+   
           <FunctionVisualizer />
         </div>
         <div class={styles.rightPanel}>

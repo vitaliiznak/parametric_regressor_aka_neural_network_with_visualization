@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "chrome",
+        "request": "launch",
+        "name": "Debug Solid.js App in Chrome",
+        "url": "http://localhost:3000",
+        "webRoot": "${workspaceFolder}",
+        "sourceMaps": true,
+        "sourceMapPathOverrides": {
+          "webpack:///./src/*": "${webRoot}/src/*"
+        },
+        "skipFiles": [
+          "<node_internals>/**",
+          "${workspaceFolder}/node_modules/**",
+          "chrome-extension://**"
+        ],
+        "disableNetworkCache": true,
+        "smartStep": true
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Start Vite Server",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/vite",
+        "runtimeArgs": ["--port", "3000"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "Debug Solid.js App (with server)",
+        "configurations": ["Start Vite Server", "Debug Solid.js App in Chrome"],
+        "preLaunchTask": "npm: dev",
+        "stopAll": true
+      }
+    ]
+  }

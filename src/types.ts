@@ -17,17 +17,13 @@ export interface AppState {
     iteration: number;
     currentLoss: number | null;
     forwardStepsCount: number;
+    lossHistory: number[];
   };
 
   // training process data
-  TrainingResult: {
-    gradients: number[] | null;
-    oldWeights: number[] | null;
-    newWeights: number[] | null;
-  };
+  trainingResult: TrainingResult
 
 
-  trainingResult: TrainingResult;
   simulationResult: SimulationResult | null;
   currentInput: number[];
 
@@ -36,7 +32,7 @@ export interface AppState {
 
   trainer: Trainer | null;
 
-  forwardStepResults: { input: number[], output: number[] }[];
+  forwardStepResults: Prediction[];
 }
 /*
 @TODO 
@@ -70,14 +66,15 @@ export interface AppState {
 }
 */
 
-
-
 export interface TrainingResult {
+  gradients: number[] | null;
+  oldWeights: number[] | null;
+  newWeights: number[] | null;
+}
+
+export interface Prediction {
   input: number[];
   output: number[];
-  gradients: number[];
-  oldWeights: number[];
-  newWeights: number[];
 }
 
 export interface TrainingData {

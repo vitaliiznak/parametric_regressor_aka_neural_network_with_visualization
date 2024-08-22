@@ -4,9 +4,50 @@ import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
 import { Trainer } from "./trainer";
+import { Value } from "./NeuralNetwork/value";
+import { batch } from "solid-js";
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
+
+const initialState: AppState = {
+  // Network configuration
+  network: new MLP(INITIAL_NETWORK),
+  visualData: { nodes: [], connections: [] },
+
+
+  // Training configuration
+  trainingConfig: INITIAL_TRAINING,
+  trainingData: null,
+
+  // Training state
+  trainingState: {
+    isTraining: false,
+    currentPhase: 'idle',
+    iteration: 0,
+    currentLoss: null,
+    forwardStepsCount: 0,
+    lossHistory: [],
+  },
+  currentInput: [],
+  simulationResult: {
+    input: [],
+    output: [],
+    layerOutputs: []
+  },
+  trainingResult: {
+    gradients: [],
+    oldWeights: [],
+    newWeights: [],
+  },
+
+  trainer: null,
+
+  forwardStepResults: []
+};
+
+
+export const [store, setStore] = createStore(initialState);
 
 // Action functions
 function initializeTrainingData() {
@@ -39,14 +80,6 @@ function resumeTraining() {
   // TODO: Implement resume logic
 }
 
-function updateTrainingProgress(iteration: number, loss: number) {
-  setStore('trainingState', { iteration, currentLoss: loss });
-}
-
-function updateNetwork(network: MLP) {
-  setStore('network', network);
-}
-
 function initializeTrainer() {
   if (!store.trainingData || !store.trainingConfig) {
     throw new Error("Training data or configuration not available");
@@ -66,7 +99,7 @@ function singleStepForward() {
   if (!trainer) {
     trainerAux = initializeTrainer()
   }
-  if(!trainerAux){
+  if (!trainerAux) {
     throw new Error("Trainer not available");
   }
 
@@ -82,13 +115,12 @@ function singleStepForward() {
   }
 
   console.log("Forward step completed. Result:", result);
-  setStore('trainingResult', result);
   setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
   setStore('forwardStepResults', [
     ...store.forwardStepResults,
-    { 
-      input: result.input, 
-      output: result.output 
+    {
+      input: result.input,
+      output: result.output
     }
   ]);
   // Update the trainingResult with the simulation input
@@ -107,7 +139,10 @@ function singleStepForward() {
   console.log("Finished singleStepForward");
 }
 
+let isCalculatingLoss = false;
 function calculateLoss() {
+  if (isCalculatingLoss) return;
+  isCalculatingLoss = true;
   console.log("Starting calculateLoss");
   if (!store.trainer || store.trainingState.forwardStepsCount < store.trainingConfig.batchSize) {
     console.error("Cannot calculate loss");
@@ -115,10 +150,34 @@ function calculateLoss() {
   }
 
   console.log("Before calling trainer.calculateLoss()");
-  const result = store.trainer.calculateLoss();
+  console.log({
+    forwardStepResults: store.forwardStepResults,
+  })
+  const result = store.trainer.calculateLoss(store.forwardStepResults);
   console.log("After calling trainer.calculateLoss(). Result:", result);
 
+  let currentLoss: number;
+  if (result === null) {
+    throw new Error("Error calculating loss");
+  } else if (result instanceof Value) {
+    currentLoss = result.data;
+  } else {
+    currentLoss = result;
+  }
+  console.log("Here Current loss:", {
+    currentLoss
+  });
+  // Defer the state update to the next microtask
+  queueMicrotask(() => {
+    batch(() => {
+      setStore('trainingState', 'currentPhase', 'loss');
+      setStore('trainingState', 'currentLoss', currentLoss);
+      setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
+    });
+  });
+
   console.log("Finished calculateLoss");
+  isCalculatingLoss = false;
 }
 
 function stepBackward() {
@@ -183,50 +242,8 @@ function simulateInput(input: number[]) {
 }
 
 // Initial state
-const initialState: AppState = {
-  // Network configuration
-  network: new MLP(INITIAL_NETWORK),
-  visualData: { nodes: [], connections: [] },
-
-  // Training configuration
-  trainingConfig: INITIAL_TRAINING,
-  trainingData: null,
-
-  // Training state
-  trainingState:{
-    isTraining: false,
-    currentPhase: 'idle',
-    iteration: 0,
-    currentLoss: null,
-    forwardStepsCount: 0,
-  },
 
 
-
-
-
-
-  currentInput: [],
-  simulationResult: {
-    input: [],
-    output: [],
-    layerOutputs: []
-  },
-  trainingResult: {
-    input: [],
-    output: [],
-    gradients: [],
-    oldWeights: [],
-    newWeights: [],
-
-  },
-
-  trainer: null,
-
-  forwardStepResults: []
-};
-
-export const [store, setStore] = createStore(initialState);
 
 
 // Replace setStore with loggedSetStore in your actions
@@ -236,13 +253,10 @@ export const actions = {
   stopTraining,
   pauseTraining,
   resumeTraining,
-  updateTrainingProgress,
-  updateNetwork,
+
   singleStepForward,
   calculateLoss,
   stepBackward,
   updateWeights,
   simulateInput
 };
-
-export const createAppStore = (initialState: AppState) => createStore(initialState);

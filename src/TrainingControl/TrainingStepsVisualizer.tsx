@@ -2,13 +2,14 @@ import { Component, For, Show } from "solid-js";
 import { css } from "@emotion/css";
 import { FaSolidArrowRight, FaSolidCalculator } from 'solid-icons/fa';
 
-interface ForwardStepsVisualizerProps {
+interface TrainingStepsVisualizerProps {
   forwardStepsCount: number;
   forwardStepResults: { input: number[], output: number[] }[];
   batchSize: number;
+  currentLoss: number | null;
 }
 
-const ForwardStepsVisualizer: Component<ForwardStepsVisualizerProps> = (props) => {
+const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props) => {
   const styles = {
     container: css`
       margin-top: 1rem;
@@ -54,6 +55,20 @@ const ForwardStepsVisualizer: Component<ForwardStepsVisualizerProps> = (props) =
       font-weight: bold;
       margin-top: 0.25rem;
     `,
+    lossStep: css`
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: white;
+      border-radius: 0.25rem;
+      padding: 0.75rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    `,
   };
 
   return (
@@ -75,11 +90,14 @@ const ForwardStepsVisualizer: Component<ForwardStepsVisualizerProps> = (props) =
           )}
         </For>
         <Show when={props.forwardStepsCount >= props.batchSize}>
-          <div class={styles.step}>
+          <div class={styles.lossStep}>
             <div class={styles.stepIcon}>
               <FaSolidCalculator />
             </div>
             <div class={styles.stepLabel}>Loss Calculation</div>
+            <div class={styles.stepDetails}>
+              <div>Loss: {props.currentLoss?.toFixed(4) || 'N/A'}</div>
+            </div>
           </div>
         </Show>
       </div>
@@ -87,4 +105,4 @@ const ForwardStepsVisualizer: Component<ForwardStepsVisualizerProps> = (props) =
   );
 };
 
-export default ForwardStepsVisualizer;
+export default TrainingStepsVisualizer;
