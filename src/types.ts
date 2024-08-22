@@ -16,7 +16,6 @@ export interface AppState {
     currentPhase: 'idle' | 'forward' | 'loss' | 'backward' | 'update' | 'iteration';
     iteration: number;
     currentLoss: number | null;
-    forwardStepsCount: number;
     forwardStepResults: Prediction[];
     lossHistory: number[];
   };

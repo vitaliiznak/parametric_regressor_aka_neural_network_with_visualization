@@ -26,7 +26,6 @@ const initialState: AppState = {
     currentPhase: 'idle',
     iteration: 0,
     currentLoss: null,
-    forwardStepsCount: 0,
     forwardStepResults: [],
     lossHistory: [],
   },
@@ -111,7 +110,6 @@ function singleStepForward() {
   if (result === null) {
     console.log("Completed one epoch of training");
     batch(() => {
-      setStore('trainingState', 'forwardStepsCount', 0);
       setStore('trainingState', 'forwardStepResults', []);
     });
     return;
@@ -119,7 +117,6 @@ function singleStepForward() {
 
   console.log("Forward step completed. Result:", result);
   batch(() => {
-    setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
     setStore('trainingState', 'forwardStepResults', [...store.trainingState.forwardStepResults, { input: result.input, output: result.output }]);
     setStore('simulationResult', { input: result.input, output: result.output, layerOutputs: layerOutputs });
   });
@@ -155,7 +152,6 @@ function calculateLoss() {
       setStore('trainingState', 'currentPhase', 'loss');
       setStore('trainingState', 'currentLoss', currentLoss);
       setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
-      setStore('trainingState', 'forwardStepsCount', 0);
       setStore('forwardStepResults', []);
     });
   });

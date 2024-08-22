@@ -122,12 +122,10 @@ const TrainingControls: Component = () => {
   createEffect(() => {
     const {currentPhase} = store.trainingState 
     if (currentPhase === 'forward') {
-      setStore('trainingState', 'forwardStepsCount', store.trainingState.forwardStepsCount + 1);
       setIsLossCalculated(false);
     } else if (currentPhase === 'loss') {
       setIsLossCalculated(true);
     } else if (currentPhase === 'backward') {
-      setStore('trainingState', 'forwardStepsCount', 0);
       setIsLossCalculated(false);
     }
   });
@@ -156,7 +154,7 @@ const TrainingControls: Component = () => {
   };
 
   const calculateLoss = () => {
-    if (store.trainingState.forwardStepsCount === 0) {
+    if (store.trainingState.forwardStepResults.length === 0) {
       console.error("No forward steps taken");
       return;
     }
@@ -208,7 +206,7 @@ const TrainingControls: Component = () => {
       
 
       
-        <Show when={store.trainingState.forwardStepsCount > 0}>
+        <Show when={store.trainingState.forwardStepResults.length > 0}>
           <button class={styles.button} onClick={calculateLoss}>
             <FaSolidCalculator /> Calculate Loss
           </button>
