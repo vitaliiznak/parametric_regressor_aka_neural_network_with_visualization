@@ -1,12 +1,14 @@
 import { Component, For, Show } from "solid-js";
 import { css } from "@emotion/css";
-import { FaSolidArrowRight, FaSolidCalculator, FaSolidArrowLeft } from 'solid-icons/fa';
+import { FaSolidArrowRight, FaSolidCalculator, FaSolidArrowLeft, FaSolidArrowDown } from 'solid-icons/fa';
+import WeightUpdateVisualizer from './WeightUpdateVisualizer';
 
 interface TrainingStepsVisualizerProps {
   forwardStepResults: { input: number[], output: number[] }[];
   backwardStepResults: number[];
   batchSize: number;
   currentLoss: number | null;
+  weightUpdateResults: any | null;
 }
 
 const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props) => {
@@ -88,6 +90,24 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
       font-size: 1.5rem;
       color: #ff4d4d;
     `,
+    weightUpdateStep: css`
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: white;
+      border-radius: 0.25rem;
+      padding: 0.75rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    `,
+    weightUpdateStepIcon: css`
+      font-size: 1.25rem;
+      color: #3B82F6;
+    `,
   };
 
   return (
@@ -130,6 +150,17 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
               </div>
         
           </Show>
+        </Show>
+        <Show when={props.weightUpdateResults}>
+          <div class={styles.weightUpdateStep}>
+            <div class={styles.weightUpdateStepIcon}>
+              <FaSolidArrowDown />
+            </div>
+            <div class={styles.stepLabel}>Weight Update</div>
+            <div class={styles.stepDetails}>
+              <WeightUpdateVisualizer />
+            </div>
+          </div>
         </Show>
       </div>
     </div>

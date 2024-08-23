@@ -1,11 +1,11 @@
-import { Component, createEffect, createSignal, For, Show } from "solid-js";
+import { Component, createEffect, createSignal, Show } from "solid-js";
 import { css } from "@emotion/css";
-import { actions, setStore, store } from '../store';
+import { actions, store } from '../store';
 import TrainingStepsVisualizer from './TrainingStepsVisualizer';
 
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
-import { FaSolidBackward, FaSolidCalculator, FaSolidForward } from "solid-icons/fa";
+import { FaSolidBackward, FaSolidCalculator, FaSolidForward, FaSolidWeightScale } from "solid-icons/fa";
 import LossHistoryChart from "./LossHistoryChart";
 
 export const styles = {
@@ -213,6 +213,11 @@ const TrainingControls: Component = () => {
         <Show when={isLossCalculated()}>
           <button class={styles.controlButton} onClick={stepBackward}>
             <FaSolidBackward /> Backward Step
+          </button>
+        </Show>
+        <Show when={store.trainingState.backwardStepGradients.length > 0}>
+          <button class={styles.controlButton} onClick={updateWeights}>
+            <FaSolidWeightScale /> Update Weights
           </button>
         </Show>
       </div>

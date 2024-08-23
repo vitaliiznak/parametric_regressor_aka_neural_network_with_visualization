@@ -95,9 +95,6 @@ export class Trainer {
     this._network.zeroGrad();
     console.log('Gradients after zeroing:', this._network.parameters().map(p => p.grad));
 
-    console.log('Starting backward pass', {
-      currentLossData: this.currentLoss.data
-    });
     
     this.currentLoss.backward();
 
@@ -108,8 +105,17 @@ export class Trainer {
     return result;
   }
 
-  updateWeights(): any | null {
-   //to implement
+  updateWeights(learningRate: number): TrainingResult {
+    const oldWeights = this._network.parameters().map(p => p.data);
+    this._network.parameters().forEach(p => {
+      p.data -= learningRate * p.grad;
+    });
+    const newWeights = this._network.parameters().map(p => p.data);
+    return {
+      gradients: this._network.parameters().map(p => p.grad),
+      oldWeights,
+      newWeights
+    };
   }
 
   getCurrentIteration(): number {

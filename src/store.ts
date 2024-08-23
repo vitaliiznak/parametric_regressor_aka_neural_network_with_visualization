@@ -27,7 +27,7 @@ const initialState: AppState = {
     iteration: 0,
     currentLoss: null,
     forwardStepResults: [],
-    backwardStepGradients:  [],
+    backwardStepGradients: [],
     lossHistory: [],
   },
 
@@ -156,7 +156,7 @@ function calculateLoss() {
       setStore('trainingState', 'currentPhase', 'loss');
       setStore('trainingState', 'currentLoss', currentLoss);
       setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
- 
+
     });
   });
 
@@ -195,16 +195,17 @@ function stepBackward() {
 }
 
 function updateWeights() {
-  if (!store.trainer) {
-    console.error("Trainer not initialized");
-    return;
-  }
+  batch(() => {
+    if (!store.trainer || !store.trainingConfig) {
+      console.error("Trainer or training configuration not initialized");
+      return;
+    }
+    const result = store.trainer.updateWeights(store.trainingConfig.learningRate);
 
-  const result = store.trainer.updateWeights();
-  if (result) {
     setStore('trainingResult', result);
     setStore('network', store.trainer.network);
-  }
+    setStore('trainingState', 'currentPhase', 'update');
+  });
 }
 
 function simulateInput(input: number[]) {
