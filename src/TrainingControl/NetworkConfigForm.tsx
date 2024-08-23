@@ -5,62 +5,43 @@ import { setStore, store } from "../store";
 import { css } from "@emotion/css";
 import { CONFIG } from "../config";
 import { colors } from '../styles/colors';
+import { commonStyles } from '../styles/common';
+import { typography } from '../styles/typography';
+import Tooltip from '../components/Tooltip';
 
 const styles = {
   container: css`
-    background-color: ${colors.surface};
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 1rem;
+    ${commonStyles.card}
   `,
   title: css`
-    font-size: 1.25rem;
-    font-weight: bold;
+    font-size: ${typography.fontSize.xl};
+    font-weight: ${typography.fontWeight.bold};
     margin-bottom: 1rem;
     color: ${colors.text};
   `,
   form: css`
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   `,
   inputGroup: css`
     display: flex;
     flex-direction: column;
   `,
   label: css`
-    font-size: 0.875rem;
-    color: ${colors.textLight};
-    margin-bottom: 0.25rem;
+    ${commonStyles.label}
   `,
   input: css`
-    padding: 0.5rem;
-    border: 1px solid ${colors.border};
-    border-radius: 0.25rem;
-    font-size: 1rem;
-    &:focus {
-      outline: none;
-      border-color: ${colors.primary};
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-    }
+    ${commonStyles.input}
   `,
   button: css`
-    background-color: ${colors.primary};
-    color: ${colors.surface};
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: ${colors.primaryDark};
-    }
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
+    grid-column: span 2;
   `,
   currentConfig: css`
     margin-top: 1rem;
-    font-size: 0.875rem;
+    font-size: ${typography.fontSize.sm};
     color: ${colors.textLight};
   `,
 };
@@ -117,38 +98,40 @@ const NetworkConfigForm: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h3 class={styles.title}>Network Configuration</h3>
-      <form onSubmit={handleSubmit} class={styles.form}>
+      <h2 class={styles.title}>Network Configuration</h2>
+      <form class={styles.form} onSubmit={handleSubmit}>
         <div class={styles.inputGroup}>
-          <label class={styles.label}>
-            Layers (comma-separated):
-            <input
-              type="text"
-              value={layersString()}
-              onInput={handleLayersChange}
-              class={styles.input}
-              placeholder="e.g., 5,3,1"
-            />
+          <label class={commonStyles.label}>
+            Layer sizes:
+            <Tooltip content="Enter the number of neurons for each layer, separated by commas. E.g., 5,3,1">
+              <input
+                type="text"
+                value={layersString()}
+                onInput={handleLayersChange}
+                class={commonStyles.input}
+                placeholder="e.g., 5,3,1"
+              />
+            </Tooltip>
           </label>
         </div>
         <div class={styles.inputGroup}>
-          <label class={styles.label}>
-            Activations (comma-separated):
-            <input
-              type="text"
-              value={activations()}
-              onInput={handleActivationsChange}
-              class={styles.input}
-              placeholder="e.g., tanh,relu,sigmoid"
-            />
+          <label class={commonStyles.label}>
+            Activations:
+            <Tooltip content="Enter the activation function for each layer, separated by commas. E.g., tanh,relu,sigmoid">
+              <input
+                type="text"
+                value={activations()}
+                onInput={handleActivationsChange}
+                class={commonStyles.input}
+                placeholder="e.g., tanh,relu,sigmoid"
+              />
+            </Tooltip>
           </label>
         </div>
         <button type="submit" class={styles.button}>Update Network</button>
       </form>
       <div class={styles.currentConfig}>
-        <p>Current Configuration:</p>
-        <p>Layers: {store.network.layers.map(layer => layer.neurons.length).join(', ')}</p>
-        <p>Activations: {store.network.activations.join(', ')}</p>
+        <p>Current: {store.network.layers.map(layer => layer.neurons.length).join(', ')} | {store.network.activations.join(', ')}</p>
       </div>
     </div>
   );

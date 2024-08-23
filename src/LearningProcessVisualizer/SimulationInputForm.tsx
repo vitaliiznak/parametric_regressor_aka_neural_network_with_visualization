@@ -1,62 +1,45 @@
 import { Component, createSignal } from "solid-js";
 import { colors } from '../styles/colors';
+import { typography } from '../styles/typography';
+import { commonStyles } from '../styles/common';
 import { css } from "@emotion/css";
 import Tooltip from '../components/Tooltip';
 
 const styles = {
+  container: css`
+    ${commonStyles.card}
+  `,
   title: css`
-    font-size: 1.25rem;
-    font-weight: 500;
+    font-size: ${typography.fontSize.xl};
+    font-weight: ${typography.fontWeight.bold};
     margin-bottom: 1rem;
     color: ${colors.text};
   `,
   form: css`
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  `,
-  inputGroup: css`
-    display: flex;
-    flex-direction: column;
+    align-items: flex-end;
     gap: 0.5rem;
   `,
+  inputGroup: css`
+    flex: 1;
+  `,
   label: css`
-    font-weight: 500;
-    color: ${colors.textLight};
+    ${commonStyles.label}
   `,
   input: css`
-    border: 1px solid ${colors.border};
-    border-radius: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-    width: 100%;
-    background-color: ${colors.surface}; /* Add background color */
-    color: ${colors.text}; /* Add text color */
-    &:focus {
-      outline: none;
-      border-color: ${colors.primary};
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-    }
+    ${commonStyles.input}
   `,
   inputError: css`
     border-color: ${colors.error};
   `,
   errorMessage: css`
     color: ${colors.error};
-    font-size: 0.875rem;
+    font-size: ${typography.fontSize.sm};
+    margin-top: 0.25rem;
   `,
   button: css`
-    background-color: ${colors.primary};
-    color: ${colors.surface};
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: ${colors.primaryDark};
-    }
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
   `,
 };
 
@@ -83,32 +66,30 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulate }
 
   return (
     <div class={styles.container}>
-      <h3 class={styles.title}>Simulate ChatGPT Usage</h3>
+      <h3 class={commonStyles.sectionTitle}>Simulate ChatGPT Usage</h3>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>
-          <Tooltip content="Enter a value between 0 and 100 to represent the percentage of ChatGPT usage">
-            <label htmlFor="chatGPTUsage" class={styles.label}>
-              ChatGPT Usage (%)
-            </label>
+          <label htmlFor="chatGPTUsage" class={commonStyles.label}>
+            ChatGPT Usage (%)
+          </label>
+          <Tooltip content="Enter a value between 0 and 100">
+            <input
+              id="chatGPTUsage"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={chatGPTUsage()}
+              onInput={(e) => setChatGPTUsage(e.currentTarget.value)}
+              placeholder="0-100"
+              class={`${commonStyles.input} ${error() ? styles.inputError : ''}`}
+            />
           </Tooltip>
-          <input
-            id="chatGPTUsage"
-            type="number"
-            min="0"
-            max="100"
-            step="0.1"
-            value={chatGPTUsage()}
-            onInput={(e) => setChatGPTUsage(e.currentTarget.value)}
-            placeholder="Enter a value between 0 and 100"
-            class={`${styles.input} ${error() ? styles.inputError : ''}`}
-          />
           {error() && <div class={styles.errorMessage}>{error()}</div>}
         </div>
-        <Tooltip content="Run the simulation with the entered ChatGPT usage percentage">
-          <button type="submit" class={styles.button}>
-            Simulate
-          </button>
-        </Tooltip>
+        <button type="submit" class={styles.button}>
+          Simulate
+        </button>
       </form>
     </div>
   );

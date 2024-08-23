@@ -2,115 +2,43 @@ import { Component, createEffect, createSignal, Show } from "solid-js";
 import { css } from "@emotion/css";
 import { actions, store } from '../store';
 import TrainingStepsVisualizer from './TrainingStepsVisualizer';
-
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
+import { typography } from '../styles/typography';
+import { commonStyles } from '../styles/common';
 import { FaSolidBackward, FaSolidCalculator, FaSolidForward, FaSolidWeightScale } from "solid-icons/fa";
 import LossHistoryChart from "./LossHistoryChart";
 
-export const styles = {
-  controlsContainer: css`
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-  gap: 0.5rem;
-`,
-  controlButton: css`
-  background-color: #3B82F6;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  &:hover {
-    background-color: #2563EB;
-  }
-  &:disabled {
-    background-color: #E5E7EB;
-    cursor: not-allowed;
-  }
-`,
+const styles = {
   container: css`
-    background-color: ${colors.surface};
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    ${commonStyles.card}
     margin-top: 1rem;
   `,
   title: css`
-    font-size: 1.25rem;
-    font-weight: bold;
+    font-size: ${typography.fontSize.xl};
+    font-weight: ${typography.fontWeight.bold};
     margin-bottom: 1rem;
     color: ${colors.text};
   `,
-  button: css`
-    background-color: ${colors.primary};
-    color: ${colors.surface};
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: ${colors.primaryDark};
-    }
-    &:disabled {
-      background-color: ${colors.border};
-      cursor: not-allowed;
-    }
+  controlsContainer: css`
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
   `,
-  exportButton: css`
-    background-color: ${colors.secondary};
-    color: ${colors.surface};
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 1rem;
-    &:hover {
-      background-color: ${colors.secondaryDark};
-    }
-  `,
-  progressContainer: css`
-    margin-bottom: 1rem;
-  `,
-  progressLabel: css`
-    font-size: 0.875rem;
-    color: ${colors.textLight};
-    margin-bottom: 0.25rem;
-  `,
-  progressBar: css`
-    width: 100%;
-    height: 0.5rem;
-    background-color: ${colors.border};
-    border-radius: 0.25rem;
-    overflow: hidden;
-  `,
-  progressFill: css`
-    height: 100%;
-    background-color: ${colors.primary};
-    transition: width 300ms ease-in-out;
-  `,
-  lossContainer: css`
+  controlButton: css`
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: ${typography.fontSize.xs};
   `,
-  lossLabel: css`
-    font-size: 0.875rem;
-    color: ${colors.textLight};
-    margin-right: 0.5rem;
-  `,
-  lossValue: css`
-    font-size: 1rem;
-    font-weight: bold;
+  exportButton: css`
+    ${commonStyles.button}
+    ${commonStyles.secondaryButton}
+    margin-top: 1rem;
   `,
 };
 
@@ -163,7 +91,6 @@ const TrainingControls: Component = () => {
   const stepBackward = () => {
     actions.stepBackward();
   };
-
   const updateWeights = () => {
     actions.updateWeights();
   };
@@ -182,7 +109,7 @@ const TrainingControls: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h3 class={styles.title}>Training Control</h3>
+      <h2 class={styles.title}>Training Controls</h2>
       <TrainingStatus
         iteration={store.trainingState.iteration || 0}
         totalIterations={store.trainingConfig?.iterations || 0}
@@ -200,24 +127,21 @@ const TrainingControls: Component = () => {
 
       <div class={styles.controlsContainer}>
         <button class={styles.controlButton} onClick={singleStepForward}>
-          <FaSolidForward /> Forward Step
+          <FaSolidForward /> Forward
         </button>
-      
-
-      
         <Show when={store.trainingState.forwardStepResults.length > 0}>
-          <button class={styles.button} onClick={calculateLoss}>
-            <FaSolidCalculator /> Calculate Loss
+          <button class={styles.controlButton} onClick={calculateLoss}>
+            <FaSolidCalculator /> Loss
           </button>
         </Show>
         <Show when={isLossCalculated()}>
           <button class={styles.controlButton} onClick={stepBackward}>
-            <FaSolidBackward /> Backward Step
+            <FaSolidBackward /> Backward
           </button>
         </Show>
         <Show when={store.trainingState.backwardStepGradients.length > 0}>
           <button class={styles.controlButton} onClick={updateWeights}>
-            <FaSolidWeightScale /> Update Weights
+            <FaSolidWeightScale /> Update
           </button>
         </Show>
       </div>

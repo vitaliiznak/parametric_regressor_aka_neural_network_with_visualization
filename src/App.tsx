@@ -1,13 +1,11 @@
-import { Component, createEffect, createSignal } from 'solid-js';
+import { Component, createEffect, createSignal, Show } from 'solid-js';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
-import TrainingControls from './TrainingControl/TrainingControls';
-import NetworkConfigForm from './TrainingControl/NetworkConfigForm';
-import TrainingConfigForm from './TrainingControl/TrainingConfigForm';
+import FunctionVisualizer from './FunctionVisualizer';
+import ConfigPanel from './ConfigPanel';
+import ControlPanel from './ControlPanel';
+import LegendAndTask from './LegendAndTask';
 import { store, actions } from './store';
 
-import SimulationInputForm from './LearningProcessVisualizer/SimulationInputForm';
-import FunctionVisualizer from './FunctionVisualizer';
-import LegendAndTask from './LegendAndTask';
 import { css } from '@emotion/css';
 import { colors } from './styles/colors';
 
@@ -15,79 +13,84 @@ const App: Component = () => {
   createEffect(() => {
     actions.initializeTrainingData();
   });
-  const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
 
-  const handleSidebarToggle = (isOpen: boolean) => {
-    console.log("Sidebar toggle called:", isOpen);
-    setIsSidebarOpen(isOpen);
-  };
-
-  const simulateNetwork = () => {
-    if (!store.currentInput) {
-      alert("Please set input values first");
-      return;
-    }
-    actions.simulateInput(store.currentInput)
-  };
+  const [activeTab, setActiveTab] = createSignal<"network" | "function">("network");
 
   const styles = {
     mainContainer: css`
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      
-      @media (max-width: 768px) {
-        padding: 10px;
-      }
-    `,
-    contentWrapper: css`
       display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
+      flex-direction: column;
     `,
-    leftPanel: css`
-      flex: 2;
-      min-width: 300px;
+    header: css`
+      display: flex;
+      margin-bottom: 10px;
     `,
-    rightPanel: css`
-      flex: 1;
-      min-width: 250px;
-      
-      @media (max-width: 768px) {
-        width: 100%;
+    tabContainer: css`
+      display: flex;
+    `,
+    tab: css`
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      background-color: ${colors.surface};
+      color: ${colors.text};
+      &.active {
+        background-color: ${colors.primary};
+        color: ${colors.surface};
       }
     `,
-    helpIcon: css`
-      cursor: help;
-      margin-left: 5px;
-      color: ${colors.primary};
+    content: css`
+      display: flex;
+      min-height: 0;
+    `,
+    visualizer: css`
+      flex: 1;
+ 
+      background-color: ${colors.surface};
+      border-radius: 4px;
+   
+    `,
+    sidebar: css`
+      display: flex;
+      flex-direction: column;
     `,
   };
 
   return (
     <div class={styles.mainContainer}>
-      <LegendAndTask />
-      <div class={styles.contentWrapper}>
-        <div class={styles.leftPanel}>
-      
-          <NetworkVisualizer
-            includeLossNode={false}
-            onVisualizationUpdate={() => console.log("Visualization updated")}
-            onSidebarToggle={handleSidebarToggle}
-          />
-       
-   
-          <FunctionVisualizer />
+      <div class={styles.header}>
+        <LegendAndTask />
+      </div>
+      <div class={styles.tabContainer}>
+          <button
+            class={`${styles.tab} ${activeTab() === "network" ? "active" : ""}`}
+            onClick={() => setActiveTab("network")}
+          >
+            Network
+          </button>
+          <button
+            class={`${styles.tab} ${activeTab() === "function" ? "active" : ""}`}
+            onClick={() => setActiveTab("function")}
+          >
+            Function
+          </button>
         </div>
-        <div class={styles.rightPanel}>
-       
-          <NetworkConfigForm />
-    
-          <TrainingConfigForm />
-    
-          <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
-      
-          <SimulationInputForm onSimulate={simulateNetwork} />
+      <div class={styles.content}>
+        <div class={styles.visualizer}>
+          <Show when={activeTab() === "network"}>
+            <NetworkVisualizer
+              includeLossNode={false}
+              onVisualizationUpdate={() => console.log("Visualization updated")}
+            />
+          </Show>
+          <Show when={activeTab() === "function"}>
+            <FunctionVisualizer />
+          </Show>
+        </div>
+        <div class={styles.sidebar}>
+          <ConfigPanel />
+          <ControlPanel />
         </div>
       </div>
     </div>

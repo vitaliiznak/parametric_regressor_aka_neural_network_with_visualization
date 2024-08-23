@@ -2,60 +2,39 @@ import { Component } from "solid-js";
 import { setStore, store } from "../store";
 import { css } from "@emotion/css";
 import { colors } from '../styles/colors';
+import { commonStyles } from '../styles/common';
+import { typography } from '../styles/typography';
+import Tooltip from '../components/Tooltip';
 
 const styles = {
   container: css`
-    background-color: ${colors.surface};
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 1rem;
+    ${commonStyles.card}
   `,
   title: css`
-    font-size: 1.25rem;
-    font-weight: bold;
+    font-size: ${typography.fontSize.xl};
+    font-weight: ${typography.fontWeight.bold};
     margin-bottom: 1rem;
     color: ${colors.text};
   `,
   form: css`
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   `,
   inputGroup: css`
     display: flex;
     flex-direction: column;
   `,
   label: css`
-    font-size: 0.875rem;
-    color: ${colors.textLight};
-    margin-bottom: 0.25rem;
+    ${commonStyles.label}
   `,
   input: css`
-    padding: 0.5rem;
-    border: 1px solid ${colors.border};
-    border-radius: 0.25rem;
-    font-size: 1rem;
-    background-color: ${colors.surface}; /* Add background color */
-    color: ${colors.text}; /* Add text color */
-    &:focus {
-      outline: none;
-      border-color: ${colors.primary};
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-    }
+    ${commonStyles.input}
   `,
   button: css`
-    background-color: ${colors.primary};
-    color: ${colors.surface};
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    &:hover {
-      background-color: ${colors.primaryDark};
-    }
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
+    grid-column: span 2;
   `,
 };
 
@@ -67,29 +46,36 @@ const TrainingConfigForm: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h3 class={styles.title}>Training Configuration</h3>
+      <h2 class={styles.title}>Training Configuration</h2>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>
-          <label class={styles.label}>
+          <label class={commonStyles.label}>
             Learning Rate:
-            <input
-              type="number"
-              step="0.001"
-              value={store.trainingConfig.learningRate}
-              onInput={(e) => setStore('trainingConfig', 'learningRate', Number(e.currentTarget.value))}
-              class={styles.input}
-            />
+            <Tooltip content="The learning rate determines how quickly the model adapts to the problem. Typical values range from 0.001 to 0.1.">
+              <input
+                type="number"
+                step="0.001"
+                min="0.001"
+                max="1"
+                value={store.trainingConfig.learningRate}
+                onInput={(e) => setStore('trainingConfig', 'learningRate', Number(e.currentTarget.value))}
+                class={commonStyles.input}
+              />
+            </Tooltip>
           </label>
         </div>
         <div class={styles.inputGroup}>
-          <label class={styles.label}>
+          <label class={commonStyles.label}>
             Iterations:
-            <input
-              type="number"
-              value={store.trainingConfig.iterations}
-              onInput={(e) => setStore('trainingConfig', 'iterations', Number(e.currentTarget.value))}
-              class={styles.input}
-            />
+            <Tooltip content="The number of times the entire dataset is passed through the network during training.">
+              <input
+                type="number"
+                min="1"
+                value={store.trainingConfig.iterations}
+                onInput={(e) => setStore('trainingConfig', 'iterations', Number(e.currentTarget.value))}
+                class={commonStyles.input}
+              />
+            </Tooltip>
           </label>
         </div>
         <button type="submit" class={styles.button}>Update Training Config</button>

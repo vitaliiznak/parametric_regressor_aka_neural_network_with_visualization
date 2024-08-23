@@ -2,48 +2,48 @@ import { Component } from "solid-js";
 import { css } from '@emotion/css';
 import { FiCpu, FiTrendingUp } from 'solid-icons/fi';
 import { colors } from './styles/colors';
+import { typography } from './styles/typography';
+import { commonStyles, spacing } from './styles/common';
+
+const styles = {
+  container: css`
+    ${commonStyles.card}
+    margin-bottom: ${spacing.xl};
+    transition: all 0.3s ease;
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+  `,
+  title: css`
+    font-size: ${typography.fontSize['2xl']};
+    font-weight: ${typography.fontWeight.bold};
+    color: ${colors.text};
+    margin-bottom: ${spacing.md};
+  `,
+  description: css`
+    font-size: ${typography.fontSize.base};
+    color: ${colors.textLight};
+    margin-bottom: ${spacing.lg};
+  `,
+  infoCardsContainer: css`
+    display: flex;
+    justify-content: space-around;
+    margin-top: ${spacing.lg};
+    background-color: ${colors.background};
+    border-radius: ${spacing.md};
+    padding: ${spacing.lg};
+  `,
+};
 
 const LegendAndTask: Component = () => {
   return (
-    <div class={css`
-      background-color: ${colors.background};
-      border-radius: 16px;
-      padding: 30px;
-      margin-bottom: 40px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      border: 1px solid ${colors.border};
-      transition: all 0.3s ease;
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-      }
-    `}>
-      <h2 class={css`
-        color: ${colors.text};
-        margin-bottom: 24px;
-        font-size: 32px;
-        font-weight: 700;
-        text-align: center;
-      `}>Neural Network Visualizer: The ChatGPT Productivity Paradox</h2>
-      <p class={css`
-        color: ${colors.textLight};
-        line-height: 1.8;
-        margin-bottom: 24px;
-        font-size: 18px;
-        text-align: center;
-      `}>
-        Explore the relationship between ChatGPT usage and developer productivity. 
-        This interactive tool helps you find the optimal balance for maximum efficiency.
+    <div class={styles.container}>
+      <h2 class={styles.title}>ChatGPT Productivity Paradox</h2>
+      <p class={styles.description}>
+        Explore the relationship between ChatGPT usage and productivity scores.
       </p>
-      <div class={css`
-        display: flex;
-        justify-content: space-around;
-        margin-top: 30px;
-        background-color: ${colors.surface};
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-      `}>
+      <div class={styles.infoCardsContainer}>
         <InfoCard 
           icon={<FiCpu size={32} color={colors.primary} />} 
           title="Input" 
