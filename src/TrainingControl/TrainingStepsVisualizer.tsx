@@ -1,14 +1,15 @@
 import { Component, For, Show } from "solid-js";
 import { css } from "@emotion/css";
 import { FaSolidArrowRight, FaSolidCalculator, FaSolidArrowLeft, FaSolidArrowDown } from 'solid-icons/fa';
-import WeightUpdateVisualizer from './WeightUpdateVisualizer';
+import WeightUpdateStep from './WeightUpdateStep';
+import { TrainingStepResult } from "../types";
 
 interface TrainingStepsVisualizerProps {
   forwardStepResults: { input: number[], output: number[] }[];
   backwardStepResults: number[];
   batchSize: number;
   currentLoss: number | null;
-  weightUpdateResults: any | null;
+  weightUpdateResults: TrainingStepResult;
 }
 
 const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props) => {
@@ -127,7 +128,7 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
             </div>
           )}
         </For>
-        <Show when={props.forwardStepResults.length >= props.batchSize}>
+        <Show when={props.currentLoss !== undefined && props.currentLoss !== null}>
           <div class={styles.lossStep}>
             <div class={styles.stepIcon}>
               <FaSolidCalculator />
@@ -137,30 +138,26 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
               <div>Loss: {props.currentLoss?.toFixed(4) || 'N/A'}</div>
             </div>
           </div>
-          <Show when={props.backwardStepResults.length > 0}>
-          
-              <div class={styles.backwardStep}>
-                <div class={styles.backwardStepIcon}>
-                  <FaSolidArrowLeft />
-                </div>
-                <div class={styles.stepLabel}>Backward Step</div>
-                <div class={styles.stepDetails}>
-                  <div>Gradients: {props.backwardStepResults.map(v => v.toFixed(4)).join(', ')}</div>
-                </div>
-              </div>
-        
-          </Show>
         </Show>
-        <Show when={props.weightUpdateResults}>
-          <div class={styles.weightUpdateStep}>
-            <div class={styles.weightUpdateStepIcon}>
-              <FaSolidArrowDown />
+        <Show when={props.backwardStepResults.length > 0}>
+
+          <div class={styles.backwardStep}>
+            <div class={styles.backwardStepIcon}>
+              <FaSolidArrowLeft />
             </div>
-            <div class={styles.stepLabel}>Weight Update</div>
+            <div class={styles.stepLabel}>Backward Step</div>
             <div class={styles.stepDetails}>
-              <WeightUpdateVisualizer />
+              <div>Gradients: {props.backwardStepResults.map(v => v.toFixed(4)).join(', ')}</div>
             </div>
           </div>
+
+        </Show>
+
+        <Show when={props.weightUpdateResults?.newWeights?.length}>
+          <WeightUpdateStep
+            oldWeights={props.weightUpdateResults.oldWeights ?? []}
+            newWeights={props.weightUpdateResults.newWeights ?? []}
+          />
         </Show>
       </div>
     </div>

@@ -24,7 +24,6 @@ const ControlPanel: Component = () => {
   return (
     <div class={styles.container}>
       <div class={styles.section}>
-        <div class={styles.sectionTitle}>Training Controls</div>
         <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
       </div>
       <div class={styles.section}>

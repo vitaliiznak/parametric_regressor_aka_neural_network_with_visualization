@@ -1,6 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-import { BackwardStepGradients, Prediction, TrainingConfig, TrainingResult } from "./types";
+import { BackwardStepGradients, Prediction, TrainingConfig, TrainingStepResult } from "./types";
 
 export class Trainer {
   _network: MLP;
@@ -105,7 +105,7 @@ export class Trainer {
     return result;
   }
 
-  updateWeights(learningRate: number): TrainingResult {
+  updateWeights(learningRate: number): TrainingStepResult {
     const oldWeights = this._network.parameters().map(p => p.data);
     this._network.parameters().forEach(p => {
       p.data -= learningRate * p.grad;

@@ -22,7 +22,7 @@ export interface AppState {
   };
 
   // training process data
-  trainingResult: TrainingResult
+  trainingStepResult: TrainingStepResult
 
   trainer: Trainer | null;
   
@@ -34,7 +34,7 @@ export interface AppState {
 
 export type BackwardStepGradients = number[]
 
-export interface TrainingResult {
+export interface TrainingStepResult {
   gradients: number[] | null;
   oldWeights: number[] | null;
   newWeights: number[] | null;

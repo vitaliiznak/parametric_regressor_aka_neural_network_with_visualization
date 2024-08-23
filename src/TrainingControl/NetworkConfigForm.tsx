@@ -98,7 +98,6 @@ const NetworkConfigForm: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h2 class={styles.title}>Network Configuration</h2>
       <form class={styles.form} onSubmit={handleSubmit}>
         <div class={styles.inputGroup}>
           <label class={commonStyles.label}>

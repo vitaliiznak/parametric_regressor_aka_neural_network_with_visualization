@@ -9,7 +9,7 @@ const LearningProcessVisualizer: Component = () => {
 
   const renderData = createMemo(() => {
     console.log("renderData memo running");
-    if (!store.trainingResult) {
+    if (!store.trainingStepResult) {
       console.log("No training result");
       return null;
     }
@@ -112,13 +112,13 @@ const LearningProcessVisualizer: Component = () => {
   return (
     <div class={styles.container}>
       <h3 class={styles.title}>Learning Process</h3>
-      <Show when={store.trainingResult}>
+      <Show when={store.trainingStepResult}>
         {() => {
           console.log("Rendering training result");
           return (
             <>
               <div class={styles.stepInfo}>Current Step: {store.trainingState.currentPhase}</div>
-              <Show when={store.trainingResult}>
+              <Show when={store.trainingStepResult}>
                 <div class={styles.dataDisplay}>
                   {JSON.stringify(renderData(), null, 2)}
                 </div>

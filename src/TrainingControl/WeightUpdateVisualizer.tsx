@@ -32,12 +32,12 @@ const WeightUpdateVisualizer: Component = () => {
     <div class={styles.container}>
       <h4 class={styles.title}>Weight Updates</h4>
       <div class={styles.weightList}>
-        <For each={store.trainingResult.oldWeights}>
+        <For each={store.trainingStepResult.oldWeights}>
           {(oldWeight, index) => (
             <div class={styles.weightItem}>
               Weight {index()}: 
-              {oldWeight.toFixed(4)} → {store.trainingResult.newWeights[index()].toFixed(4)}
-              (Δ: {(store.trainingResult.newWeights[index()] - oldWeight).toFixed(4)})
+              {oldWeight.toFixed(4)} → {store.trainingStepResult.newWeights[index()].toFixed(4)}
+              (Δ: {(store.trainingStepResult.newWeights[index()] - oldWeight).toFixed(4)})
             </div>
           )}
         </For>

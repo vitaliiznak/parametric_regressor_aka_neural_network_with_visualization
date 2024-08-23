@@ -46,7 +46,6 @@ const TrainingConfigForm: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h2 class={styles.title}>Training Configuration</h2>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>
           <label class={commonStyles.label}>

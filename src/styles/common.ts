@@ -88,6 +88,12 @@ export const commonStyles = {
     margin-top: ${spacing.xs};
   `,
 
+  sectionTitle: css`
+    font-size: ${typography.fontSize.lg};
+    font-weight: ${typography.fontWeight.bold};
+    margin-bottom: 1rem;
+  `,
+
   // Add responsive breakpoints
   breakpoints: {
     sm: '@media (min-width: 640px)',

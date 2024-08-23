@@ -19,10 +19,12 @@ const styles = {
     ${commonStyles.button}
     font-size: ${typography.fontSize.xs};
     padding: 0.125rem 0.25rem;
+    &.active {
+      color: ${colors.surface};
+      background-color: ${colors.primary};
   `,
   configContent: css`
     max-height: 300px;
-    overflow-y: auto;
   `,
 };
 

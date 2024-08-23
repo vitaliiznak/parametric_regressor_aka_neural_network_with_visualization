@@ -64,13 +64,13 @@ const App: Component = () => {
       </div>
       <div class={styles.tabContainer}>
           <button
-            class={`${styles.tab} ${activeTab() === "network" ? "active" : ""}`}
+            class={`${styles.tab} ${activeTab() === "network" ? 'active' : ""}`}
             onClick={() => setActiveTab("network")}
           >
             Network
           </button>
           <button
-            class={`${styles.tab} ${activeTab() === "function" ? "active" : ""}`}
+            class={`${styles.tab} ${activeTab() === "function" ? 'active' : ""}`}
             onClick={() => setActiveTab("function")}
           >
             Function

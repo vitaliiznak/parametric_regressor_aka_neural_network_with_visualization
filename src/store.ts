@@ -31,7 +31,7 @@ const initialState: AppState = {
     lossHistory: [],
   },
 
-  trainingResult: {
+  trainingStepResult: {
     gradients: [],
     oldWeights: [],
     newWeights: [],
@@ -202,7 +202,7 @@ function updateWeights() {
     }
     const result = store.trainer.updateWeights(store.trainingConfig.learningRate);
 
-    setStore('trainingResult', result);
+    setStore('trainingStepResult', result);
     setStore('network', store.trainer.network);
     setStore('trainingState', 'currentPhase', 'update');
   });

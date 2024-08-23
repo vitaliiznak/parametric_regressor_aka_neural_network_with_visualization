@@ -123,6 +123,7 @@ const TrainingControls: Component = () => {
         batchSize={store.trainingState.forwardStepResults.length}
         currentLoss={store.trainingState.currentLoss}
         backwardStepResults={ store.trainingState.backwardStepGradients}
+        weightUpdateResults={store.trainingStepResult}
       />
 
       <div class={styles.controlsContainer}>
@@ -141,7 +142,7 @@ const TrainingControls: Component = () => {
         </Show>
         <Show when={store.trainingState.backwardStepGradients.length > 0}>
           <button class={styles.controlButton} onClick={updateWeights}>
-            <FaSolidWeightScale /> Update
+            <FaSolidWeightScale /> Update weights
           </button>
         </Show>
       </div>
