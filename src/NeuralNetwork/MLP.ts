@@ -7,6 +7,7 @@ export class MLP {
   activations: ActivationFunction[];
   inputSize: number;
   layerOutputs: Value[][] = [];
+  private gradientMapping: { neuron: number; parameter: number }[] = [];
 
   constructor(config: MLPConfig) {
     const { inputSize, layers, activations } = config;
@@ -22,6 +23,7 @@ export class MLP {
       console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
     });
     this.clearLayerOutputs();
+    this.computeGradientMapping();
   }
 
   getLayerOutputs(): number[][] {
@@ -109,5 +111,25 @@ export class MLP {
         neuron.b = new Value(json.layers[i].neurons[j].bias);
       });
     });
+  }
+
+  private computeGradientMapping() {
+    const parametersPerNeuron = this.getParametersPerNeuron();
+    let index = 0;
+  
+    for (const { neuron, weights, bias } of parametersPerNeuron) {
+      for (let parameter = 0; parameter < weights + bias; parameter++) {
+        this.gradientMapping.push({ neuron, parameter });
+        index++;
+      }
+    }
+  }
+
+  getGradientMapping() {
+    return this.gradientMapping;
+  }
+
+  getParametersPerNeuron(): { neuron: number, weights: number, bias: number }[] {
+    return this.layers.flatMap(layer => layer.getParametersCount());
   }
 }

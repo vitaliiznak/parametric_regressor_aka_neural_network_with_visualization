@@ -27,7 +27,6 @@ const ControlPanel: Component = () => {
         <TrainingControls onVisualizationUpdate={() => console.log("Visualization updated")} />
       </div>
       <div class={styles.section}>
-        <div class={styles.sectionTitle}>Simulation Input</div>
         <SimulationInputForm onSimulate={() => {}} />
       </div>
     </div>

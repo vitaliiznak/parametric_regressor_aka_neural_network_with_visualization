@@ -20,6 +20,8 @@ const App: Component = () => {
     mainContainer: css`
       display: flex;
       flex-direction: column;
+      height: 100vh; 
+    
     `,
     header: css`
       display: flex;
@@ -42,18 +44,21 @@ const App: Component = () => {
     `,
     content: css`
       display: flex;
-      min-height: 0;
+      flex-grow: 1; 
     `,
     visualizer: css`
-      flex: 1;
- 
+      flex-grow: 1; 
       background-color: ${colors.surface};
       border-radius: 4px;
-   
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; 
     `,
     sidebar: css`
       display: flex;
       flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden; 
     `,
   };
 

@@ -18,4 +18,12 @@ export class Layer {
   parameters(): Value[] {
     return this.neurons.flatMap(neuron => neuron.parameters());
   }
+
+ getParametersCount(): { neuron: number, weights: number, bias: number }[] {
+    return this.neurons.map((neuron, index) => ({
+      neuron: index + 1,
+      weights: neuron.w.length,
+      bias: 1
+    }));
+  }
 }

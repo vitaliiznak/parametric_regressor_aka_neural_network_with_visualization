@@ -32,7 +32,7 @@ export interface AppState {
 
 }
 
-export type BackwardStepGradients = number[]
+export type BackwardStepGradients = { neuron: number; parameter: number; gradient: number }[];
 
 export interface TrainingStepResult {
   gradients: number[] | null;

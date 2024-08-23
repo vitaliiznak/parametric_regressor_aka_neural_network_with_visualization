@@ -23,8 +23,8 @@ const styles = {
   controlsContainer: css`
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.25rem;
-    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
   `,
   controlButton: css`
     ${commonStyles.button}
@@ -34,11 +34,44 @@ const styles = {
     justify-content: center;
     gap: 0.25rem;
     font-size: ${typography.fontSize.xs};
+    padding: 0.5rem 1rem; // Increase padding for larger buttons
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   `,
   exportButton: css`
     ${commonStyles.button}
     ${commonStyles.secondaryButton}
     margin-top: 1rem;
+  `,
+  progressBar: css`
+    width: 100%;
+    height: 6px;
+    background-color: ${colors.border};
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  `,
+  progressFill: css`
+    height: 100%;
+    background-color: ${colors.primary};
+    transition: width 300ms ease-in-out;
+  `,
+  trainingStepsContainer: css`
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  `,
+  trainingStepButton: css`
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: ${typography.fontSize.xs};
+    padding: 0.5rem 1rem; // Increase padding for larger buttons
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   `,
 };
 
@@ -48,15 +81,13 @@ const TrainingControls: Component = () => {
   const [isLossCalculated, setIsLossCalculated] = createSignal(false);
 
   createEffect(() => {
-    const {currentPhase} = store.trainingState 
+    const { currentPhase } = store.trainingState
     if (currentPhase === 'forward' || currentPhase === 'backward') {
       setIsLossCalculated(false);
     } else if (currentPhase === 'loss') {
       setIsLossCalculated(true);
     }
   });
-
-  
 
   const iterationProgress = () => {
     const currentIteration = store.trainingState.iteration || 0;
@@ -69,10 +100,6 @@ const TrainingControls: Component = () => {
     if (loss < 0.5) return colors.error;
     return colors.error;
   };
-
-
-
-
 
   const singleStepForward = () => {
     actions.singleStepForward();
@@ -117,34 +144,40 @@ const TrainingControls: Component = () => {
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
       />
-
+      <div class={styles.progressBar}>
+        <div class={styles.progressFill} style={{ width: `${iterationProgress() * 100}%` }}></div>
+      </div>
       <TrainingStepsVisualizer
         forwardStepResults={store.trainingState.forwardStepResults}
         batchSize={store.trainingState.forwardStepResults.length}
         currentLoss={store.trainingState.currentLoss}
-        backwardStepResults={ store.trainingState.backwardStepGradients}
+        backwardStepResults={store.trainingState.backwardStepGradients}
         weightUpdateResults={store.trainingStepResult}
       />
 
-      <div class={styles.controlsContainer}>
-        <button class={styles.controlButton} onClick={singleStepForward}>
-          <FaSolidForward /> Forward
-        </button>
-        <Show when={store.trainingState.forwardStepResults.length > 0}>
-          <button class={styles.controlButton} onClick={calculateLoss}>
-            <FaSolidCalculator /> Loss
+      <div class={styles.trainingStepsContainer}>
+        <div>
+          <button class={styles.trainingStepButton} onClick={singleStepForward}>
+            <FaSolidForward /> Forward
           </button>
-        </Show>
-        <Show when={isLossCalculated()}>
-          <button class={styles.controlButton} onClick={stepBackward}>
-            <FaSolidBackward /> Backward
-          </button>
-        </Show>
-        <Show when={store.trainingState.backwardStepGradients.length > 0}>
-          <button class={styles.controlButton} onClick={updateWeights}>
-            <FaSolidWeightScale /> Update weights
-          </button>
-        </Show>
+          <Show when={store.trainingState.forwardStepResults.length > 0}>
+            <button class={styles.trainingStepButton} onClick={calculateLoss}>
+              <FaSolidCalculator /> Loss
+            </button>
+          </Show>
+        </div>
+        <div>
+          <Show when={isLossCalculated()}>
+            <button class={styles.trainingStepButton} onClick={stepBackward}>
+              <FaSolidBackward /> Backward
+            </button>
+          </Show>
+          <Show when={store.trainingState.backwardStepGradients.length > 0}>
+            <button class={styles.trainingStepButton} onClick={updateWeights}>
+              <FaSolidWeightScale /> Update weights
+            </button>
+          </Show>
+        </div>
       </div>
 
       <LossHistoryChart

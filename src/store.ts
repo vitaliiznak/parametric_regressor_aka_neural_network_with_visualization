@@ -15,7 +15,6 @@ const initialState: AppState = {
   network: new MLP(INITIAL_NETWORK),
   visualData: { nodes: [], connections: [] },
 
-
   // Training configuration
   trainingConfig: INITIAL_TRAINING,
   trainingData: null,
@@ -45,11 +44,7 @@ const initialState: AppState = {
     output: [],
     layerOutputs: []
   },
-
-
-
 };
-
 
 export const [store, setStore] = createStore(initialState);
 
@@ -128,7 +123,6 @@ function singleStepForward() {
   console.log("Finished singleStepForward");
 }
 
-
 function calculateLoss() {
   console.log("Starting calculateLoss");
   if (!store.trainer) {
@@ -156,7 +150,6 @@ function calculateLoss() {
       setStore('trainingState', 'currentPhase', 'loss');
       setStore('trainingState', 'currentLoss', currentLoss);
       setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
-
     });
   });
 
@@ -183,7 +176,13 @@ function stepBackward() {
   if (result && Array.isArray(result)) {
     console.log("Updating store with result");
     try {
-      setStore('trainingState', 'backwardStepGradients', result);
+      const gradientMapping = store.network.getGradientMapping();
+      const transformedResult = result.map((gradient, index) => ({
+        ...gradientMapping[index],
+        gradient
+      }));
+
+      setStore('trainingState', 'backwardStepGradients', transformedResult);
       console.log("Store updated successfully");
     } catch (error) {
       console.error("Error updating store:", error);
@@ -227,9 +226,6 @@ function simulateInput(input: number[]) {
 
 // Initial state
 
-
-
-
 // Replace setStore with loggedSetStore in your actions
 export const actions = {
   initializeTrainingData,
@@ -237,7 +233,6 @@ export const actions = {
   stopTraining,
   pauseTraining,
   resumeTraining,
-
   singleStepForward,
   calculateLoss,
   stepBackward,
