@@ -21,7 +21,6 @@ const initialState: AppState = {
 
   // Training state
   trainingState: {
-    isTraining: false,
     currentPhase: 'idle',
     iteration: 0,
     currentLoss: null,
@@ -66,9 +65,6 @@ function startTraining() {
 }
 
 function stopTraining() {
-  setStore('trainingState', produce(state => {
-    state.isTraining = false;
-  }));
 }
 
 function pauseTraining() {
@@ -89,6 +85,16 @@ function initializeTrainer() {
   setStore('trainer', trainer);
 
   return trainer;
+}
+
+function stepReset() {
+  batch(() => {
+    setStore('trainingState', 'forwardStepResults', []);
+    setStore('trainingState', 'backwardStepGradients', []);
+    setStore('trainingState', 'lossHistory', []);
+    setStore('trainingState', 'currentLoss', null);
+    setStore('trainingState', 'currentPhase', 'idle');
+  });
 }
 
 function singleStepForward() {
@@ -176,13 +182,9 @@ function stepBackward() {
   if (result && Array.isArray(result)) {
     console.log("Updating store with result");
     try {
-      const gradientMapping = store.network.getGradientMapping();
-      const transformedResult = result.map((gradient, index) => ({
-        ...gradientMapping[index],
-        gradient
-      }));
+      console.log('here stepBackward', result)
 
-      setStore('trainingState', 'backwardStepGradients', transformedResult);
+      setStore('trainingState', 'backwardStepGradients', result);
       console.log("Store updated successfully");
     } catch (error) {
       console.error("Error updating store:", error);
@@ -237,5 +239,6 @@ export const actions = {
   calculateLoss,
   stepBackward,
   updateWeights,
-  simulateInput
+  simulateInput,
+  stepReset
 };

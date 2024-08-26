@@ -9,7 +9,7 @@ import { colors } from '../styles/colors';
 
 // Create tooltip element
 const tooltip = document.createElement('div');
-tooltip.style.position = 'absolute';
+tooltip.style.position = 'fixed';
 tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
 tooltip.style.color = 'white';
 tooltip.style.padding = '5px';
@@ -19,10 +19,29 @@ tooltip.style.display = 'none';
 document.body.appendChild(tooltip);
 
 const showTooltip = (x: number, y: number, text: string) => {
-  tooltip.style.left = `${x + 10}px`;
-  tooltip.style.top = `${y + 10}px`;
-  tooltip.innerText = text;
-  tooltip.style.display = 'block';
+
+  if (tooltip) {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = text;
+
+    // Adjust position to keep tooltip on screen
+    const rect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let left = x + 15;
+    let top = y - 40;
+
+    if (left + rect.width > viewportWidth) {
+      left = x - rect.width - 10;
+    }
+    if (top + rect.height > viewportHeight) {
+      top = y - rect.height - 10;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  }
 };
 
 const hideTooltip = () => {
@@ -268,7 +287,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       // Save the custom position
       setCustomNodePositions(prev => ({
         ...prev,
-        [draggedNode.id]: { x: scaledX, y: scaledY }
+        [draggedNode?.id ?? '']: { x: scaledX, y: scaledY }
       }));
 
       setVisualData({
@@ -290,8 +309,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       );
       if (hoveredNode) {
         canvas.style.cursor = 'pointer';
-        // Show tooltip
-        showTooltip(e.clientX, e.clientY, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue}`);
+        // Show tooltip closer to the mouse pointer
+        showTooltip(e.clientX + 10, e.clientY + 10, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue?.toFixed(4) || 'N/A'}`);
       } else {
         canvas.style.cursor = 'grab';
         hideTooltip();
@@ -363,6 +382,21 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           render(performance.now()); // Re-render to remove the highlight
         }}
       />
+      <div
+        id="network-tooltip"
+        class={css`
+          position: fixed;
+          display: none;
+          background-color: ${colors.surface};
+          border: 1px solid ${colors.border};
+          padding: 5px;
+          border-radius: 4px;
+          font-size: 12px;
+          pointer-events: none;
+          z-index: 1000;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        `}
+      ></div>
     </div>
   );
 };

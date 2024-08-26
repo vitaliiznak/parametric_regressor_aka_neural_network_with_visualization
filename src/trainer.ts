@@ -95,11 +95,17 @@ export class Trainer {
     this._network.zeroGrad();
     console.log('Gradients after zeroing:', this._network.parameters().map(p => p.grad));
 
-    
     this.currentLoss.backward();
 
-    const result: BackwardStepGradients = this._network.parameters().map(p => p.grad);
-    
+    const result: BackwardStepGradients = this._network.layers.flatMap((layer, layerIndex) =>
+      layer.neurons.map((neuron, neuronIndex) => ({
+        neuron: neuronIndex + 1,
+        weights: neuron.w.length,
+        bias: 1,
+        gradients: [...neuron.w.map(w => w.grad), neuron.b.grad]
+      }))
+    );
+
     console.log('Gradients after backward pass:', result);
 
     return result;

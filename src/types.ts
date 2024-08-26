@@ -12,12 +12,11 @@ export interface AppState {
 
   // Training state
   trainingState: {
-    isTraining: boolean;
     currentPhase: 'idle' | 'forward' | 'loss' | 'backward' | 'update' | 'iteration';
     iteration: number;
     currentLoss: number | null;
     forwardStepResults: Prediction[];
-    backwardStepGradients: BackwardStepGradients
+    backwardStepGradients: BackwardStepGradients; // Changed to allow null
     lossHistory: number[];
   };
 
@@ -32,7 +31,12 @@ export interface AppState {
 
 }
 
-export type BackwardStepGradients = { neuron: number; parameter: number; gradient: number }[];
+export type BackwardStepGradients = {
+  neuron: number;
+  weights: number;
+  bias: number;
+  gradients: number[];
+}[];
 
 export interface TrainingStepResult {
   gradients: number[] | null;

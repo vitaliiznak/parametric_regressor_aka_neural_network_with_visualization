@@ -73,6 +73,10 @@ const styles = {
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   `,
+  disabledButton: css`
+    opacity: 0.5;
+    cursor: not-allowed;
+  `,
 };
 
 const TrainingControls: Component = () => {
@@ -101,25 +105,40 @@ const TrainingControls: Component = () => {
     return colors.error;
   };
 
+  const isForwardDisabled = () => 
+    (store.trainingState.currentPhase !== 'idle' && store.trainingState.currentPhase !== 'update') ||
+    store.trainingState.backwardStepGradients.length > 0;
+
+  const isLossDisabled = () => 
+    store.trainingState.forwardStepResults.length === 0 ||
+    store.trainingState.backwardStepGradients.length > 0;
+
+  const isBackwardDisabled = () => store.trainingState.currentPhase !== 'loss';
+
+  const isUpdateWeightsDisabled = () => store.trainingState.backwardStepGradients.length === 0;
+
+  const isResetDisabled = () => store.trainingState.forwardStepResults.length === 0;
+
   const singleStepForward = () => {
-    actions.singleStepForward();
+    if (!isForwardDisabled()) actions.singleStepForward();
+    setIsLossCalculated(false);
+  };
+
+  const stepReset = () => {
+    if (!isResetDisabled()) actions.stepReset();
     setIsLossCalculated(false);
   };
 
   const calculateLoss = () => {
-    if (store.trainingState.forwardStepResults.length === 0) {
-      console.error("No forward steps taken");
-      return;
-    }
-    actions.calculateLoss();
+    if (!isLossDisabled()) actions.calculateLoss();
     setIsLossCalculated(true);
   };
 
   const stepBackward = () => {
-    actions.stepBackward();
+    if (!isBackwardDisabled()) actions.stepBackward();
   };
   const updateWeights = () => {
-    actions.updateWeights();
+    if (!isUpdateWeightsDisabled()) actions.updateWeights();
   };
 
   const handleWheel = (e: WheelEvent) => {
@@ -157,26 +176,43 @@ const TrainingControls: Component = () => {
 
       <div class={styles.trainingStepsContainer}>
         <div>
-          <button class={styles.trainingStepButton} onClick={singleStepForward}>
+          <button
+            class={`${styles.trainingStepButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
+            onClick={singleStepForward}
+            disabled={isForwardDisabled()}
+          >
             <FaSolidForward /> Forward
           </button>
-          <Show when={store.trainingState.forwardStepResults.length > 0}>
-            <button class={styles.trainingStepButton} onClick={calculateLoss}>
-              <FaSolidCalculator /> Loss
-            </button>
-          </Show>
+          <button
+            class={`${styles.trainingStepButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
+            onClick={calculateLoss}
+            disabled={isLossDisabled()}
+          >
+            <FaSolidCalculator /> Loss
+          </button>
         </div>
+        <button
+          class={`${styles.trainingStepButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
+          onClick={stepReset}
+          disabled={isResetDisabled()}
+        >
+          Reset
+        </button>
         <div>
-          <Show when={isLossCalculated()}>
-            <button class={styles.trainingStepButton} onClick={stepBackward}>
-              <FaSolidBackward /> Backward
-            </button>
-          </Show>
-          <Show when={store.trainingState.backwardStepGradients.length > 0}>
-            <button class={styles.trainingStepButton} onClick={updateWeights}>
-              <FaSolidWeightScale /> Update weights
-            </button>
-          </Show>
+          <button
+            class={`${styles.trainingStepButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
+            onClick={stepBackward}
+            disabled={isBackwardDisabled()}
+          >
+            <FaSolidBackward /> Backward
+          </button>
+          <button
+            class={`${styles.trainingStepButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
+            onClick={updateWeights}
+            disabled={isUpdateWeightsDisabled()}
+          >
+            <FaSolidWeightScale /> Update weights
+          </button>
         </div>
       </div>
 
