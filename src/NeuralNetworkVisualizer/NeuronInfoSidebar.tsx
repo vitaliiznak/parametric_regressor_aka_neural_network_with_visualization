@@ -3,7 +3,6 @@ import { css } from "@emotion/css";
 import { VisualNode } from "../types";
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
-import { FaSolidChevronDown, FaSolidChevronRight } from 'solid-icons/fa';
 import { Chart } from 'chart.js/auto';
 
 interface NeuronInfoSidebarProps {
@@ -12,56 +11,14 @@ interface NeuronInfoSidebarProps {
 }
 
 const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
-  const [expandedSections, setExpandedSections] = createSignal<Set<string>>(new Set(['basic']));
-  let weightsChartInstance: Chart | null = null;
   let activationChartInstance: Chart | null = null;
-
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
-      } else {
-        newSet.add(section);
-      }
-      return newSet;
-    });
-  };
+  const [showDetails, setShowDetails] = createSignal(false);
 
   createEffect(() => {
     if (props.neuron) {
-      renderWeightsChart();
       renderActivationFunctionChart();
     }
   });
-
-  const renderWeightsChart = () => {
-    const ctx = document.getElementById('weightsChart') as HTMLCanvasElement;
-    if (ctx && props.neuron) {
-      if (weightsChartInstance) {
-        weightsChartInstance.destroy();
-      }
-      weightsChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: props.neuron.weights.map((_, i) => `W${i + 1}`),
-          datasets: [{
-            label: 'Weights',
-            data: props.neuron.weights,
-            backgroundColor: colors.primary,
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-  };
 
   const renderActivationFunctionChart = () => {
     const ctx = document.getElementById('activationFunctionChart') as HTMLCanvasElement;
@@ -117,77 +74,56 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
     }
   };
 
+  const calculateEquation = (neuron: VisualNode) => {
+    const terms = neuron.weights.map((w, i) => `x${i + 1} * ${w.toFixed(4)}`);
+    return `${terms.join(' + ')} + ${neuron.bias.toFixed(4)}`;
+  };
+
+  const calculateResult = (neuron: VisualNode): string => {
+    if (!neuron.inputValues || neuron.inputValues.some(v => v === undefined)) {
+      return 'N/A';
+    }
+    const result = neuron.weights.reduce((sum, w, i) => sum + w * (neuron.inputValues![i] || 0), neuron.bias);
+    return result.toFixed(4);
+  };
+
   return (
     <Show when={props.neuron}>
       <div class={styles.sidebar}>
         <button onClick={props.onClose} class={styles.closeButton}>
           &times;
         </button>
-        <h2 class={styles.title}>Neuron Information</h2>
+        <h2 class={styles.title}>Neuron Info</h2>
         
-        <Section
-          title="Basic Information"
-          expanded={expandedSections().has('basic')}
-          onToggle={() => toggleSection('basic')}
-        >
+        <div class={styles.infoSection}>
           <p><strong>ID:</strong> {props.neuron?.id}</p>
           <p><strong>Layer:</strong> {props.neuron?.layerId}</p>
           <p><strong>Activation:</strong> {props.neuron?.activation}</p>
-          <p><strong>Output Value:</strong> {props.neuron?.outputValue?.toFixed(4)}</p>
-        </Section>
+          <p><strong>Output:</strong> {props.neuron?.outputValue?.toFixed(4)}</p>
+        </div>
 
-        <Section
-          title="Weights and Bias"
-          expanded={expandedSections().has('weights')}
-          onToggle={() => toggleSection('weights')}
-        >
-          <canvas id="weightsChart" width="350" height="200" style="width: 100%; height: auto;"></canvas>
-          <p><strong>Bias:</strong> {props.neuron?.bias.toFixed(4)}</p>
-        </Section>
+        <div class={styles.equationSection}>
+          <h3>Neuron Equation:</h3>
+          <p>{calculateEquation(props.neuron!)} = {calculateResult(props.neuron!)}</p>
+          <button onClick={() => setShowDetails(!showDetails())} class={styles.detailsButton}>
+            {showDetails() ? 'Hide Details' : 'Show Details'}
+          </button>
+          <Show when={showDetails()}>
+            <div class={styles.detailsSection}>
+              {props.neuron!.weights.map((w, i) => (
+                <p>x{i + 1} = {props.neuron!.inputValues?.[i]?.toFixed(4) || 'N/A'}, w{i + 1} = {w.toFixed(4)}</p>
+              ))}
+              <p>bias = {props.neuron!.bias.toFixed(4)}</p>
+            </div>
+          </Show>
+        </div>
 
-        <Section
-          title="Activation Function"
-          expanded={expandedSections().has('activation')}
-          onToggle={() => toggleSection('activation')}
-        >
+        <div class={styles.chartSection}>
+          <h3>Activation Function:</h3>
           <canvas id="activationFunctionChart" width="350" height="200" style="width: 100%; height: auto;"></canvas>
-        </Section>
-
-        <Section
-          title="Connections"
-          expanded={expandedSections().has('connections')}
-          onToggle={() => toggleSection('connections')}
-        >
-          <p><strong>Input Connections:</strong> {props.neuron?.sourceNodes?.join(', ')}</p>
-          <p><strong>Output Connections:</strong> {props.neuron?.targetNodes?.join(', ')}</p>
-        </Section>
-
-        <Section
-          title="Layer Information"
-          expanded={expandedSections().has('layer')}
-          onToggle={() => toggleSection('layer')}
-        >
-          <p><strong>Layer ID:</strong> {props.neuron?.layerId}</p>
-          <p><strong>Layer Activation:</strong> {props.neuron?.layerActivation}</p>
-        </Section>
+        </div>
       </div>
     </Show>
-  );
-};
-
-const Section: Component<{ title: string; expanded: boolean; onToggle: () => void; children: any }> = (props) => {
-  return (
-    <div class={styles.section}>
-      <button class={styles.sectionToggle} onClick={props.onToggle}>
-        {props.expanded ? <FaSolidChevronDown /> : <FaSolidChevronRight />}
-        {props.title}
-      </button>
-      <Show when={props.expanded}>
-        <div class={styles.sectionContent}>
-          {props.children}
-        </div>
-      </Show>
-    </div>
   );
 };
 
@@ -196,7 +132,7 @@ const styles = {
     position: fixed;
     top: 0;
     right: 0;
-    width: 400px; // Increased from 300px to 400px
+    width: 400px;
     height: 100%;
     background-color: ${colors.surface};
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
@@ -220,23 +156,29 @@ const styles = {
     font-size: ${typography.fontSize.xl};
     margin-bottom: 1rem;
   `,
-  section: css`
+  infoSection: css`
     margin-bottom: 1rem;
   `,
-  sectionToggle: css`
-    display: flex;
-    align-items: center;
-    width: 100%;
-    background: none;
-    border: none;
-    text-align: left;
-    font-size: ${typography.fontSize.lg};
-    color: ${colors.text};
-    cursor: pointer;
-    padding: 0.5rem 0;
+  equationSection: css`
+    margin-bottom: 1rem;
   `,
-  sectionContent: css`
-    padding-left: 1rem;
+  detailsButton: css`
+    background-color: ${colors.secondary};
+    color: ${colors.surface};
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  `,
+  detailsSection: css`
+    margin-top: 10px;
+    padding: 10px;
+    background-color: ${colors.background};
+    border-radius: 4px;
+  `,
+  chartSection: css`
+    margin-top: 1rem;
   `,
 };
 

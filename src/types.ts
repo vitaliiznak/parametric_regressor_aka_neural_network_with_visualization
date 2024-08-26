@@ -75,6 +75,7 @@ export interface VisualNode {
   bias: number;
   outputValue?: number;
   activation?: string;
+  inputValues?: number[]; // Add this line
 }
 
 export interface VisualConnection {
