@@ -1,52 +1,11 @@
-import { Component, createEffect, onCleanup, createSignal } from "solid-js";
-import { css } from '@emotion/css';
-import { NetworkLayout } from "./layout";
+import { Component, createEffect, onCleanup, createSignal, createMemo, Show, batch } from "solid-js";
 import { NetworkRenderer } from "./renderer";
 import NeuronInfoSidebar from "./NeuronInfoSidebar";
 import { store } from "../store";
-import { VisualNetworkData, VisualNode } from "../types";
-import { colors } from '../styles/colors';
-
-// Create tooltip element
-const tooltip = document.createElement('div');
-tooltip.style.position = 'fixed';
-tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-tooltip.style.color = 'white';
-tooltip.style.padding = '5px';
-tooltip.style.borderRadius = '5px';
-tooltip.style.pointerEvents = 'none';
-tooltip.style.display = 'none';
-document.body.appendChild(tooltip);
-
-const showTooltip = (x: number, y: number, text: string) => {
-
-  if (tooltip) {
-    tooltip.style.display = 'block';
-    tooltip.innerHTML = text;
-
-    // Adjust position to keep tooltip on screen
-    const rect = tooltip.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let left = x + 15;
-    let top = y - 40;
-
-    if (left + rect.width > viewportWidth) {
-      left = x - rect.width - 10;
-    }
-    if (top + rect.height > viewportHeight) {
-      top = y - rect.height - 10;
-    }
-
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-  }
-};
-
-const hideTooltip = () => {
-  tooltip.style.display = 'none';
-};
+import { VisualNode } from "../types";
+import { useCanvasSetup } from "./useCanvasSetup";
+import { canvasStyle, containerStyle, tooltipStyle } from "./NetworkVisualizerStyles";
+import { debounce } from "@solid-primitives/scheduled";
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
@@ -55,23 +14,26 @@ interface NetworkVisualizerProps {
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
-  const [visualData, setVisualData] = createSignal<VisualNetworkData>({ nodes: [], connections: [] });
-  const [layoutCalculator, setLayoutCalculator] = createSignal<NetworkLayout | null>(null);
-  const [renderer, setRenderer] = createSignal<NetworkRenderer | null>(null);
-  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null);
-  const [containerRef, setContainerRef] = createSignal<HTMLDivElement | null>(null);
-  const [isCanvasInitialized, setIsCanvasInitialized] = createSignal(false);
+  const {
+    layoutCalculator,
+    renderer,
+    canvasRef,
+    setCanvasRef,
+    setContainerRef,
+    isCanvasInitialized,
+    initializeCanvas
+  } = useCanvasSetup(props.onVisualizationUpdate);
+
   const [isPanning, setIsPanning] = createSignal(false);
   const [selectedNeuron, setSelectedNeuron] = createSignal<VisualNode | null>(null);
   const [customNodePositions, setCustomNodePositions] = createSignal<Record<string, { x: number, y: number }>>({});
+  const [tooltipData, setTooltipData] = createSignal<{ x: number, y: number, text: string } | null>(null);
 
   let draggedNode: VisualNode | null = null;
   let mouseDownTimer: number | null = null;
-  let initialMousePosition: { x: number; y: number } | null = null;
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
-  let animationFrameId: number | undefined;
 
-  const calculateVisualData = () => {
+  const visualData = createMemo(() => {
     const layoutCalculatorValue = layoutCalculator();
     if (!layoutCalculatorValue) {
       console.error('Layout calculator is not initialized');
@@ -79,32 +41,39 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     }
 
     const networkData = store.network.toJSON();
-    const newVisualData = layoutCalculatorValue.calculateLayout(
+    return layoutCalculatorValue.calculateLayout(
       networkData,
       store.currentInput,
       store.simulationResult,
       customNodePositions()
     );
-    return newVisualData;
-  };
+  });
 
-  const render = () => {
-    const rendererValue = renderer()
-    const newVisualData = calculateVisualData();
-    setVisualData(newVisualData);
-    if (!rendererValue) {
-      console.warn('Renderer is not initialized');
-      return
+  const currentSelectedNeuron = createMemo(() => {
+    if (!selectedNeuron()) return null;
+    return visualData().nodes.find(node => node.id === selectedNeuron()?.id) || null;
+  });
+
+  createEffect(() => {
+    if (isCanvasInitialized()) {
+      setupEventListeners();
     }
-    rendererValue.render(newVisualData, selectedNeuron());
-  };
+  });
+
+  createEffect(() => {
+    const rendererValue = renderer();
+    const selected = selectedNeuron();
+    if (rendererValue) {
+      rendererValue.render(visualData(), selected);
+    }
+  });
 
   const setupEventListeners = () => {
     const canvas = canvasRef();
     if (canvas) {
       const listeners = {
         mousedown: handleMouseDown,
-        mousemove: handleMouseMove,
+        mousemove: debouncedHandleMouseMove,
         mouseup: handleMouseUp,
         wheel: handleWheel,
         contextmenu: (e: Event) => e.preventDefault()
@@ -122,6 +91,24 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     }
   };
 
+  const debouncedHandleMouseMove = debounce((e: MouseEvent) => {
+    const canvas = canvasRef();
+    const rendererValue = renderer();
+    if (!canvas || !rendererValue) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (isPanning()) {
+      handlePanning(e, rendererValue);
+    } else if (draggedNode && e.buttons === 1) {
+      handleNodeDragging(e, rendererValue);
+    } else {
+      handleHovering(x, y, rendererValue);
+    }
+  }, 16); // Debounce to roughly 60fps
+
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -135,101 +122,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       rendererValue.zoom(x, y, delta);
       rendererValue.render(visualData(), selectedNeuron());
     }
-  };
-
-  const initializeCanvas = (canvasArg: HTMLCanvasElement) => {
-    const canvas = canvasArg || canvasRef()
-    const container = containerRef()
-    if (!container || !containerRef) {
-      console.error('Canvas or container ref is undefined');
-      return;
-    }
-    const { width, height } = container.getBoundingClientRect();
-
-    console.log('initializeCanvas', { width, height })
-    if (canvas && width > 0 && height > 0) {
-      canvas.width = width;
-      canvas.height = height;
-      setLayoutCalculator(new NetworkLayout(canvas.width, canvas.height));
-      setRenderer(new NetworkRenderer(canvas));
-      props.onVisualizationUpdate();
-      setIsCanvasInitialized(true);
-    } else {
-      console.warn('Container dimensions are zero, skipping canvas initialization');
-    }
-
-  };
-
-  createEffect(() => {
-    if (isCanvasInitialized()) {
-      console.log('Canvas initialized, setting up event listeners');
-      setupEventListeners();
-    } else {
-      console.log('Canvas not initialized');
-    }
-  });
-
-  createEffect(() => {
-    const network = store.network;
-    const currentInput = store.currentInput;
-    const simulationResult = store.simulationResult;
-    // does fast forwaed trigger this?
-    if (network || currentInput || simulationResult) {
-      render();
-    }
-  });
-
-
-  createEffect(() => {
-    const container = containerRef()
-    const canvas = canvasRef()
-    if (container && canvas) {
-      const resizeObserver = new ResizeObserver(() => {
-        const { width, height } = container.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          initializeCanvas(canvas);
-        }
-      });
-      resizeObserver.observe(container);
-
-      onCleanup(() => {
-        resizeObserver.disconnect();
-      });
-    }
-  });
-
-  onCleanup(() => {
-    if (animationFrameId !== undefined) {
-      cancelAnimationFrame(animationFrameId);
-    }
-  });
-
-  const addLossFunctionNodes = (visualData: VisualNetworkData, network: any): VisualNetworkData => {
-    const outputLayer = network.layers[network.layers.length - 1];
-    const lossNodeId = 'loss';
-    const lossNode: VisualNode = {
-      id: lossNodeId,
-      label: 'Loss',
-      layerId: 'loss_layer',
-      x: (network.layers.length + 1) * layoutCalculator()!.layerSpacing,
-      y: layoutCalculator()!.canvasHeight / 2,
-      weights: [],
-      bias: 0
-    };
-
-    const newNodes = [...visualData.nodes, lossNode];
-    const newConnections = [...visualData.connections];
-
-    outputLayer.neurons.forEach((_, index) => {
-      newConnections.push({
-        from: `neuron_${network.layers.length - 1}_${index}`,
-        to: lossNodeId,
-        weight: 1,
-        bias: 1
-      });
-    });
-
-    return { nodes: newNodes, connections: newConnections };
   };
 
   const handleMouseDown = (e: MouseEvent) => {
@@ -248,7 +140,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       );
       if (clickedNode) {
         draggedNode = clickedNode;
-        initialMousePosition = { x: e.clientX, y: e.clientY };
+    
         mouseDownTimer = setTimeout(() => {
           mouseDownTimer = null;
         }, 200); // Set a 200ms timer to distinguish between click and drag
@@ -259,110 +151,82 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (mouseDownTimer !== null && initialMousePosition) {
-      const dx = e.clientX - initialMousePosition.x;
-      const dy = e.clientY - initialMousePosition.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 5) { // 5px threshold to start dragging
-        clearTimeout(mouseDownTimer);
-        mouseDownTimer = null;
-      }
-    }
-    const canvas = canvasRef();
-    const rendererValue = renderer();
-    const visualDataVal = visualData();
-    if (isPanning() && rendererValue) {
-      const dx = e.clientX - lastPanPosition.x;
-      const dy = e.clientY - lastPanPosition.y;
-      rendererValue.pan(dx, dy);
-      lastPanPosition = { x: e.clientX, y: e.clientY };
-      rendererValue.render(visualDataVal, selectedNeuron());
-    } else if (draggedNode && canvas && rendererValue && e.buttons === 1) {
-      const rect = canvas.getBoundingClientRect();
-      const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
-      const scaledY = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
-      draggedNode.x = scaledX;
-      draggedNode.y = scaledY;
-      
-      // Save the custom position
-      setCustomNodePositions(prev => ({
-        ...prev,
-        [draggedNode?.id ?? '']: { x: scaledX, y: scaledY }
-      }));
+  const handlePanning = (e: MouseEvent, rendererValue: NetworkRenderer) => {
+    const dx = e.clientX - lastPanPosition.x;
+    const dy = e.clientY - lastPanPosition.y;
+    rendererValue.pan(dx, dy);
+    lastPanPosition = { x: e.clientX, y: e.clientY };
+    rendererValue.render(visualData(), selectedNeuron());
+  };
 
-      setVisualData({
-        ...visualDataVal,
-        nodes: visualDataVal.nodes.map(node => node.id === draggedNode?.id ? draggedNode : node)
-      });
-      rendererValue.render(visualDataVal, selectedNeuron());
-    } else if (canvas && layoutCalculator && rendererValue) {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const hoveredNode = layoutCalculator()!.findNodeAt(
-        x,
-        y,
-        visualDataVal.nodes,
-        rendererValue.scale,
-        rendererValue.offsetX,
-        rendererValue.offsetY
-      );
-      if (hoveredNode) {
-        canvas.style.cursor = 'pointer';
-        // Show tooltip closer to the mouse pointer
-        showTooltip(e.clientX + 10, e.clientY + 10, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue?.toFixed(4) || 'N/A'}`);
-      } else {
-        canvas.style.cursor = 'grab';
-        hideTooltip();
-        rendererValue.render(visualDataVal, selectedNeuron());
-      }
+  const handleNodeDragging = (e: MouseEvent, rendererValue: NetworkRenderer) => {
+    const canvas = canvasRef();
+    if (!canvas || !draggedNode) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
+    const scaledY = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
+  
+    updateCustomNodePosition(draggedNode.id, scaledX, scaledY);
+    rendererValue.render(visualData(), selectedNeuron());
+  };
+
+  const updateCustomNodePosition = (nodeId: string, x: number, y: number) => {
+    setCustomNodePositions(prev => ({
+      ...prev,
+      [nodeId]: { x, y }
+    }));
+  };
+
+  const showTooltip = (x: number, y: number, text: string) => {
+    setTooltipData({ x, y, text });
+  };
+
+  const hideTooltip = () => {
+    setTooltipData(null);
+  };
+
+  const handleHovering = (x: number, y: number, rendererValue: NetworkRenderer) => {
+    const layoutCalculatorValue = layoutCalculator();
+    if (!layoutCalculatorValue) return;
+
+    const hoveredNode = layoutCalculatorValue.findNodeAt(
+      x,
+      y,
+      visualData().nodes,
+      rendererValue.scale,
+      rendererValue.offsetX,
+      rendererValue.offsetY
+    );
+
+    if (hoveredNode) {
+      canvasRef()!.style.cursor = 'pointer';
+      showTooltip(x, y, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue?.toFixed(4) || 'N/A'}`);
+    } else {
+      canvasRef()!.style.cursor = 'grab';
+      hideTooltip();
     }
   };
 
   const handleMouseUp = () => {
     const canvas = canvasRef();
     if (canvas) {
-      if (mouseDownTimer !== null) {
-        clearTimeout(mouseDownTimer);
-        // If the timer hasn't been cleared, it's a click
-        if (draggedNode) {
-          setSelectedNeuron(draggedNode);
-  
+      batch(() => {
+        if (mouseDownTimer !== null) {
+          clearTimeout(mouseDownTimer);
+          if (draggedNode) {
+            setSelectedNeuron(draggedNode);
+            renderer()?.render(visualData(), draggedNode); // Trigger re-render with selected node
+          }
         }
-      }
-      setIsPanning(false);
-      draggedNode = null;
-      mouseDownTimer = null;
-      initialMousePosition = null;
+        setIsPanning(false);
+        draggedNode = null;
+        mouseDownTimer = null;
+        lastPanPosition = { x: 0, y: 0 };
+      });
       canvas.style.cursor = 'grab';
     }
   };
-
-
-
-  const containerStyle = css`
-    width: 100%;
-    height: 0;
-    padding-bottom: 75%; // 4:3 aspect ratio
-    position: relative;
-    min-height: 400px;
-    overflow: hidden;
-    border: 1px solid ${colors.border};
-    background-color: ${colors.surface};
-    
-    @media (max-width: 768px) {
-      padding-bottom: 100%; // 1:1 aspect ratio on smaller screens
-    }
-  `;
-
-  const canvasStyle = css`
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  `;
-
 
   return (
     <div ref={setContainerRef} class={containerStyle}>
@@ -375,29 +239,29 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         onMouseDown={handleMouseDown}
       />
       <NeuronInfoSidebar
-        neuron={selectedNeuron()}
+        neuron={currentSelectedNeuron()}
         onClose={() => {
-          console.log("Closing sidebar");
           setSelectedNeuron(null);
-        
-          render(); // Re-render to remove the highlight
+          renderer()?.render(visualData(), null);
         }}
       />
-      <div
-        id="network-tooltip"
-        class={css`
-          position: fixed;
-          display: none;
-          background-color: ${colors.surface};
-          border: 1px solid ${colors.border};
-          padding: 5px;
-          border-radius: 4px;
-          font-size: 12px;
-          pointer-events: none;
-          z-index: 1000;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        `}
-      ></div>
+      <Show when={tooltipData()}>
+        {(tooltipAccessor) => {
+          const data = tooltipAccessor();
+          return (
+            <div 
+              class={tooltipStyle} 
+              style={{
+                left: `${data.x}px`,
+                top: `${data.y}px`,
+                display: 'block'
+              }}
+            >
+              {data.text}
+            </div>
+          );
+        }}
+      </Show>
     </div>
   );
 };
