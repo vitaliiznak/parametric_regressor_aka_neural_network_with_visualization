@@ -8,6 +8,7 @@ export class MLP {
   inputSize: number;
   layerOutputs: Value[][] = [];
   private gradientMapping: { neuron: number; parameter: number }[] = [];
+  private _initialInput: Value[] = [];
 
   constructor(config: MLPConfig) {
     const { inputSize, layers, activations } = config;
@@ -36,10 +37,12 @@ export class MLP {
     this.layerOutputs = [];
   }
 
+
   forward(x: (number | Value)[]): Value[] {
     console.log("MLP forward pass starting...");
-    this.clearLayerOutputs(); // Clear outputs before a new forward pass
-    let out: Value[] = x.map(Value.from);
+    this.clearLayerOutputs();
+    this._initialInput = x.map(Value.from);
+    let out: Value[] = this._initialInput;
     console.log("Input:", out.map(v => v.data));
     for (let i = 0; i < this.layers.length; i++) {
       const layer = this.layers[i];
@@ -51,7 +54,6 @@ export class MLP {
     console.log("MLP forward pass completed.");
     return out;
   }
-  
 
   parameters(): Value[] {
     return this.layers.flatMap(layer => layer.parameters());

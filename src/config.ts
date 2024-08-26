@@ -7,8 +7,7 @@ export const CONFIG = {
     activations: ['tanh', 'identity']
   } as MLPConfig,
   INITIAL_TRAINING: {
-    learningRate: 0.01,
-    iterations: 1
+    learningRate: 0.01
   },
   VISUALIZATION: {
     width: 1000,

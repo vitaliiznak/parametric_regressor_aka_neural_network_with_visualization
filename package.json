@@ -36,6 +36,7 @@
     "@viz-js/viz": "^3.8.0",
     "babel-preset-solid": "^1.8.19",
     "chart.js": "^4.4.4",
+    "chartjs-plugin-annotation": "^3.0.1",
     "esm": "^3.2.25",
     "plotly.js-dist": "^2.34.0",
     "solid-form-handler": "^1.2.3",

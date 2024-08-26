@@ -124,8 +124,8 @@ const TrainingControls: Component = () => {
     setIsLossCalculated(false);
   };
 
-  const stepReset = () => {
-    if (!isResetDisabled()) actions.stepReset();
+  const trainingStateReset = () => {
+    if (!isResetDisabled()) actions.trainingStateReset();
     setIsLossCalculated(false);
   };
 
@@ -193,7 +193,7 @@ const TrainingControls: Component = () => {
         </div>
         <button
           class={`${styles.trainingStepButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
-          onClick={stepReset}
+          onClick={trainingStateReset}
           disabled={isResetDisabled()}
         >
           Reset

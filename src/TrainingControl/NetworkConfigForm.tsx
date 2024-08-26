@@ -1,13 +1,11 @@
 import { Component, createEffect, createSignal } from "solid-js";
 import { ActivationFunction } from "../NeuralNetwork/types";
-import { MLP } from "../NeuralNetwork/mlp";
-import { setStore, store } from "../store";
-import { css } from "@emotion/css";
-import { CONFIG } from "../config";
+import { actions, store } from "../store";
 import { colors } from '../styles/colors';
 import { commonStyles } from '../styles/common';
 import { typography } from '../styles/typography';
 import Tooltip from '../components/Tooltip';
+import { css } from "@emotion/css";
 
 const styles = {
   container: css`
@@ -76,21 +74,12 @@ const NetworkConfigForm: Component = () => {
       return;
     }
 
-    const inputSize = CONFIG.INITIAL_NETWORK.inputSize;
-
     if (activationsFunctions.length !== layers.length) {
       alert("The number of activation functions should be equal to the number of layers");
       return;
     }
 
-    const newNetwork = new MLP({
-      inputSize: inputSize,
-      layers: layers,
-      activations: activationsFunctions
-    });
-
-    setStore({ network: newNetwork });
-    console.log("Store updated with new network");
+    actions.updateNetworkConfig(layers, activationsFunctions);
 
     setLayersString(layers.join(','));
     setActivations(activationsFunctions.join(','));

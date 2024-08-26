@@ -27,7 +27,6 @@ export class NetworkRenderer {
     this.ctx.translate(this.offsetX, this.offsetY);
     this.ctx.scale(this.scale, this.scale);
     this.drawConnections(data.connections, data.nodes);
-    // this.drawInputConnections(data);
     this.drawNodes(data.nodes, selectedNode);
     this.ctx.restore();
   }

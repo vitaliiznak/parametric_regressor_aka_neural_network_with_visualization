@@ -56,7 +56,6 @@ export interface TrainingData {
 
 export interface TrainingConfig {
   learningRate: number;
-  iterations: number;
 }
 
 export interface SimulationResult {
@@ -75,7 +74,7 @@ export interface VisualNode {
   bias: number;
   outputValue?: number;
   activation?: string;
-  inputValues?: number[]; // Add this line
+  inputValues?: number[];
 }
 
 export interface VisualConnection {

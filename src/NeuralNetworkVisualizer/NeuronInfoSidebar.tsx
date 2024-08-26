@@ -1,9 +1,9 @@
-import { Component, Show, createEffect, createSignal } from "solid-js";
+import { Component, Show, createEffect } from "solid-js";
 import { css } from "@emotion/css";
 import { VisualNode } from "../types";
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
-import { Chart } from 'chart.js/auto';
+import Plotly from 'plotly.js-dist';
 
 interface NeuronInfoSidebarProps {
   neuron: VisualNode | null;
@@ -11,8 +11,6 @@ interface NeuronInfoSidebarProps {
 }
 
 const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
-  let activationChartInstance: Chart | null = null;
-  const [showDetails, setShowDetails] = createSignal(false);
 
   createEffect(() => {
     if (props.neuron) {
@@ -21,70 +19,186 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
   });
 
   const renderActivationFunctionChart = () => {
-    const ctx = document.getElementById('activationFunctionChart') as HTMLCanvasElement;
-    if (ctx && props.neuron) {
-      if (activationChartInstance) {
-        activationChartInstance.destroy();
-      }
-      const x = Array.from({ length: 100 }, (_, i) => (i - 50) / 10);
-      let y;
+    const plotDiv = document.getElementById('activationFunctionPlot');
+    if (plotDiv && props.neuron) {
+      let activationFunction: (x: number) => number;
+      let xMin: number, xMax: number, yMin: number, yMax: number;
       switch (props.neuron.activation) {
         case 'tanh':
-          y = x.map(Math.tanh);
+          activationFunction = Math.tanh;
+          xMin = -4; xMax = 4; yMin = -1; yMax = 1;
           break;
         case 'relu':
-          y = x.map(v => Math.max(0, v));
+          activationFunction = (v) => Math.max(0, v);
+          xMin = -2; xMax = 4; yMin = -0.5; yMax = 4;
           break;
         case 'sigmoid':
-          y = x.map(v => 1 / (1 + Math.exp(-v)));
+          activationFunction = (v) => 1 / (1 + Math.exp(-v));
+          xMin = -6; xMax = 6; yMin = 0; yMax = 1;
           break;
         default:
-          y = x;
+          activationFunction = (v) => v;
+          xMin = -4; xMax = 4; yMin = -4; yMax = 4;
       }
 
-      activationChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: x,
-          datasets: [{
-            label: `${props.neuron.activation} Activation`,
-            data: y,
-            borderColor: colors.primary,
-            fill: false,
-          }]
+      const neuronInput = props.neuron.inputValues ? props.neuron.inputValues.reduce((sum, val, i) => sum + val * props.neuron!.weights[i], 0) + props.neuron.bias : 0;
+      const neuronOutput = activationFunction(neuronInput);
+
+      // Adjust x-axis limits to include neuron input
+      xMin = Math.min(xMin, neuronInput - 1);
+      xMax = Math.max(xMax, neuronInput + 1);
+
+      // Adjust y-axis limits to include neuron output
+      yMin = Math.min(yMin, neuronOutput - 0.5);
+      yMax = Math.max(yMax, neuronOutput + 0.5);
+
+      const x = Array.from({ length: 200 }, (_, i) => xMin + (i / 199) * (xMax - xMin));
+      const y = x.map(activationFunction);
+
+      const data = [
+        {
+          x: x,
+          y: y,
+          type: 'scatter',
+          mode: 'lines',
+          name: `${props.neuron.activation} Activation`,
+          line: { color: colors.primary, width: 3 }
         },
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Input'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Output'
-              }
-            }
-          }
+        {
+          x: [neuronInput],
+          y: [neuronOutput],
+          type: 'scatter',
+          mode: 'markers',
+          name: 'Neuron Input/Output',
+          marker: { color: colors.error, size: 12, symbol: 'star' }
+        },
+        {
+          x: [neuronInput, neuronInput],
+          y: [yMin, neuronOutput],
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Input Line',
+          line: { color: colors.secondary, dash: 'dash', width: 2 }
+        },
+        {
+          x: [xMin, neuronInput],
+          y: [neuronOutput, neuronOutput],
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Output Line',
+          line: { color: colors.secondary, dash: 'dash', width: 2 }
         }
-      });
+      ];
+
+      const layout = {
+        title: {
+          text: 'Activation Function',
+          font: { size: 24, color: colors.text }
+        },
+        xaxis: {
+          title: 'Input',
+          range: [xMin, xMax],
+          gridcolor: colors.border,
+          zerolinecolor: colors.border
+        },
+        yaxis: {
+          title: 'Output',
+          range: [yMin, yMax],
+          gridcolor: colors.border,
+          zerolinecolor: colors.border
+        },
+        showlegend: false,
+        annotations: [
+          {
+            x: neuronInput,
+            y: yMin,
+            xref: 'x',
+            yref: 'y',
+            text: `Input: ${neuronInput.toFixed(4)}`,
+            showarrow: true,
+            arrowhead: 4,
+            ax: 0,
+            ay: 40
+          },
+          {
+            x: xMin,
+            y: neuronOutput,
+            xref: 'x',
+            yref: 'y',
+            text: `Output: ${neuronOutput.toFixed(4)}`,
+            showarrow: true,
+            arrowhead: 4,
+            ax: 40,
+            ay: 0
+          }
+        ],
+        shapes: [
+          {
+            type: 'circle',
+            xref: 'x',
+            yref: 'y',
+            x0: neuronInput - 0.1,
+            y0: neuronOutput - 0.1,
+            x1: neuronInput + 0.1,
+            y1: neuronOutput + 0.1,
+            fillcolor: colors.error,
+            line: { color: colors.error }
+          }
+        ],
+        plot_bgcolor: colors.background,
+        paper_bgcolor: colors.surface,
+        font: { color: colors.text },
+        margin: { t: 50, r: 50, b: 50, l: 50 }
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: false
+      };
+
+      Plotly.newPlot(plotDiv, data, layout, config);
     }
   };
+
+  const Term: Component<{ variable: string, value: string | number, subscript?: number }> = (props) => (
+    <span class={styles.term}>
+      <span class={styles.variable}>
+        {props.variable}{props.subscript !== undefined && <sub>{props.subscript}</sub>}
+      </span>
+      {" = "}
+      <span class={styles.value}>{props.value}</span>
+    </span>
+  );
 
   const calculateEquation = (neuron: VisualNode) => {
-    const terms = neuron.weights.map((w, i) => `x${i + 1} * ${w.toFixed(4)}`);
-    return `${terms.join(' + ')} + ${neuron.bias.toFixed(4)}`;
-  };
+    const terms = neuron.weights.map((w, i) => {
+      const x = neuron.inputValues?.[i]?.toFixed(4) || 'N/A';
+      const weight = w.toFixed(4);
+      return (
+        <>
+          (<Term variable="X" value={x} subscript={i + 1} />) *
+          (<Term variable="w" value={weight} subscript={i + 1} />)
+        </>
+      );
+    });
 
-  const calculateResult = (neuron: VisualNode): string => {
-    if (!neuron.inputValues || neuron.inputValues.some(v => v === undefined)) {
-      return 'N/A';
-    }
-    const result = neuron.weights.reduce((sum, w, i) => sum + w * (neuron.inputValues![i] || 0), neuron.bias);
-    return result.toFixed(4);
+    const biasResult = neuron.bias.toFixed(4);
+    const totalResult = neuron.outputValue?.toFixed(4) || 'N/A';
+
+    return (
+      <div class={styles.equationText}>
+        {terms.map((term, index) => (
+          <>
+            {index > 0 && " + "}
+            {term}
+          </>
+        ))}
+        {" + "}
+        (<Term variable="b" value={biasResult} />)
+        {" = "}
+        <span class={styles.totalResult}>{totalResult}</span>
+      </div>
+    );
   };
 
   return (
@@ -97,30 +211,15 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
         
         <div class={styles.infoSection}>
           <p><strong>ID:</strong> {props.neuron?.id}</p>
-          <p><strong>Layer:</strong> {props.neuron?.layerId}</p>
-          <p><strong>Activation:</strong> {props.neuron?.activation}</p>
-          <p><strong>Output:</strong> {props.neuron?.outputValue?.toFixed(4)}</p>
         </div>
 
         <div class={styles.equationSection}>
           <h3>Neuron Equation:</h3>
-          <p>{calculateEquation(props.neuron!)} = {calculateResult(props.neuron!)}</p>
-          <button onClick={() => setShowDetails(!showDetails())} class={styles.detailsButton}>
-            {showDetails() ? 'Hide Details' : 'Show Details'}
-          </button>
-          <Show when={showDetails()}>
-            <div class={styles.detailsSection}>
-              {props.neuron!.weights.map((w, i) => (
-                <p>x{i + 1} = {props.neuron!.inputValues?.[i]?.toFixed(4) || 'N/A'}, w{i + 1} = {w.toFixed(4)}</p>
-              ))}
-              <p>bias = {props.neuron!.bias.toFixed(4)}</p>
-            </div>
-          </Show>
+          {calculateEquation(props.neuron!)}
         </div>
 
         <div class={styles.chartSection}>
-          <h3>Activation Function:</h3>
-          <canvas id="activationFunctionChart" width="350" height="200" style="width: 100%; height: auto;"></canvas>
+          <div id="activationFunctionPlot" style="width: 100%; height: 300px;"></div>
         </div>
       </div>
     </Show>
@@ -179,6 +278,36 @@ const styles = {
   `,
   chartSection: css`
     margin-top: 1rem;
+  `,
+  equationText: css`
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 10px;
+    background-color: ${colors.background};
+    border-radius: 4px;
+    line-height: 1.6;
+  `,
+  term: css`
+    display: inline-block;
+    margin: 0 4px;
+  `,
+  variable: css`
+    font-weight: bold;
+    color: ${colors.primary};
+  `,
+  value: css`
+    color: ${colors.secondary};
+    text-decoration: underline;
+  `,
+  termResult: css`
+    color: ${colors.success};
+    font-weight: bold;
+  `,
+  totalResult: css`
+    color: ${colors.error};
+    font-weight: bold;
+    font-size: 1.1em;
   `,
 };
 

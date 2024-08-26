@@ -6,6 +6,7 @@ import { CONFIG } from "./config";
 import { Trainer } from "./trainer";
 import { Value } from "./NeuralNetwork/value";
 import { batch } from "solid-js";
+import { ActivationFunction } from "./NeuralNetwork/types";
 
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
@@ -87,7 +88,7 @@ function initializeTrainer() {
   return trainer;
 }
 
-function stepReset() {
+function trainingStateReset() {
   batch(() => {
     setStore('trainingState', 'forwardStepResults', []);
     setStore('trainingState', 'backwardStepGradients', []);
@@ -226,6 +227,24 @@ function simulateInput(input: number[]) {
   });
 }
 
+function updateNetworkConfig(layers: number[], activations: ActivationFunction[]) {
+  batch(() => {
+    const inputSize = CONFIG.INITIAL_NETWORK.inputSize;
+
+    const newNetwork = new MLP({
+      inputSize: inputSize,
+      layers: layers,
+      activations: activations
+    });
+
+    setStore('network', newNetwork);
+    console.log("Store updated with new network");
+
+    // Reset training state
+    trainingStateReset();
+  });
+}
+
 // Initial state
 
 // Replace setStore with loggedSetStore in your actions
@@ -240,5 +259,6 @@ export const actions = {
   stepBackward,
   updateWeights,
   simulateInput,
-  stepReset
+  trainingStateReset,
+  updateNetworkConfig
 };

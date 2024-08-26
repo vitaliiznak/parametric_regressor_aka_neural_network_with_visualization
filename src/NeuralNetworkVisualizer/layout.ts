@@ -56,8 +56,6 @@ export class NetworkLayout {
       });
     }
 
-
-
     network.layers.forEach((layer, layerIndex) => {
       const x = this.inputValueAndNetworkSpacing + layerIndex * this.layerSpacing + this.layerSpacing / 2;
       const layerHeight = layer.neurons.length * this.nodeHeight + (layer.neurons.length - 1) * this.nodeSpacing;
@@ -75,7 +73,7 @@ export class NetworkLayout {
           y: customPosition ? customPosition.y : startY + neuronIndex * (this.nodeHeight + this.nodeSpacing),
           activation: neuron.activation,
           weights: neuron.weights,
-          bias: neuron.bias
+          bias: neuron.bias,
         };
         nodes.push(node);
 
@@ -105,8 +103,6 @@ export class NetworkLayout {
     console.log('Generated nodes:', nodes);
     console.log('Generated connections:', connections);
 
-  
-
     if (simulationResult) {
       const { input, layerOutputs } = simulationResult;
       nodes.forEach((node) => {
@@ -119,6 +115,7 @@ export class NetworkLayout {
         } else if (nodeType === 'neuron') {
           if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {
             node.outputValue = layerOutputs[layerIndex][nodeIndex];
+            node.inputValues = layerIndex === 0 ? input : simulationResult?.layerOutputs?.[layerIndex - 1]
           }
         }
       });

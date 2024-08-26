@@ -88,7 +88,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     return newVisualData;
   };
 
-  const render = (time: number) => {
+  const render = () => {
     const rendererValue = renderer()
     const newVisualData = calculateVisualData();
     setVisualData(newVisualData);
@@ -173,9 +173,9 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const network = store.network;
     const currentInput = store.currentInput;
     const simulationResult = store.simulationResult;
-
+    // does fast forwaed trigger this?
     if (network || currentInput || simulationResult) {
-      render(performance.now());
+      render();
     }
   });
 
@@ -327,7 +327,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         // If the timer hasn't been cleared, it's a click
         if (draggedNode) {
           setSelectedNeuron(draggedNode);
-          props.onSidebarToggle(true);
+  
         }
       }
       setIsPanning(false);
@@ -363,6 +363,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     height: 100%;
   `;
 
+
   return (
     <div ref={setContainerRef} class={containerStyle}>
       <canvas
@@ -378,8 +379,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         onClose={() => {
           console.log("Closing sidebar");
           setSelectedNeuron(null);
-          props.onSidebarToggle(false);
-          render(performance.now()); // Re-render to remove the highlight
+        
+          render(); // Re-render to remove the highlight
         }}
       />
       <div

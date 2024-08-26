@@ -63,20 +63,7 @@ const TrainingConfigForm: Component = () => {
             </Tooltip>
           </label>
         </div>
-        <div class={styles.inputGroup}>
-          <label class={commonStyles.label}>
-            Iterations:
-            <Tooltip content="The number of times the entire dataset is passed through the network during training.">
-              <input
-                type="number"
-                min="1"
-                value={store.trainingConfig.iterations}
-                onInput={(e) => setStore('trainingConfig', 'iterations', Number(e.currentTarget.value))}
-                class={commonStyles.input}
-              />
-            </Tooltip>
-          </label>
-        </div>
+    
         <button type="submit" class={styles.button}>Update Training Config</button>
       </form>
     </div>
