@@ -3,12 +3,12 @@ import { SimulationResult, VisualConnection, VisualNetworkData, VisualNode } fro
 
 
 export class NetworkLayout {
-  public nodeWidth = 60;
-  public nodeHeight = 40;
-  public layerSpacing = 220; // Reduced from 240
-  public nodeSpacing = 80;
+  public nodeWidth = 50;
+  public nodeHeight = 30;
+  public layerSpacing = 180;
+  public nodeSpacing = 60;
   public inputValuesSpacing = 10;
-  public inputValueAndNetworkSpacing = 180;
+  public inputValueAndNetworkSpacing = 150;
 
   constructor(public canvasWidth: number, public canvasHeight: number) { }
 
