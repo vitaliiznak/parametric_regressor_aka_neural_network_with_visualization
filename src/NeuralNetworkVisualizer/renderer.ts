@@ -1,4 +1,4 @@
-import { VisualConnection, VisualNetworkData, VisualNode } from "../types";
+import { Point, VisualConnection, VisualNetworkData, VisualNode } from "../types";
 import { debounce } from "@solid-primitives/scheduled";
 
 export class NetworkRenderer {
@@ -114,6 +114,8 @@ export class NetworkRenderer {
     if (selectedNode && node.id === selectedNode.id) {
       this.highlightSelectedNeuron(node);
     }
+
+    this.drawBias(node);
   }
 
   private drawInputNode(node: VisualNode) {
@@ -151,35 +153,90 @@ export class NetworkRenderer {
       this.drawOutputValue(node);
     }
   
+    this.drawBias(node);
   }
 
   private drawConnections(connections: VisualConnection[], nodes: VisualNode[]) {
-    if (!connections || !Array.isArray(connections)) {
-      console.error('Invalid connections array:', connections);
-      return;
-    }
-
     connections.forEach(conn => {
       const fromNode = nodes.find(n => n.id === conn.from)!;
       const toNode = nodes.find(n => n.id === conn.to)!;
 
-      const fromX = fromNode.x + 60; // Get the right edge of the node
-      const fromY = fromNode.y + 20; // Center vertically
+      const fromX = fromNode.x + 60;
+      const fromY = fromNode.y + 20;
       const toX = toNode.x;
       const toY = toNode.y + 20;
 
-      this.drawArrow(fromX, fromY, toX, toY);
+      const connectionColor = this.getConnectionColor(conn.weight);
+      this.drawCurvedArrow(fromX, fromY, toX, toY, connectionColor);
 
       // Draw weight label
       const midX = (fromX + toX) / 2;
-      const midY = (fromY + toY) / 2;
-      this.drawLabel(midX, midY - 10, `W: ${conn.weight.toFixed(4)}`, 'blue');
-
-      // Draw bias label
-      this.drawLabel(midX, midY + 10, `B: ${conn.bias.toFixed(4)}`, 'green');
+      const midY = (fromY + toY) / 2 - 20; // Offset the label above the curve
+      this.drawLabel(midX, midY, `W: ${conn.weight.toFixed(2)}`);
     });
   }
 
+  private drawLabel(x: number, y: number, text: string) {
+    this.ctx.font = '12px Arial';
+    const metrics = this.ctx.measureText(text);
+    const textWidth = metrics.width;
+    const textHeight = 12; // Approximate height for Arial 12px
+    const padding = 4;
+    const cornerRadius = 4;
+
+    // Draw rounded rectangle background
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(x - textWidth / 2 - padding + cornerRadius, y - textHeight / 2 - padding);
+    this.ctx.lineTo(x + textWidth / 2 + padding - cornerRadius, y - textHeight / 2 - padding);
+    this.ctx.arcTo(x + textWidth / 2 + padding, y - textHeight / 2 - padding, x + textWidth / 2 + padding, y - textHeight / 2 - padding + cornerRadius, cornerRadius);
+    this.ctx.lineTo(x + textWidth / 2 + padding, y + textHeight / 2 + padding - cornerRadius);
+    this.ctx.arcTo(x + textWidth / 2 + padding, y + textHeight / 2 + padding, x + textWidth / 2 + padding - cornerRadius, y + textHeight / 2 + padding, cornerRadius);
+    this.ctx.lineTo(x - textWidth / 2 - padding + cornerRadius, y + textHeight / 2 + padding);
+    this.ctx.arcTo(x - textWidth / 2 - padding, y + textHeight / 2 + padding, x - textWidth / 2 - padding, y + textHeight / 2 + padding - cornerRadius, cornerRadius);
+    this.ctx.lineTo(x - textWidth / 2 - padding, y - textHeight / 2 - padding + cornerRadius);
+    this.ctx.arcTo(x - textWidth / 2 - padding, y - textHeight / 2 - padding, x - textWidth / 2 - padding + cornerRadius, y - textHeight / 2 - padding, cornerRadius);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    // Draw text
+    this.ctx.fillStyle = 'black';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(text, x, y);
+  }
+
+  private drawCurvedArrow(fromX: number, fromY: number, toX: number, toY: number, color: string) {
+    const headLength = 10;
+    const controlPointOffset = Math.abs(toX - fromX) * 0.2;
+
+    this.ctx.strokeStyle = color;
+    this.ctx.fillStyle = color;
+    this.ctx.lineWidth = 2;
+
+    // Draw the curved line
+    this.ctx.beginPath();
+    this.ctx.moveTo(fromX, fromY);
+    this.ctx.bezierCurveTo(
+      fromX + controlPointOffset, fromY,
+      toX - controlPointOffset, toY,
+      toX, toY
+    );
+    this.ctx.stroke();
+
+    // Calculate the angle for the arrowhead
+    const endTangentX = toX - controlPointOffset * 2;
+    const endTangentY = toY;
+    const angle = Math.atan2(toY - endTangentY, toX - endTangentX);
+
+    // Draw the arrow head
+    this.ctx.beginPath();
+    this.ctx.moveTo(toX, toY);
+    this.ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+    this.ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
 
   private drawOutputValue(node: VisualNode) {
     const outputX = node.x + 64; // Right side of the node
@@ -201,47 +258,6 @@ export class NetworkRenderer {
     this.ctx.fillText(node.outputValue!.toFixed(4), outputX + 20, outputY);
   }
 
-  private drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
-    const headLen = 10;
-    const angle = Math.atan2(toY - fromY, toX - fromX);
-    const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
-  
-    this.ctx.beginPath();
-    this.ctx.moveTo(fromX, fromY);
-    this.ctx.quadraticCurveTo((fromX + toX) / 2, fromY - 20, toX, toY); // Use quadraticCurveTo for curved lines
-    this.ctx.strokeStyle = 'black';
-    this.ctx.lineWidth = 1;
-    this.ctx.stroke();
-  
-    // Only draw arrowhead if there's enough space
-    if (length > headLen * 2) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(toX, toY);
-      this.ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
-      this.ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
-      this.ctx.closePath();
-      this.ctx.fillStyle = 'black';
-      this.ctx.fill();
-    }
-  }
-
-  private drawLabel(x: number, y: number, text: string, color: string) {
-    this.ctx.font = '12px Arial';
-    const metrics = this.ctx.measureText(text);
-    const textWidth = metrics.width;
-    const textHeight = 12; // Approximate height for Arial 12px
-
-    // Draw background
-    this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(x - textWidth / 2 - 2, y - textHeight / 2 - 2, textWidth + 4, textHeight + 4);
-
-    // Draw text
-    this.ctx.fillStyle = color;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(text, x, y);
-  }
-
   highlightSelectedNeuron(node: VisualNode) {
     this.ctx.save();
     this.ctx.strokeStyle = '#FF4500';
@@ -252,5 +268,60 @@ export class NetworkRenderer {
     this.ctx.roundRect(node.x - 2, node.y - 2, 64, 44, 10);
     this.ctx.stroke();
     this.ctx.restore();
+  }
+
+  private getConnectionColor(weight: number): string {
+    const normalizedWeight = Math.max(-1, Math.min(1, weight)); // Clamp weight between -1 and 1
+    let r, g, b;
+    const baseAlpha = 0.6; // Base opacity for all lines
+    const alphaVariation = 0.3; // Additional opacity based on weight magnitude
+
+    if (normalizedWeight < 0) {
+      // Negative weights: blue to light blue
+      const t = normalizedWeight + 1; // t goes from 0 (at -1) to 1 (at 0)
+      r = Math.round(70 + 100 * t);
+      g = Math.round(130 + 100 * t);
+      b = 255;
+    } else {
+      // Positive weights: light red to red
+      const t = normalizedWeight; // t goes from 0 to 1
+      r = 255;
+      g = Math.round(130 - 100 * t);
+      b = Math.round(130 - 130 * t);
+    }
+
+    const alpha = baseAlpha + alphaVariation * Math.abs(normalizedWeight);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  private drawConnection(from: Point, to: Point, weight: number) {
+    const color = this.getConnectionColor(weight);
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(from.x, from.y);
+    this.ctx.lineTo(to.x, to.y);
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = Math.abs(weight) * 2 + 1;  // Ensure a minimum width of 1
+    this.ctx.stroke();
+  }
+
+  private drawBias(node: VisualNode) {
+    const biasX = node.x - 20; // Position the bias to the left of the node
+    const biasY = node.y + 20; // Vertical center of the node
+
+    // Draw a small circle for the bias
+    this.ctx.beginPath();
+    this.ctx.arc(biasX, biasY, 18, 0, 2 * Math.PI);
+    this.ctx.fillStyle = 'lightyellow';
+    this.ctx.fill();
+    this.ctx.strokeStyle = 'black';
+    this.ctx.stroke();
+
+    // Draw the bias value
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = '9px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(`b: ${node.bias.toFixed(2)}`, biasX, biasY);
   }
 }
