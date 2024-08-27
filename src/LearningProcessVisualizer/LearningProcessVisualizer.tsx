@@ -2,7 +2,6 @@ import { Component, Show, For, createMemo } from "solid-js";
 import { store } from "../store";
 import { colors } from '../styles/colors';
 import { css } from "@emotion/css";
-import { FaSolidForward, FaSolidBackward, FaSolidCalculator } from 'solid-icons/fa';
 
 const LearningProcessVisualizer: Component = () => {
   console.log("LearningProcessVisualizer rendering");

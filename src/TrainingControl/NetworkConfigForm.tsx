@@ -10,6 +10,7 @@ import { css } from "@emotion/css";
 const styles = {
   container: css`
     ${commonStyles.card}
+    max-width: 100%; // Ensure the container doesn't exceed its parent's width
   `,
   title: css`
     font-size: ${typography.fontSize.xl};
@@ -18,8 +19,8 @@ const styles = {
     color: ${colors.text};
   `,
   form: css`
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
   `,
   inputGroup: css`
@@ -31,11 +32,12 @@ const styles = {
   `,
   input: css`
     ${commonStyles.input}
+    width: 100%; // Make inputs take full width of their container
   `,
   button: css`
     ${commonStyles.button}
     ${commonStyles.primaryButton}
-    grid-column: span 2;
+    width: 100%; // Make button take full width
   `,
   currentConfig: css`
     margin-top: 1rem;
@@ -96,7 +98,7 @@ const NetworkConfigForm: Component = () => {
                 type="text"
                 value={layersString()}
                 onInput={handleLayersChange}
-                class={commonStyles.input}
+                class={styles.input}
                 placeholder="e.g., 5,3,1"
               />
             </Tooltip>
@@ -110,7 +112,7 @@ const NetworkConfigForm: Component = () => {
                 type="text"
                 value={activations()}
                 onInput={handleActivationsChange}
-                class={commonStyles.input}
+                class={styles.input}
                 placeholder="e.g., tanh,relu,sigmoid"
               />
             </Tooltip>

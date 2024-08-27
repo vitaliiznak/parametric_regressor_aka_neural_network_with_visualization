@@ -22,8 +22,8 @@ const styles = {
   `,
   controlsContainer: css`
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
     margin-bottom: 1rem;
   `,
   controlButton: css`
@@ -32,11 +32,17 @@ const styles = {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    font-size: ${typography.fontSize.xs};
-    padding: 0.5rem 1rem; // Increase padding for larger buttons
-    border-radius: 4px;
+    gap: 0.5rem;
+    font-size: ${typography.fontSize.sm};
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
   `,
   exportButton: css`
     ${commonStyles.button}
@@ -77,6 +83,30 @@ const styles = {
     opacity: 0.5;
     cursor: not-allowed;
   `,
+  buttonGroup: css`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  `,
+  separator: css`
+    height: 1px;
+    background-color: ${colors.border};
+    margin: 1rem 0;
+  `,
+  resetButton: css`
+    ${commonStyles.button}
+    ${commonStyles.secondaryButton}
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: ${typography.fontSize.sm};
+    transition: all 0.2s ease-in-out;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  `,
 };
 
 const TrainingControls: Component = () => {
@@ -105,11 +135,11 @@ const TrainingControls: Component = () => {
     return colors.error;
   };
 
-  const isForwardDisabled = () => 
+  const isForwardDisabled = () =>
     (store.trainingState.currentPhase !== 'idle' && store.trainingState.currentPhase !== 'update') ||
     store.trainingState.backwardStepGradients.length > 0;
 
-  const isLossDisabled = () => 
+  const isLossDisabled = () =>
     store.trainingState.forwardStepResults.length === 0 ||
     store.trainingState.backwardStepGradients.length > 0;
 
@@ -157,7 +187,6 @@ const TrainingControls: Component = () => {
     <div class={styles.container}>
       <TrainingStatus
         iteration={store.trainingState.iteration || 0}
-        totalIterations={store.trainingConfig?.iterations || 0}
         currentLoss={store.trainingState.currentLoss}
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
@@ -165,38 +194,49 @@ const TrainingControls: Component = () => {
       <div class={styles.progressBar}>
         <div class={styles.progressFill} style={{ width: `${iterationProgress() * 100}%` }}></div>
       </div>
+      <TrainingStepsVisualizer
+        forwardStepResults={store.trainingState.forwardStepResults}
+        backwardStepResults={store.trainingState.backwardStepGradients}
+        currentLoss={store.trainingState.currentLoss}
+        weightUpdateResults={store.trainingState.weightUpdateResults}
+      />
       <div class={styles.controlsContainer}>
-        <button
-          class={`${styles.controlButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
-          onClick={singleStepForward}
-          disabled={isForwardDisabled()}
-        >
-          <FaSolidForward /> Forward
-        </button>
-        <button
-          class={`${styles.controlButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
-          onClick={calculateLoss}
-          disabled={isLossDisabled()}
-        >
-          <FaSolidCalculator /> Loss
-        </button>
-        <button
-          class={`${styles.controlButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
-          onClick={stepBackward}
-          disabled={isBackwardDisabled()}
-        >
-          <FaSolidBackward /> Backward
-        </button>
-        <button
-          class={`${styles.controlButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
-          onClick={updateWeights}
-          disabled={isUpdateWeightsDisabled()}
-        >
-          <FaSolidWeightScale /> Update weights
-        </button>
+        <div class={styles.buttonGroup}>
+          <button
+            class={`${styles.controlButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
+            onClick={singleStepForward}
+            disabled={isForwardDisabled()}
+          >
+            <FaSolidForward /> Forward
+          </button>
+          <button
+            class={`${styles.controlButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
+            onClick={calculateLoss}
+            disabled={isLossDisabled()}
+          >
+            <FaSolidCalculator /> Loss
+          </button>
+        </div>
+        <div class={styles.buttonGroup}>
+          <button
+            class={`${styles.controlButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
+            onClick={stepBackward}
+            disabled={isBackwardDisabled()}
+          >
+            <FaSolidBackward /> Backward
+          </button>
+          <button
+            class={`${styles.controlButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
+            onClick={updateWeights}
+            disabled={isUpdateWeightsDisabled()}
+          >
+            <FaSolidWeightScale /> Update weights
+          </button>
+        </div>
       </div>
+      <div class={styles.separator}></div>
       <button
-        class={`${styles.controlButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
+        class={`${styles.resetButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
         onClick={trainingStateReset}
         disabled={isResetDisabled()}
       >

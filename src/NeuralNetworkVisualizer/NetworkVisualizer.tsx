@@ -7,6 +7,7 @@ import { useCanvasSetup } from "./useCanvasSetup";
 import { canvasStyle, containerStyle, tooltipStyle } from "./NetworkVisualizerStyles";
 import { debounce } from "@solid-primitives/scheduled";
 import { css } from "@emotion/css";
+import { colors } from "../styles/colors";
 
 
 interface NetworkVisualizerProps {
@@ -282,7 +283,13 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           const data = tooltipAccessor();
           return (
             <div
-              class={tooltipStyle}
+              class={css`
+                ${tooltipStyle}
+                background-color: ${colors.surface};
+                color: ${colors.text};
+                border: 1px solid ${colors.border};
+                box-shadow: 0 2px 4px ${colors.shadow};
+              `}
               style={{
                 left: `${data.x}px`,
                 top: `${data.y}px`,

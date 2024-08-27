@@ -13,7 +13,6 @@ interface TrainingStepsVisualizerProps {
     bias: number;
     gradients: number[];
   }[];
-  batchSize: number;
   currentLoss: number | null;
   weightUpdateResults: TrainingStepResult;
 }

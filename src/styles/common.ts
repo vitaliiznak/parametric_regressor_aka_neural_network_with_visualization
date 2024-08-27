@@ -20,6 +20,9 @@ export const commonStyles = {
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
     
+    color: ${colors.text};
+    background-color: ${colors.surface};
+    
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -28,7 +31,7 @@ export const commonStyles = {
   
   primaryButton: css`
     background-color: ${colors.primary};
-    color: ${colors.surface};
+    color: ${colors.text};
     border: none;
     
     &:hover:not(:disabled) {
@@ -38,7 +41,7 @@ export const commonStyles = {
   
   secondaryButton: css`
     background-color: ${colors.secondary};
-    color: ${colors.surface};
+    color: ${colors.text};
     border: none;
     
     &:hover:not(:disabled) {
@@ -65,7 +68,7 @@ export const commonStyles = {
   card: css`
     background-color: ${colors.surface};
     border-radius: ${spacing.md};
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     padding: ${spacing.md};
   `,
   

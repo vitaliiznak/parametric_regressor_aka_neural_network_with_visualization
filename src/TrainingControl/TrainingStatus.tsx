@@ -1,5 +1,6 @@
 import { Component } from "solid-js";
 import { css } from "@emotion/css";
+import { colors } from "../styles/colors";
 
 interface TrainingStatusProps {
   iteration: number;
@@ -18,7 +19,6 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
       margin-bottom: 1rem;
     `,
     statusItem: css`
-      background-color: #F3F4F6;
       padding: 1rem;
       border-radius: 0.5rem;
       transition: all 0.3s ease;
@@ -27,9 +27,15 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
         transform: translateY(-2px);
       }
     `,
+    iterationItem: css`
+      background-color: ${colors.primary}22;
+    `,
+    lossItem: css`
+      background-color: ${colors.warning}22;
+    `,
     statusLabel: css`
       font-size: 0.875rem;
-      color: #4B5563;
+      color: ${colors.textLight};
       margin-bottom: 0.25rem;
     `,
     statusValue: css`
@@ -39,20 +45,21 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
     progressBar: css`
       width: 100%;
       height: 0.5rem;
-      background-color: #E5E7EB;
+      background-color: ${colors.border};
       border-radius: 0.25rem;
       overflow: hidden;
+      margin-top: 0.5rem;
     `,
     progressFill: css`
       height: 100%;
-      background-color: #3B82F6;
+      background-color: ${colors.primary};
       transition: width 300ms ease-in-out;
     `,
   };
 
   return (
     <div class={styles.statusGrid}>
-      <div class={styles.statusItem}>
+      <div class={`${styles.statusItem} ${styles.iterationItem}`}>
         <div class={styles.statusLabel}>Iteration</div>
         <div class={styles.statusValue}>
           {props.iteration} / {props.totalIterations}
@@ -61,7 +68,7 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
           <div class={styles.progressFill} style={{ width: `${props.iterationProgress * 100}%` }}></div>
         </div>
       </div>
-      <div class={styles.statusItem}>
+      <div class={`${styles.statusItem} ${styles.lossItem}`}>
         <div class={styles.statusLabel}>Current Loss</div>
         <div class={styles.statusValue} style={{ color: props.getLossColor(props.currentLoss) }}>
           {props.currentLoss !== null ? props.currentLoss.toFixed(4) : 'N/A' }

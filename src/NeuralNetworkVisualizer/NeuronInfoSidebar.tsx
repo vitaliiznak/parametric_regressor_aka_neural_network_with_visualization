@@ -232,13 +232,15 @@ const styles = {
     top: 0;
     right: 0;
     width: 400px;
-    height: 100%;
+    height: 100vh;
     background-color: ${colors.surface};
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
     padding: 20px;
     box-sizing: border-box;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
   `,
   closeButton: css`
     position: absolute;

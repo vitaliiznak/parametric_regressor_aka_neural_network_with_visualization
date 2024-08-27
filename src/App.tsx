@@ -33,19 +33,11 @@ const App: Component = () => {
     `,
     visualizer: css`
       flex-grow: 1;
-      background-color: ${colors.surface};
+      background-color: #1B213D;
       border-radius: 4px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-    `,
-    sidebar: css`
-      display: flex;
-      flex-direction: column;
-      width: 300px;
-      max-width: 400px;
-      height: 100vh;
-      overflow-y: auto;
     `,
     tabContainer: css`
       display: flex;
@@ -89,6 +81,8 @@ const App: Component = () => {
             <NetworkVisualizer
               includeLossNode={false}
               onVisualizationUpdate={() => console.log("Visualization updated")}
+              onSidebarToggle={() => {/* Handle sidebar toggle */}}
+              onResize={() => {/* Handle resize */}}
             />
           </Show>
           <Show when={activeTab() === "function"}>

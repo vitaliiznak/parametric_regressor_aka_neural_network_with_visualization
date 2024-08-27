@@ -14,11 +14,15 @@ const styles = {
     ${commonStyles.card}
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    height: 100vh;
     background-color: ${colors.surface};
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  `,
+  content: css`
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1rem;
   `,
   header: css`
     display: flex;
@@ -65,6 +69,31 @@ const styles = {
     font-weight: ${typography.fontWeight.bold};
     color: ${colors.text};
   `,
+  scrollableContent: css`
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1rem;
+
+    /* Scrollbar styling */
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: ${colors.background};
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: ${colors.primary};
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: ${colors.primaryDark};
+    }
+
+    /* For Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: ${colors.primary} ${colors.background};
+  `,
 };
 
 const Cockpit: Component = () => {
@@ -94,32 +123,33 @@ const Cockpit: Component = () => {
           </button>
         </div>
       </div>
+      <div class={styles.scrollableContent}>
+        <div class={styles.metricsContainer}>
+          <div class={styles.metric}>
+            <span class={styles.metricLabel}>Current Loss</span>
+            <span class={styles.metricValue}>{store.trainingState.currentLoss?.toFixed(4) || "N/A"}</span>
+          </div>
+          <div class={styles.metric}>
+            <span class={styles.metricLabel}>Iteration</span>
+            <span class={styles.metricValue}>{store.trainingState.iteration || 0}</span>
+          </div>
+          <div class={styles.metric}>
+            <span class={styles.metricLabel}>Accuracy</span>
+            <span class={styles.metricValue}>{"N/A"}</span>
+          </div>
+        </div>
 
-      <div class={styles.metricsContainer}>
-        <div class={styles.metric}>
-          <span class={styles.metricLabel}>Current Loss</span>
-          <span class={styles.metricValue}>{store.trainingState.currentLoss?.toFixed(4) || "N/A"}</span>
-        </div>
-        <div class={styles.metric}>
-          <span class={styles.metricLabel}>Iteration</span>
-          <span class={styles.metricValue}>{store.trainingState.iteration || 0}</span>
-        </div>
-        <div class={styles.metric}>
-          <span class={styles.metricLabel}>Accuracy</span>
-          <span class={styles.metricValue}>{"N/A"}</span>
-        </div>
+        <Show when={activeTab() === "network"}>
+          <NetworkConfigForm />
+        </Show>
+        <Show when={activeTab() === "training"}>
+          <TrainingConfigForm />
+          <TrainingControls onVisualizationUpdate={() => { }} />
+        </Show>
+        <Show when={activeTab() === "simulation"}>
+          <SimulationInputForm onSimulate={() => { }} />
+        </Show>
       </div>
-
-      <Show when={activeTab() === "network"}>
-        <NetworkConfigForm />
-      </Show>
-      <Show when={activeTab() === "training"}>
-        <TrainingConfigForm />
-        <TrainingControls onVisualizationUpdate={() => {}} />
-      </Show>
-      <Show when={activeTab() === "simulation"}>
-        <SimulationInputForm onSimulate={() => {}} />
-      </Show>
     </div>
   );
 };

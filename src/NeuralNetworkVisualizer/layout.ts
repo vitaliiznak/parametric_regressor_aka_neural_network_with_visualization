@@ -5,6 +5,8 @@ import { SimulationResult, VisualConnection, VisualNetworkData, VisualNode } fro
 export class NetworkLayout {
   public nodeWidth = 50;
   public nodeHeight = 30;
+  public inputNodeWidth = 100;
+  public inputNodeHeight = 40;
   public layerSpacing = 180;
   public nodeSpacing = 60;
   public inputValuesSpacing = 10;

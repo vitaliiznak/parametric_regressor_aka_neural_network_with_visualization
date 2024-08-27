@@ -51,7 +51,8 @@ const InputDataVisualizer: Component = () => {
         height: 600,
         margin: { l: 50, r: 50, b: 50, t: 80 },
         paper_bgcolor: colors.background,
-        plot_bgcolor: colors.background,
+        plot_bgcolor: colors.surface,
+        font: { color: colors.text },
         hovermode: 'closest',
         dragmode: 'pan',
       };

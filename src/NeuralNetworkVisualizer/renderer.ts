@@ -1,3 +1,4 @@
+import { colors } from "../styles/colors";
 import { Point, VisualConnection, VisualNetworkData, VisualNode } from "../types";
 import { debounce } from "@solid-primitives/scheduled";
 
@@ -10,8 +11,8 @@ export class NetworkRenderer {
   public nodeWidth: number;
   public nodeHeight: number;
   private highlightedNodeId: string | null = null;
-  private lastRenderedData: VisualNetworkData;
-  private lastRenderedSelectedNode: VisualNode | null;
+  lastRenderedData: VisualNetworkData | undefined;
+  lastRenderedSelectedNode: VisualNode | null;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
@@ -30,7 +31,7 @@ export class NetworkRenderer {
 
   setHighlightedNode(nodeId: string | null) {
     this.highlightedNodeId = nodeId;
-    this.render(this.lastRenderedData, this.lastRenderedSelectedNode);
+    this.debouncedRender(this.lastRenderedData, this.lastRenderedSelectedNode);
   }
 
   pan(dx: number, dy: number) {
@@ -74,9 +75,9 @@ export class NetworkRenderer {
   }
 
   private drawHiddenNode(node: VisualNode, selectedNode: VisualNode | null, isHighlighted: boolean) {
-    const nodeColor = 'white';
-    const strokeColor = '#333';
-    const textColor = '#333';
+    const nodeColor = 'rgba(255, 255, 255, 0.8)'; // White with 80% opacity
+    const strokeColor = colors.border;
+    const labelColor = colors.textDark; // Use a darker color for labels
 
     // Draw node
     this.ctx.fillStyle = nodeColor;
@@ -89,16 +90,16 @@ export class NetworkRenderer {
 
     // Draw activation function
     if (node.layerId !== 'input' && node.activation) {
-      this.ctx.fillStyle = textColor;
+      this.ctx.fillStyle = colors.primary;
       this.ctx.font = '10px Arial';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText(node.activation, node.x + 25, node.y + 10);
     }
 
-    // Draw neuron label
-    this.ctx.fillStyle = textColor;
-    this.ctx.font = '9px Arial';
+    // Draw neuron label (N1, N2, N{i})
+    this.ctx.fillStyle = labelColor;
+    this.ctx.font = 'bold 9px Arial'; // Make the font bold for better visibility
     this.ctx.fillText(node.label, node.x + 25, node.y + 22);
 
     // Draw output value
@@ -113,10 +114,10 @@ export class NetworkRenderer {
     }
 
     if (isHighlighted) {
-      this.ctx.shadowColor = '#FF4500';
+      this.ctx.shadowColor = colors.primary;
       this.ctx.shadowBlur = 15;
       this.ctx.lineWidth = 3;
-      this.ctx.strokeStyle = '#FF4500';
+      this.ctx.strokeStyle = colors.primary;
       this.ctx.stroke();
       this.ctx.shadowBlur = 0;
       this.ctx.lineWidth = 1;
@@ -124,40 +125,77 @@ export class NetworkRenderer {
   }
 
   private drawInputNode(node: VisualNode, isHighlighted: boolean) {
-    const nodeColor = '#e6f3ff';
-    const strokeColor = '#333';
-    const textColor = '#333';
+    const nodeColor = colors.surface;
+    const strokeColor = colors.primary;
+    const labelColor = colors.text;
+    const inputValueColor = colors.primary;
+
+    const nodeWidth = 110;
+    const nodeHeight = 40;
+    const padding = 5;
 
     // Draw node
     this.ctx.fillStyle = nodeColor;
     this.ctx.strokeStyle = strokeColor;
-    this.ctx.lineWidth = 1;
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
-    this.ctx.roundRect(node.x, node.y, 70, 25, 5);
+    this.ctx.roundRect(node.x, node.y, nodeWidth, nodeHeight, 10);
     this.ctx.fill();
     this.ctx.stroke();
 
-    // Draw neuron label
-    this.ctx.fillStyle = textColor;
-    this.ctx.font = '9px Arial';
+    // Draw input icon (stylized "I" for Input)
+    this.ctx.fillStyle = colors.primary;
+    this.ctx.font = 'bold 18px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(node.label, node.x + 35, node.y + 12);
+    this.ctx.fillText('I', node.x + 15, node.y + nodeHeight / 2);
 
-    // Draw output value
+    // Draw neuron label
+    this.ctx.fillStyle = labelColor;
+    this.ctx.font = '12px Arial';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'top';
+    const labelText = this.truncateText(node.label, nodeWidth - 40, '12px Arial');
+    this.ctx.fillText(labelText, node.x + 30, node.y + padding);
+
+    // Draw input value
     if (node.outputValue !== undefined) {
-      this.drawOutputValue(node);
+      this.ctx.fillStyle = inputValueColor;
+      this.ctx.font = 'bold 14px Arial';
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'bottom';
+      const valueText = node.outputValue.toFixed(2);
+      const truncatedValue = this.truncateText(valueText, nodeWidth - 35, 'bold 14px Arial');
+      this.ctx.fillText(truncatedValue, node.x + nodeWidth - padding, node.y + nodeHeight - padding);
     }
 
     if (isHighlighted) {
-      this.ctx.shadowColor = '#FF4500';
+      this.ctx.shadowColor = colors.primary;
       this.ctx.shadowBlur = 15;
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeStyle = '#FF4500';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeStyle = colors.primary;
       this.ctx.stroke();
       this.ctx.shadowBlur = 0;
-      this.ctx.lineWidth = 1;
+      this.ctx.lineWidth = 2;
     }
+  }
+
+  private truncateText(text: string, maxWidth: number, font: string): string {
+    this.ctx.font = font;
+    let width = this.ctx.measureText(text).width;
+    let ellipsis = '...';
+    let truncated = text;
+
+    if (width <= maxWidth) {
+      return text;
+    }
+
+    while (width > maxWidth) {
+      truncated = truncated.slice(0, -1);
+      width = this.ctx.measureText(truncated + ellipsis).width;
+    }
+
+    return truncated + ellipsis;
   }
 
   private drawBias(node: VisualNode) {
@@ -167,14 +205,14 @@ export class NetworkRenderer {
     // Draw a small circle for the bias
     this.ctx.beginPath();
     this.ctx.arc(biasX, biasY, 8, 0, 2 * Math.PI);
-    this.ctx.fillStyle = '#f0f0f0';
+    this.ctx.fillStyle = colors.background;
     this.ctx.fill();
-    this.ctx.strokeStyle = '#333';
+    this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
 
     // Draw the bias value
-    this.ctx.fillStyle = '#333';
+    this.ctx.fillStyle = colors.text;
     this.ctx.font = '8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
@@ -188,14 +226,14 @@ export class NetworkRenderer {
     // Draw a small circle
     this.ctx.beginPath();
     this.ctx.arc(outputX, outputY, 10, 0, 2 * Math.PI);
-    this.ctx.fillStyle = '#e6f3ff';
+    this.ctx.fillStyle = colors.background;
     this.ctx.fill();
-    this.ctx.strokeStyle = '#333';
+    this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
 
     // Draw the output value
-    this.ctx.fillStyle = '#333';
+    this.ctx.fillStyle = colors.text;
     this.ctx.font = '8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
@@ -224,7 +262,7 @@ export class NetworkRenderer {
 
   private drawLabel(x: number, y: number, text: string) {
     this.ctx.font = '8px Arial';
-    this.ctx.fillStyle = '#333';
+    this.ctx.fillStyle = colors.textLight;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(text, x, y);

@@ -28,8 +28,6 @@ const FunctionVisualizer: Component = () => {
       return output[0].data;
     });
 
-    console.log(learnedY)
-
     // Prepare data for the neural network predictions
     const nnX = xs.map(x => x[0]);
     const nnY = ys;
@@ -39,58 +37,64 @@ const FunctionVisualizer: Component = () => {
         x: trueX,
         y: trueY,
         type: 'scatter',
-        mode: 'lines',
+        mode: 'lines+text', // Include text labels
         name: 'True Function',
         line: { color: colors.primary, width: 3 },
+       
         hoverinfo: 'x+y',
       },
       {
         x: nnX,
         y: nnY,
         type: 'scatter',
-        mode: 'markers',
+        mode: 'markers+text', // Include text labels
         name: 'Training Data',
         marker: { color: colors.error, size: 8 },
+
         hoverinfo: 'x+y',
       },
       {
         x: trueX,
         y: learnedY,
         type: 'scatter',
-        mode: 'lines',
+        mode: 'lines+text', // Include text labels
         name: 'Learned Function',
         line: { color: colors.success, width: 3, dash: 'dash' },
         visible: showLearnedFunction() ? true : 'legendonly',
+  
         hoverinfo: 'x+y',
       }
     ];
 
     const layout = {
-      title: 'ChatGPT Productivity Paradox',
-      xaxis: { 
+      xaxis: {
         title: 'ChatGPT Usage (%)',
         range: [0, 100],
+        gridcolor: colors.border,
+        zerolinecolor: colors.border,
       },
-      yaxis: { 
+      yaxis: {
         title: 'Productivity Score',
         range: [0, 100],
+        gridcolor: colors.border,
+        zerolinecolor: colors.border,
       },
-      legend: { 
-        x: 1, 
-        xanchor: 'right', 
+      legend: {
+        x: 1,
+        xanchor: 'right',
         y: 1,
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
+   
         bordercolor: colors.border,
         borderwidth: 1,
       },
       hovermode: 'closest',
-      plot_bgcolor: colors.background,
-      paper_bgcolor: colors.surface,
+      plot_bgcolor: '#1B213D', // Ensure this matches the desired background color
+      paper_bgcolor: '#1B213D',
       font: {
         family: typography.fontFamily,
         size: 14,
         color: colors.text,
-      },
+      }
     };
 
     const config = {
@@ -111,7 +115,7 @@ const FunctionVisualizer: Component = () => {
       }
       return false; // Prevent default legend click behavior
     });
-  };
+  }
 
   onMount(() => {
     createPlot();
@@ -128,8 +132,8 @@ const FunctionVisualizer: Component = () => {
       ${commonStyles.card}
       padding: ${spacing.xl};
       margin-top: ${spacing.xl};
-      background-color: ${colors.surface};
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-color: #1B213D;  // A darker shade for better contrast
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       border-radius: 8px;
       
       @media (max-width: 768px) {
@@ -146,6 +150,7 @@ const FunctionVisualizer: Component = () => {
       width: 100%;
       height: 500px;
       margin-bottom: ${spacing.lg};
+      background-color: #1B213D;  // A darker shade for better contrast
     `,
     toggleButton: css`
       ${commonStyles.button}
@@ -163,7 +168,7 @@ const FunctionVisualizer: Component = () => {
   return (
     <div class={styles.container}>
       <h2 class={styles.title}>ChatGPT Productivity Function</h2>
-      <div ref={plotDiv} class={styles.plotContainer}></div>
+      <div ref={el => plotDiv = el} class={styles.plotContainer}></div>
       <button class={styles.toggleButton} onClick={() => setShowLearnedFunction(!showLearnedFunction())}>
         {showLearnedFunction() ? 'Hide' : 'Show'} Learned Function
       </button>

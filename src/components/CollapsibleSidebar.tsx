@@ -35,7 +35,7 @@ const CollapsibleSidebar: Component<CollapsibleSidebarProps> = (props) => {
     <div
       class={css`
         ${styles.sidebar}
-        width: ${isOpen() ? "300px" : "0px"};
+        width: ${isOpen() ? "330px" : "0px"};
       `}
     >
       <button
