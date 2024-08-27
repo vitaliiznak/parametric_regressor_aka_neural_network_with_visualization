@@ -1,13 +1,16 @@
+import './styles/gloabal.css'
 import { Component, createEffect, createSignal, Show } from 'solid-js';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import FunctionVisualizer from './FunctionVisualizer';
-import ConfigPanel from './ConfigPanel';
-import ControlPanel from './ControlPanel';
-import LegendAndTask from './LegendAndTask';
-import { store, actions } from './store';
+
+import { actions } from './store';
 
 import { css } from '@emotion/css';
 import { colors } from './styles/colors';
+
+import SidebarCockpit from './SidebarCockpit'
+import CollapsibleSidebar from './components/CollapsibleSidebar';
+import TutorialBar from './Tutorial/TutorialBar'; // Add this import
 
 const App: Component = () => {
   createEffect(() => {
@@ -19,55 +22,55 @@ const App: Component = () => {
   const styles = {
     mainContainer: css`
       display: flex;
-      flex-direction: column;
-      height: 100vh; 
-    
-    `,
-    header: css`
-      display: flex;
-      margin-bottom: 10px;
-    `,
-    tabContainer: css`
-      display: flex;
-    `,
-    tab: css`
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      background-color: ${colors.surface};
-      color: ${colors.text};
-      &.active {
-        background-color: ${colors.primary};
-        color: ${colors.surface};
-      }
+      flex-direction: row;
+      height: 100vh;
     `,
     content: css`
       display: flex;
-      flex-grow: 1; 
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden;
     `,
     visualizer: css`
-      flex-grow: 1; 
+      flex-grow: 1;
       background-color: ${colors.surface};
       border-radius: 4px;
       display: flex;
       flex-direction: column;
-      overflow: hidden; 
+      overflow: hidden;
     `,
     sidebar: css`
       display: flex;
       flex-direction: column;
-      flex-shrink: 0;
-      overflow: hidden; 
+      width: 300px;
+      max-width: 400px;
+      height: 100vh;
+      overflow-y: auto;
+    `,
+    tabContainer: css`
+      display: flex;
+      background-color: ${colors.background};
+    `,
+    tab: css`
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: ${colors.surface};
+      border: none;
+      &.active {
+        background-color: ${colors.primary};
+        color: ${colors.text};
+      }
     `,
   };
 
   return (
     <div class={styles.mainContainer}>
-      <div class={styles.header}>
-        <LegendAndTask />
-      </div>
-      <div class={styles.tabContainer}>
+      <CollapsibleSidebar>
+        <SidebarCockpit />
+      </CollapsibleSidebar>
+      <div class={styles.content}>
+    
+        <div class={styles.tabContainer}>
           <button
             class={`${styles.tab} ${activeTab() === "network" ? 'active' : ""}`}
             onClick={() => setActiveTab("network")}
@@ -81,7 +84,6 @@ const App: Component = () => {
             Function
           </button>
         </div>
-      <div class={styles.content}>
         <div class={styles.visualizer}>
           <Show when={activeTab() === "network"}>
             <NetworkVisualizer
@@ -93,11 +95,8 @@ const App: Component = () => {
             <FunctionVisualizer />
           </Show>
         </div>
-        <div class={styles.sidebar}>
-          <ConfigPanel />
-          <ControlPanel />
-        </div>
       </div>
+      <TutorialBar /> {/* Add this line to include the TutorialBar */}
     </div>
   );
 };

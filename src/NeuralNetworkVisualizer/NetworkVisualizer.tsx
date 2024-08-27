@@ -6,11 +6,14 @@ import { VisualNode } from "../types";
 import { useCanvasSetup } from "./useCanvasSetup";
 import { canvasStyle, containerStyle, tooltipStyle } from "./NetworkVisualizerStyles";
 import { debounce } from "@solid-primitives/scheduled";
+import { css } from "@emotion/css";
+
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
   onVisualizationUpdate: () => void;
   onSidebarToggle: (isOpen: boolean) => void;
+  onResize: (width: number, height: number) => void;
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
@@ -28,6 +31,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [selectedNeuron, setSelectedNeuron] = createSignal<VisualNode | null>(null);
   const [customNodePositions, setCustomNodePositions] = createSignal<Record<string, { x: number, y: number }>>({});
   const [tooltipData, setTooltipData] = createSignal<{ x: number, y: number, text: string } | null>(null);
+  const [tutorialStep, setTutorialStep] = createSignal(0);
 
   let draggedNode: VisualNode | null = null;
   let mouseDownTimer: number | null = null;
@@ -65,6 +69,21 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const selected = selectedNeuron();
     if (rendererValue) {
       rendererValue.render(visualData(), selected);
+    }
+  });
+
+  createEffect(() => {
+    const rendererValue = renderer();
+    if (rendererValue) {
+      switch (tutorialStep()) {
+        case 1: // Neurons step
+          rendererValue.setHighlightedNode('neuron_0_0'); // Highlight the first neuron
+          break;
+        case 2: // Layers step
+          rendererValue.setHighlightedNode(null); // Remove highlight
+          break;
+        // Add more cases for other steps
+      }
     }
   });
 
@@ -140,7 +159,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       );
       if (clickedNode) {
         draggedNode = clickedNode;
-    
+
         mouseDownTimer = setTimeout(() => {
           mouseDownTimer = null;
         }, 200); // Set a 200ms timer to distinguish between click and drag
@@ -166,7 +185,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const rect = canvas.getBoundingClientRect();
     const scaledX = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
     const scaledY = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
-  
+
     updateCustomNodePosition(draggedNode.id, scaledX, scaledY);
     rendererValue.render(visualData(), selectedNeuron());
   };
@@ -229,7 +248,20 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   };
 
   return (
-    <div ref={setContainerRef} class={containerStyle}>
+    <div
+      ref={setContainerRef}
+      class={css`
+        ${containerStyle}
+        resize: both;
+        overflow: auto;
+        min-height: 400px;
+        min-width: 300px;
+      `}
+      onResize={(e) => {
+        const target = e.target as HTMLDivElement;
+        props.onResize(target.clientWidth, target.clientHeight);
+      }}
+    >
       <canvas
         ref={el => {
           setCanvasRef(el);
@@ -249,8 +281,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         {(tooltipAccessor) => {
           const data = tooltipAccessor();
           return (
-            <div 
-              class={tooltipStyle} 
+            <div
+              class={tooltipStyle}
               style={{
                 left: `${data.x}px`,
                 top: `${data.y}px`,
@@ -262,8 +294,11 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           );
         }}
       </Show>
+   
+  
     </div>
   );
 };
+
 
 export default NetworkVisualizer;

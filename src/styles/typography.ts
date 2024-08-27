@@ -4,6 +4,7 @@ export const typography = {
       xs: '0.7rem',
       sm: '0.75rem',
       base: '0.9rem',
+      md: '0.95rem',
       lg: '0.98rem',
       xl: '1rem',
       '2xl': '1.5rem',

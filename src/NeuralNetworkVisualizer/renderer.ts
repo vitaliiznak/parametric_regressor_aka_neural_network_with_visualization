@@ -9,6 +9,9 @@ export class NetworkRenderer {
   private debouncedRender: (data: VisualNetworkData, selectedNode: VisualNode | null) => void;
   public nodeWidth: number;
   public nodeHeight: number;
+  private highlightedNodeId: string | null = null;
+  private lastRenderedData: VisualNetworkData;
+  private lastRenderedSelectedNode: VisualNode | null;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
@@ -20,30 +23,14 @@ export class NetworkRenderer {
   }
 
   render(data: VisualNetworkData, selectedNode: VisualNode | null) {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.save();
-    this.ctx.translate(this.offsetX, this.offsetY);
-    this.ctx.scale(this.scale, this.scale);
-
-    // Draw connections
-    this.drawConnections(data.connections, data.nodes);
-
-    // Draw nodes
-    this.drawNodes(data.nodes, selectedNode);
-
-
-    this.ctx.restore();
+    this.lastRenderedData = data;
+    this.lastRenderedSelectedNode = selectedNode;
+    this._render(data, selectedNode);
   }
 
-  private _render(data: VisualNetworkData, selectedNode: VisualNode | null) {
-
-    this.clear();
-    this.ctx.save();
-    this.ctx.translate(this.offsetX, this.offsetY);
-    this.ctx.scale(this.scale, this.scale);
-    this.drawConnections(data.connections, data.nodes);
-    this.drawNodes(data.nodes, selectedNode);
-    this.ctx.restore();
+  setHighlightedNode(nodeId: string | null) {
+    this.highlightedNodeId = nodeId;
+    this.render(this.lastRenderedData, this.lastRenderedSelectedNode);
   }
 
   pan(dx: number, dy: number) {
@@ -74,24 +61,19 @@ export class NetworkRenderer {
 
   private drawNodes(nodes: VisualNode[], selectedNode: VisualNode | null) {
     nodes.forEach(node => {
+      const isHighlighted = node.id === this.highlightedNodeId;
       switch (node.layerId) {
         case 'input':
-          this.drawInputNode(node);
+          this.drawInputNode(node, isHighlighted);
           break;
-        // case 'output':
-        //   this.drawOutputNode(node);
-        //   break;
         default:
-          this.drawHiddenNode(node, selectedNode);
+          this.drawHiddenNode(node, selectedNode, isHighlighted);
           break;
       }
-
-
-     
     });
   }
 
-  private drawHiddenNode(node: VisualNode, selectedNode: VisualNode | null) {
+  private drawHiddenNode(node: VisualNode, selectedNode: VisualNode | null, isHighlighted: boolean) {
     const nodeColor = 'white';
     const strokeColor = '#333';
     const textColor = '#333';
@@ -129,9 +111,19 @@ export class NetworkRenderer {
     if (selectedNode && node.id === selectedNode.id) {
       this.highlightSelectedNeuron(node);
     }
+
+    if (isHighlighted) {
+      this.ctx.shadowColor = '#FF4500';
+      this.ctx.shadowBlur = 15;
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeStyle = '#FF4500';
+      this.ctx.stroke();
+      this.ctx.shadowBlur = 0;
+      this.ctx.lineWidth = 1;
+    }
   }
 
-  private drawInputNode(node: VisualNode) {
+  private drawInputNode(node: VisualNode, isHighlighted: boolean) {
     const nodeColor = '#e6f3ff';
     const strokeColor = '#333';
     const textColor = '#333';
@@ -155,6 +147,16 @@ export class NetworkRenderer {
     // Draw output value
     if (node.outputValue !== undefined) {
       this.drawOutputValue(node);
+    }
+
+    if (isHighlighted) {
+      this.ctx.shadowColor = '#FF4500';
+      this.ctx.shadowBlur = 15;
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeStyle = '#FF4500';
+      this.ctx.stroke();
+      this.ctx.shadowBlur = 0;
+      this.ctx.lineWidth = 1;
     }
   }
 
@@ -295,5 +297,15 @@ export class NetworkRenderer {
     this.ctx.strokeStyle = color;
     this.ctx.lineWidth = Math.abs(weight) * 2 + 1;  // Ensure a minimum width of 1
     this.ctx.stroke();
+  }
+
+  private _render(data: VisualNetworkData, selectedNode: VisualNode | null) {
+    this.clear();
+    this.ctx.save();
+    this.ctx.translate(this.offsetX, this.offsetY);
+    this.ctx.scale(this.scale, this.scale);
+    this.drawConnections(data.connections, data.nodes);
+    this.drawNodes(data.nodes, selectedNode);
+    this.ctx.restore();
   }
 }

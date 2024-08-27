@@ -155,7 +155,6 @@ const TrainingControls: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h2 class={styles.title}>Training Controls</h2>
       <TrainingStatus
         iteration={store.trainingState.iteration || 0}
         totalIterations={store.trainingConfig?.iterations || 0}
@@ -166,56 +165,43 @@ const TrainingControls: Component = () => {
       <div class={styles.progressBar}>
         <div class={styles.progressFill} style={{ width: `${iterationProgress() * 100}%` }}></div>
       </div>
-      <TrainingStepsVisualizer
-        forwardStepResults={store.trainingState.forwardStepResults}
-        batchSize={store.trainingState.forwardStepResults.length}
-        currentLoss={store.trainingState.currentLoss}
-        backwardStepResults={store.trainingState.backwardStepGradients}
-        weightUpdateResults={store.trainingStepResult}
-      />
-
-      <div class={styles.trainingStepsContainer}>
-        <div>
-          <button
-            class={`${styles.trainingStepButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
-            onClick={singleStepForward}
-            disabled={isForwardDisabled()}
-          >
-            <FaSolidForward /> Forward
-          </button>
-          <button
-            class={`${styles.trainingStepButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
-            onClick={calculateLoss}
-            disabled={isLossDisabled()}
-          >
-            <FaSolidCalculator /> Loss
-          </button>
-        </div>
+      <div class={styles.controlsContainer}>
         <button
-          class={`${styles.trainingStepButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
-          onClick={trainingStateReset}
-          disabled={isResetDisabled()}
+          class={`${styles.controlButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
+          onClick={singleStepForward}
+          disabled={isForwardDisabled()}
         >
-          Reset
+          <FaSolidForward /> Forward
         </button>
-        <div>
-          <button
-            class={`${styles.trainingStepButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
-            onClick={stepBackward}
-            disabled={isBackwardDisabled()}
-          >
-            <FaSolidBackward /> Backward
-          </button>
-          <button
-            class={`${styles.trainingStepButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
-            onClick={updateWeights}
-            disabled={isUpdateWeightsDisabled()}
-          >
-            <FaSolidWeightScale /> Update weights
-          </button>
-        </div>
+        <button
+          class={`${styles.controlButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
+          onClick={calculateLoss}
+          disabled={isLossDisabled()}
+        >
+          <FaSolidCalculator /> Loss
+        </button>
+        <button
+          class={`${styles.controlButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
+          onClick={stepBackward}
+          disabled={isBackwardDisabled()}
+        >
+          <FaSolidBackward /> Backward
+        </button>
+        <button
+          class={`${styles.controlButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
+          onClick={updateWeights}
+          disabled={isUpdateWeightsDisabled()}
+        >
+          <FaSolidWeightScale /> Update weights
+        </button>
       </div>
-
+      <button
+        class={`${styles.controlButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
+        onClick={trainingStateReset}
+        disabled={isResetDisabled()}
+      >
+        Reset
+      </button>
       <LossHistoryChart
         lossHistory={store.trainingState.lossHistory}
         trainingRuns={store.trainingRuns}
