@@ -126,11 +126,13 @@ function initializeTrainer() {
 
 function trainingStateReset() {
   batch(() => {
-    setStore('trainingState', 'forwardStepResults', []);
-    setStore('trainingState', 'backwardStepGradients', []);
-    setStore('trainingState', 'lossHistory', []);
-    setStore('trainingState', 'currentLoss', null);
-    setStore('trainingState', 'currentPhase', 'idle');
+    setStore('trainingState', {
+      forwardStepResults: [],
+      backwardStepGradients: [],
+      lossHistory: [],
+      currentLoss: null,
+      currentPhase: 'idle'
+    });
   });
 }
 
@@ -190,9 +192,11 @@ function calculateLoss() {
 
   queueMicrotask(() => {
     batch(() => {
-      setStore('trainingState', 'currentPhase', 'loss');
-      setStore('trainingState', 'currentLoss', currentLoss);
-      setStore('trainingState', 'lossHistory', [...store.trainingState.lossHistory, currentLoss]);
+      setStore('trainingState', {
+        currentPhase: 'loss',
+        currentLoss: currentLoss,
+        lossHistory: [...store.trainingState.lossHistory, currentLoss]
+      });
     });
   });
 
