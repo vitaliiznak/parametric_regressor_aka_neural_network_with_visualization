@@ -211,18 +211,18 @@ export class NetworkRenderer {
     this.ctx.lineTo(biasX, biasY + 8);
     this.ctx.lineTo(biasX - 8, biasY);
     this.ctx.closePath();
-    this.ctx.fillStyle = colors.secondary;
+    this.ctx.fillStyle = node.bias >= 0 ? colors.secondary : colors.secondaryDark; // Use different color for negative bias
     this.ctx.fill();
     this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
 
     // Draw the bias value
-    this.ctx.fillStyle = colors.text;
+    this.ctx.fillStyle = colors.text; // Use dark text for better contrast
     this.ctx.font = 'bold 8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(node.bias.toFixed(2), biasX, biasY);
+    this.ctx.fillText(`${node.bias >= 0 ? '+' : '-'}${Math.abs(node.bias).toFixed(2)}`, biasX, biasY); // Add + or - prefix
 
     // Add "Bias" label
     this.ctx.fillStyle = colors.textLight;
@@ -250,7 +250,7 @@ export class NetworkRenderer {
     this.ctx.stroke();
 
     // Draw the output value
-    this.ctx.fillStyle = colors.surface;
+    this.ctx.fillStyle = colors.text; // Use dark text for better contrast
     this.ctx.font = 'bold 8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
@@ -278,7 +278,7 @@ export class NetworkRenderer {
       // Draw weight label
       const midX = (fromX + toX) / 2;
       const midY = (fromY + toY) / 2 - 10;
-      this.drawLabel(midX, midY, conn.weight.toFixed(2));
+      this.drawLabel(midX, midY, `x${conn.weight.toFixed(2)}`); // Add "x" prefix for multiplication
     });
   }
 

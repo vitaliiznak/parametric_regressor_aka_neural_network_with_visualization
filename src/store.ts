@@ -190,15 +190,14 @@ function calculateLoss() {
     currentLoss
   });
 
-  queueMicrotask(() => {
-    batch(() => {
-      setStore('trainingState', {
-        currentPhase: 'loss',
-        currentLoss: currentLoss,
-        lossHistory: [...store.trainingState.lossHistory, currentLoss]
-      });
+  batch(() => {
+    setStore('trainingState', {
+      currentPhase: 'loss',
+      currentLoss: currentLoss,
+      lossHistory: [...store.trainingState.lossHistory, currentLoss]
     });
   });
+
 
   console.log("Finished calculateLoss");
 }
