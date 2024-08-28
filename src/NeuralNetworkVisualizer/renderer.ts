@@ -103,12 +103,13 @@ export class NetworkRenderer {
     this.ctx.font = 'bold 9px Arial'; // Make the font bold for better visibility
     this.ctx.fillText(node.label, node.x + 25, node.y + 22);
 
+    // Draw bias
+    this.drawBias(node);
+
     // Draw output value
     if (node.outputValue !== undefined) {
       this.drawOutputValue(node);
     }
-
-    this.drawBias(node);
 
     if (selectedNode && node.id === selectedNode.id) {
       this.highlightSelectedNeuron(node);
@@ -200,13 +201,17 @@ export class NetworkRenderer {
   }
 
   private drawBias(node: VisualNode) {
-    const biasX = node.x - 15;
+    const biasX = node.x - 20;
     const biasY = node.y + 15;
 
-    // Draw a small circle for the bias
+    // Draw a diamond shape for the bias
     this.ctx.beginPath();
-    this.ctx.arc(biasX, biasY, 8, 0, 2 * Math.PI);
-    this.ctx.fillStyle = colors.background;
+    this.ctx.moveTo(biasX, biasY - 8);
+    this.ctx.lineTo(biasX + 8, biasY);
+    this.ctx.lineTo(biasX, biasY + 8);
+    this.ctx.lineTo(biasX - 8, biasY);
+    this.ctx.closePath();
+    this.ctx.fillStyle = colors.secondary;
     this.ctx.fill();
     this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
@@ -214,31 +219,47 @@ export class NetworkRenderer {
 
     // Draw the bias value
     this.ctx.fillStyle = colors.text;
-    this.ctx.font = '8px Arial';
+    this.ctx.font = 'bold 8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(node.bias.toFixed(2), biasX, biasY);
+
+    // Add "Bias" label
+    this.ctx.fillStyle = colors.textLight;
+    this.ctx.font = '7px Arial';
+    this.ctx.fillText('Bias', biasX, biasY + 15);
   }
 
   private drawOutputValue(node: VisualNode) {
-    const outputX = node.x + 55;
+    const outputX = node.x + 60;
     const outputY = node.y + 15;
 
-    // Draw a small circle
+    // Draw a hexagon for the output value
     this.ctx.beginPath();
-    this.ctx.arc(outputX, outputY, 10, 0, 2 * Math.PI);
-    this.ctx.fillStyle = colors.background;
+    this.ctx.moveTo(outputX + 10, outputY);
+    this.ctx.lineTo(outputX + 5, outputY - 8.66);
+    this.ctx.lineTo(outputX - 5, outputY - 8.66);
+    this.ctx.lineTo(outputX - 10, outputY);
+    this.ctx.lineTo(outputX - 5, outputY + 8.66);
+    this.ctx.lineTo(outputX + 5, outputY + 8.66);
+    this.ctx.closePath();
+    this.ctx.fillStyle = colors.primary;
     this.ctx.fill();
     this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
 
     // Draw the output value
-    this.ctx.fillStyle = colors.text;
-    this.ctx.font = '8px Arial';
+    this.ctx.fillStyle = colors.surface;
+    this.ctx.font = 'bold 8px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(node.outputValue!.toFixed(2), outputX, outputY);
+
+    // Add "Output" label
+    this.ctx.fillStyle = colors.textLight;
+    this.ctx.font = '7px Arial';
+    this.ctx.fillText('Output', outputX, outputY + 15);
   }
 
   private drawConnections(connections: VisualConnection[], nodes: VisualNode[]) {
