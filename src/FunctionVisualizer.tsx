@@ -119,6 +119,18 @@ const FunctionVisualizer: Component = () => {
 
   onMount(() => {
     createPlot();
+    const resizeObserver = new ResizeObserver(() => {
+      if (plotDiv) {
+        Plotly.Plots.resize(plotDiv);
+      }
+    });
+    if (plotDiv) {
+      resizeObserver.observe(plotDiv);
+    }
+
+    onCleanup(() => {
+      resizeObserver.disconnect();
+    });
   });
 
   createEffect(() => {
@@ -132,9 +144,12 @@ const FunctionVisualizer: Component = () => {
       ${commonStyles.card}
       padding: ${spacing.xl};
       margin-top: ${spacing.xl};
-      background-color: #1B213D;  // A darker shade for better contrast
+      background-color: #1B213D;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       border-radius: 8px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
       
       @media (max-width: 768px) {
         padding: ${spacing.lg};
@@ -147,10 +162,9 @@ const FunctionVisualizer: Component = () => {
       color: ${colors.text};
     `,
     plotContainer: css`
-      width: 100%;
-      height: 500px;
-      margin-bottom: ${spacing.lg};
-      background-color: #1B213D;  // A darker shade for better contrast
+      flex-grow: 1;
+      min-height: 0;
+      background-color: #1B213D;
     `,
     toggleButton: css`
       ${commonStyles.button}
@@ -161,7 +175,7 @@ const FunctionVisualizer: Component = () => {
       gap: ${spacing.sm};
       width: 100%;
       max-width: 200px;
-      margin: 0 auto;
+      margin: ${spacing.md} auto 0;
     `,
   };
 

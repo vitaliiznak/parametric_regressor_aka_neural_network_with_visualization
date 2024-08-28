@@ -149,4 +149,9 @@ export class NetworkLayout {
     }
     return null;
   }
+
+  updateDimensions(width: number, height: number) {
+    this.canvasWidth = width;
+    this.canvasHeight = height;
+  }
 }

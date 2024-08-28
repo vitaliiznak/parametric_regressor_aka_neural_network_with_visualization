@@ -18,9 +18,10 @@ export class NetworkRenderer {
     this.ctx = canvas.getContext('2d')!;
     this.nodeWidth = 60; // or whatever default value you prefer
     this.nodeHeight = 40; // or whatever default value you prefer
-    this.debouncedRender = debounce((data: VisualNetworkData, selectedNode: VisualNode | null) => {
+    this.debouncedRender = debounce((data: VisualNetworkData | null, selectedNode: VisualNode | null) => {
       this._render(data, selectedNode);
     }, 16); // Debounce to ~60fps
+    this.lastRenderedSelectedNode = null;
   }
 
   render(data: VisualNetworkData, selectedNode: VisualNode | null) {
@@ -345,5 +346,11 @@ export class NetworkRenderer {
     this.drawConnections(data.connections, data.nodes);
     this.drawNodes(data.nodes, selectedNode);
     this.ctx.restore();
+  }
+
+  updateDimensions(width: number, height: number) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.render(this.lastRenderedData!, this.lastRenderedSelectedNode);
   }
 }

@@ -14,7 +14,7 @@ const styles = {
     ${commonStyles.card}
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
     background-color: ${colors.surface};
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -97,7 +97,7 @@ const styles = {
 };
 
 const Cockpit: Component = () => {
-  const [activeTab, setActiveTab] = createSignal<"network" | "training" | "simulation">("network");
+  const [activeTab, setActiveTab] = createSignal<"network" | "training" | "simulation">("training");
 
   return (
     <div class={styles.container}>

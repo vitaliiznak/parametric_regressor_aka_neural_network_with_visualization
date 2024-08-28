@@ -25,7 +25,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     setCanvasRef,
     setContainerRef,
     isCanvasInitialized,
-    initializeCanvas
+    initializeCanvas,
+    handleResize
   } = useCanvasSetup(props.onVisualizationUpdate);
 
   const [isPanning, setIsPanning] = createSignal(false);
@@ -41,7 +42,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const visualData = createMemo(() => {
     const layoutCalculatorValue = layoutCalculator();
     if (!layoutCalculatorValue) {
-      console.error('Layout calculator is not initialized');
+      console.warn('Layout calculator is not initialized');
       return { nodes: [], connections: [] };
     }
 
@@ -254,13 +255,14 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       class={css`
         ${containerStyle}
         resize: both;
-        overflow: auto;
+        overflow: hidden;
         min-height: 400px;
         min-width: 300px;
       `}
       onResize={(e) => {
         const target = e.target as HTMLDivElement;
         props.onResize(target.clientWidth, target.clientHeight);
+        handleResize();
       }}
     >
       <canvas

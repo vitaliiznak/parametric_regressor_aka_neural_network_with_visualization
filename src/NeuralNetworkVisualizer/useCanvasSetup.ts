@@ -25,7 +25,23 @@ export function useCanvasSetup(onVisualizationUpdate: () => void) {
       onVisualizationUpdate();
       setIsCanvasInitialized(true);
     } else {
-      console.warn('Container dimensions are zero, skipping canvas initialization');
+      console.warn('Container dimensions are zero, retrying in 100ms');
+      setTimeout(() => initializeCanvas(canvas), 100);
+    }
+  };
+
+  const handleResize = () => {
+    const container = containerRef();
+    const canvas = canvasRef();
+    if (container && canvas) {
+      const { width, height } = container.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        canvas.width = width;
+        canvas.height = height;
+        layoutCalculator()?.updateDimensions(width, height);
+        renderer()?.updateDimensions(width, height);
+        onVisualizationUpdate();
+      }
     }
   };
 
@@ -33,12 +49,7 @@ export function useCanvasSetup(onVisualizationUpdate: () => void) {
     const container = containerRef();
     const canvas = canvasRef();
     if (container && canvas) {
-      const resizeObserver = new ResizeObserver(() => {
-        const { width, height } = container.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          initializeCanvas(canvas);
-        }
-      });
+      const resizeObserver = new ResizeObserver(handleResize);
       resizeObserver.observe(container);
 
       onCleanup(() => {
@@ -52,9 +63,9 @@ export function useCanvasSetup(onVisualizationUpdate: () => void) {
     renderer,
     canvasRef,
     setCanvasRef,
-    containerRef,
     setContainerRef,
     isCanvasInitialized,
-    initializeCanvas
+    initializeCanvas,
+    handleResize
   };
 }

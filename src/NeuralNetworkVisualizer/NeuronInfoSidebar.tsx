@@ -232,7 +232,7 @@ const styles = {
     top: 0;
     right: 0;
     width: 400px;
-    height: 100vh;
+    height: 100%;
     background-color: ${colors.surface};
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
