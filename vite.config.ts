@@ -7,7 +7,7 @@ export default defineConfig({
       plugins: ['@emotion/babel-plugin']
     }
   })],
-  base: '/func_interpolator_aka_neural_network_with_vizualisation/',
+  base: '/func_interpolator_aka_neural_network_with_visualization/',
   server: {
     port: 3000,
   },
