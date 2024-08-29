@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "description": "Neural Network Visualization",
+  "homepage": "https://vitaliiznak.github.io/func_interpolator_aka_neural_network_with_vizualisation",
   "scripts": {
     "start": "vite",
     "build": "vite build",
     "dev": "vite",
     "serve": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start-cmd": "ts-node --project tsconfig.json src/index.ts"
+    "predeploy": "vite build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
     "eslint": "^9.9.0",
+    "gh-pages": "^6.1.1",
     "globals": "^15.9.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

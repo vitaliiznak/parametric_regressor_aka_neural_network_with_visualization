@@ -7,24 +7,13 @@ export default defineConfig({
       plugins: ['@emotion/babel-plugin']
     }
   })],
-  resolve: {
-    // alias: {
-    //   'solid-js/store': 'node_modules/solid-js/store/dist/store.cjs',
-    //   conditions: ['development', 'browser'],
-    // },
-  },
-  // worker: {
-  //   format: 'es',
-  // },
+  base: '/func_interpolator_aka_neural_network_with_vizualisation/',
   server: {
     port: 3000,
   },
-  root: './', // If your index.html is in the src folder
-  publicDir: '../public', // Adjust this if your public assets are elsewhere
   build: {
     target: 'esnext',
-    outDir: '../dist', // Specify where to output built files
+    outDir: 'dist', // Change this to 'dist'
     emptyOutDir: true,
   },
-
 });
