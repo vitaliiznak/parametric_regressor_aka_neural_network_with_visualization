@@ -1,10 +1,11 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Trainer } from "./trainer";
 
-export interface AppState {
+
+export type AppState = {
   // Network configuration
   network: MLP;
-  visualData: VisualNetworkData;
+  visualData: { nodes: [], connections: [] };
 
   // Training configuration
   trainingConfig: TrainingConfig;
@@ -12,24 +13,30 @@ export interface AppState {
 
   // Training state
   trainingState: {
-    currentPhase: 'idle' | 'forward' | 'loss' | 'backward' | 'update' | 'iteration';
-    iteration: number;
-    currentLoss: number | null;
-    forwardStepResults: Prediction[];
-    backwardStepGradients: BackwardStepGradients; // Changed to allow null
-    lossHistory: number[];
+    currentPhase: 'idle',
+    iteration: 0,
+    currentLoss: null,
+    forwardStepResults: [],
+    backwardStepGradients: [],
+    lossHistory: [],
   };
 
-  // training process data
-  trainingStepResult: TrainingStepResult
+  trainingStepResult: {
+    gradients: [],
+    oldWeights: [],
+    newWeights: [],
+  };
 
   trainer: Trainer | null;
-  
-  // Simulation
-  currentInput: number[];
-  simulationResult: SimulationResult | null;
 
-}
+  currentInput: [];
+  simulationResult: {
+    input: [],
+    output: [],
+    layerOutputs: []
+  },
+  trainingRuns: TrainingRun[]; // Add this line
+};
 
 export type BackwardStepGradients = {
   neuron: number;

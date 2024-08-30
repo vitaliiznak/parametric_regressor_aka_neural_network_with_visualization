@@ -7,13 +7,10 @@ export default defineConfig({
       plugins: ['@emotion/babel-plugin']
     }
   })],
-  base: '/func_interpolator_aka_neural_network_with_visualization/',
-  server: {
-    port: 3000,
-  },
+  base: '/func_interpolator_aka_neural_network_with_visualization/', // Use the correct spelling here
   build: {
     target: 'esnext',
-    outDir: 'dist', // Change this to 'dist'
+    outDir: 'dist',
     emptyOutDir: true,
   },
 });

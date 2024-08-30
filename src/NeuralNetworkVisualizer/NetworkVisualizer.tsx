@@ -128,7 +128,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     } else {
       handleHovering(x, y, rendererValue);
     }
-  }, 16); // Debounce to roughly 60fps
+  }, 4); // Debounce to roughly 60fps
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();

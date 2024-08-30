@@ -1,5 +1,5 @@
-import { createStore, produce } from "solid-js/store";
-import { AppState, TrainingConfig, TrainingData } from "./types";
+import { createStore } from "solid-js/store";
+import { AppState } from "./types";
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
@@ -11,41 +11,6 @@ import { ActivationFunction } from "./NeuralNetwork/types";
 const INITIAL_NETWORK = CONFIG.INITIAL_NETWORK;
 const INITIAL_TRAINING = CONFIG.INITIAL_TRAINING;
 
-export type AppState = {
-  // Network configuration
-  network: MLP;
-  visualData: { nodes: [], connections: [] };
-
-  // Training configuration
-  trainingConfig: TrainingConfig;
-  trainingData: TrainingData;
-
-  // Training state
-  trainingState: {
-    currentPhase: 'idle',
-    iteration: 0,
-    currentLoss: null,
-    forwardStepResults: [],
-    backwardStepGradients: [],
-    lossHistory: [],
-  };
-
-  trainingStepResult: {
-    gradients: [],
-    oldWeights: [],
-    newWeights: [],
-  };
-
-  trainer: Trainer;
-
-  currentInput: [];
-  simulationResult: {
-    input: [],
-    output: [],
-    layerOutputs: []
-  },
-  trainingRuns: TrainingRun[]; // Add this line
-};
 
 const initialState: AppState = {
   // Network configuration
@@ -75,11 +40,13 @@ const initialState: AppState = {
   trainer: null,
 
   currentInput: [],
+
   simulationResult: {
     input: [],
     output: [],
     layerOutputs: []
   },
+
 };
 
 export const [store, setStore] = createStore(initialState);
