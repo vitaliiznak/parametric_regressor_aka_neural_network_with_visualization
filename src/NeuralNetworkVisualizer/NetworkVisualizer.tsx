@@ -33,7 +33,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   const [selectedNeuron, setSelectedNeuron] = createSignal<VisualNode | null>(null);
   const [customNodePositions, setCustomNodePositions] = createSignal<Record<string, { x: number, y: number }>>({});
   const [tooltipData, setTooltipData] = createSignal<{ x: number, y: number, text: string } | null>(null);
-  const [tutorialStep, setTutorialStep] = createSignal(0);
 
   let draggedNode: VisualNode | null = null;
   let mouseDownTimer: number | null = null;
@@ -74,20 +73,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     }
   });
 
-  createEffect(() => {
-    const rendererValue = renderer();
-    if (rendererValue) {
-      switch (tutorialStep()) {
-        case 1: // Neurons step
-          rendererValue.setHighlightedNode('neuron_0_0'); // Highlight the first neuron
-          break;
-        case 2: // Layers step
-          rendererValue.setHighlightedNode(null); // Remove highlight
-          break;
-        // Add more cases for other steps
-      }
-    }
-  });
 
   const setupEventListeners = () => {
     const canvas = canvasRef();
