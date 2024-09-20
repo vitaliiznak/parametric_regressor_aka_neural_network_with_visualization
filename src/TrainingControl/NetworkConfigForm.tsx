@@ -10,7 +10,7 @@ import { css } from "@emotion/css";
 const styles = {
   container: css`
     ${commonStyles.card}
-    max-width: 100%; // Ensure the container doesn't exceed its parent's width
+    max-width: 100%; 
   `,
   title: css`
     font-size: ${typography.fontSize.xl};

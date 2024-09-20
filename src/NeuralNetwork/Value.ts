@@ -5,7 +5,7 @@ export class Value {
   _op: string;
   _backward: () => void;
   label: string;
-  id: number; // Added a unique ID for each Value instance
+  id: number;
 
   constructor(data: number, _children: Value[] = [], _op: string = '', label: string = '') {
     this.#data = data;
@@ -14,10 +14,10 @@ export class Value {
     this._op = _op;
     this._backward = () => { };
     this.label = label;
-    this.id = Value.idCounter++; // Assign a unique ID
+    this.id = Value.idCounter++;
   }
 
-  static idCounter: number = 0; // Initialize the static idCounter property
+  static idCounter: number = 0;
 
   static from(n: number | Value): Value {
     return n instanceof Value ? n : new Value(n);
@@ -140,6 +140,16 @@ export class Value {
     return out;
   }
 
+  leakyRelu(alpha: number = 0.01): Value {
+    const out = new Value(this.data > 0 ? this.data : alpha * this.data, [this], 'leaky-relu', this.label);
+
+    out._backward = () => {
+      this.grad += (this.data > 0 ? 1 : alpha) * out.grad;
+    };
+
+    return out;
+  }
+
   backward(): void {
     const topo: Value[] = [];
     const visited = new Set<Value>();
@@ -199,4 +209,4 @@ export class Value {
   }
 }
 
-Value.idCounter = 0; // Initialize the ID counter
+Value.idCounter = 0;

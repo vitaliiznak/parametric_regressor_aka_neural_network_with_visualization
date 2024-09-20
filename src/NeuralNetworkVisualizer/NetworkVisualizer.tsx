@@ -7,14 +7,12 @@ import { useCanvasSetup } from "./useCanvasSetup";
 import { canvasStyle, containerStyle, tooltipStyle } from "./NetworkVisualizerStyles";
 import { debounce } from "@solid-primitives/scheduled";
 import { css } from "@emotion/css";
-import { colors } from "../styles/colors";
-
+import ConnectionSidebar from "./ConnectionSidebar";
 
 interface NetworkVisualizerProps {
   includeLossNode: boolean;
   onVisualizationUpdate: () => void;
   onSidebarToggle: (isOpen: boolean) => void;
-  onResize: (width: number, height: number) => void;
 }
 
 const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
@@ -25,12 +23,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     setCanvasRef,
     setContainerRef,
     isCanvasInitialized,
-    initializeCanvas,
-    handleResize
+    initializeCanvas
   } = useCanvasSetup(props.onVisualizationUpdate);
 
   const [isPanning, setIsPanning] = createSignal(false);
   const [selectedNeuron, setSelectedNeuron] = createSignal<VisualNode | null>(null);
+  const [selectedConnectionId, setSelectedConnectionId] = createSignal<string | null>(null);
   const [customNodePositions, setCustomNodePositions] = createSignal<Record<string, { x: number, y: number }>>({});
   const [tooltipData, setTooltipData] = createSignal<{ x: number, y: number, text: string } | null>(null);
 
@@ -39,6 +37,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
 
   const visualData = createMemo(() => {
+    const networkUpdateTrigger = store.networkUpdateTrigger;
+    
     const layoutCalculatorValue = layoutCalculator();
     if (!layoutCalculatorValue) {
       console.warn('Layout calculator is not initialized');
@@ -59,6 +59,12 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     return visualData().nodes.find(node => node.id === selectedNeuron()?.id) || null;
   });
 
+  const currentSelectedConnection = createMemo(() => {
+    const id = selectedConnectionId();
+    if (!id) return null;
+    return visualData().connections.find(conn => conn.id === id) || null;
+  });
+
   createEffect(() => {
     if (isCanvasInitialized()) {
       setupEventListeners();
@@ -69,10 +75,9 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const rendererValue = renderer();
     const selected = selectedNeuron();
     if (rendererValue) {
-      rendererValue.render(visualData(), selected);
+      rendererValue.render(visualData(), selected, selectedConnectionId());
     }
   });
-
 
   const setupEventListeners = () => {
     const canvas = canvasRef();
@@ -82,7 +87,8 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         mousemove: debouncedHandleMouseMove,
         mouseup: handleMouseUp,
         wheel: handleWheel,
-        contextmenu: (e: Event) => e.preventDefault()
+        click: handleClick,
+        contextmenu: (e: Event) => e.preventDefault(),
       };
 
       Object.entries(listeners).forEach(([event, handler]) => {
@@ -196,6 +202,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
     const layoutCalculatorValue = layoutCalculator();
     if (!layoutCalculatorValue) return;
 
+    // Check if hovering over a node
     const hoveredNode = layoutCalculatorValue.findNodeAt(
       x,
       y,
@@ -205,33 +212,67 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
       rendererValue.offsetY
     );
 
-    if (hoveredNode) {
+    // Check if hovering over a connection or its label
+    const hoveredConnection = rendererValue.getConnectionAtPoint(x, y);
+
+    if (hoveredNode || hoveredConnection) {
       canvasRef()!.style.cursor = 'pointer';
-      showTooltip(x, y, `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue?.toFixed(4) || 'N/A'}`);
+      if (hoveredNode) {
+        showTooltip(
+          x,
+          y,
+          `Node: ${hoveredNode.label}\nOutput: ${hoveredNode.outputValue?.toFixed(4) || 'N/A'}`
+        );
+      } else if (hoveredConnection) {
+        showTooltip(
+          x,
+          y,
+          `Connection: ${hoveredConnection.from} → ${hoveredConnection.to}\nWeight: ${hoveredConnection.weight.toFixed(4)}`
+        );
+      }
     } else {
       canvasRef()!.style.cursor = 'grab';
       hideTooltip();
     }
   };
 
+  const handleClick = (e: MouseEvent) => {
+    const canvas = canvasRef();
+    const rendererValue = renderer();
+    if (!rendererValue || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rendererValue.offsetX) / rendererValue.scale;
+    const y = (e.clientY - rect.top - rendererValue.offsetY) / rendererValue.scale;
+    const connection = rendererValue.getConnectionAtPoint(x, y);
+    if (connection) {
+      setSelectedConnectionId(connection.id);
+      setSelectedNeuron(null);
+      props.onSidebarToggle(true);
+      rendererValue.highlightConnection(connection);
+    } else {
+      setSelectedConnectionId(null);
+      props.onSidebarToggle(false);
+      rendererValue.clearHighlightedConnection();
+    }
+  };
+
   const handleMouseUp = () => {
     const canvas = canvasRef();
-    if (canvas) {
-      batch(() => {
-        if (mouseDownTimer !== null) {
-          clearTimeout(mouseDownTimer);
-          if (draggedNode) {
-            setSelectedNeuron(draggedNode);
-            renderer()?.render(visualData(), draggedNode); // Trigger re-render with selected node
-          }
+    
+      if (mouseDownTimer !== null) {
+        clearTimeout(mouseDownTimer);
+        if (draggedNode) {
+          setSelectedNeuron(draggedNode);
+          renderer()?.render(visualData(), draggedNode); // Trigger re-render with selected node
         }
-        setIsPanning(false);
-        draggedNode = null;
-        mouseDownTimer = null;
-        lastPanPosition = { x: 0, y: 0 };
-      });
-      canvas.style.cursor = 'grab';
-    }
+      }
+      setIsPanning(false);
+      draggedNode = null;
+      mouseDownTimer = null;
+      lastPanPosition = { x: 0, y: 0 };
+      if (canvas) {
+        canvas.style.cursor = 'grab';
+      }
   };
 
   return (
@@ -244,11 +285,6 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         min-height: 400px;
         min-width: 300px;
       `}
-      onResize={(e) => {
-        const target = e.target as HTMLDivElement;
-        props.onResize(target.clientWidth, target.clientHeight);
-        handleResize();
-      }}
     >
       <canvas
         ref={el => {
@@ -256,13 +292,20 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
           if (el) initializeCanvas(el);
         }}
         class={canvasStyle}
-        onMouseDown={handleMouseDown}
       />
       <NeuronInfoSidebar
         neuron={currentSelectedNeuron()}
         onClose={() => {
           setSelectedNeuron(null);
           renderer()?.render(visualData(), null);
+        }}
+      />
+      <ConnectionSidebar
+        connection={currentSelectedConnection()}
+        onClose={() => {
+          setSelectedConnectionId(null);
+          renderer()?.clearHighlightedConnection();
+          props.onSidebarToggle(false);
         }}
       />
       <Show when={tooltipData()}>
@@ -272,27 +315,18 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
             <div
               class={css`
                 ${tooltipStyle}
-                background-color: ${colors.surface};
-                color: ${colors.text};
-                border: 1px solid ${colors.border};
-                box-shadow: 0 2px 4px ${colors.shadow};
+                left: ${data.x + 10}px;
+                top: ${data.y + 10}px;
+                display: block;
               `}
-              style={{
-                left: `${data.x}px`,
-                top: `${data.y}px`,
-                display: 'block'
-              }}
             >
               {data.text}
             </div>
           );
         }}
       </Show>
-   
-  
     </div>
   );
 };
-
 
 export default NetworkVisualizer;

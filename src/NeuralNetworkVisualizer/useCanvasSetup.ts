@@ -1,6 +1,7 @@
 import { createSignal, createEffect, onCleanup } from "solid-js";
 import { NetworkLayout } from "./layout";
 import { NetworkRenderer } from "./renderer";
+import { store } from '../store'; // Ensure this import is present
 
 export function useCanvasSetup(onVisualizationUpdate: () => void) {
   const [layoutCalculator, setLayoutCalculator] = createSignal<NetworkLayout | null>(null);
@@ -20,8 +21,44 @@ export function useCanvasSetup(onVisualizationUpdate: () => void) {
     if (width > 0 && height > 0) {
       canvas.width = width;
       canvas.height = height;
-      setLayoutCalculator(new NetworkLayout(canvas.width, canvas.height));
-      setRenderer(new NetworkRenderer(canvas));
+
+      // Initialize the layout calculator
+      const layout = new NetworkLayout(canvas.width, canvas.height);
+      setLayoutCalculator(layout);
+
+      // Get the visual data to compute the bounding box
+      const networkData = store.network.toJSON();
+      const visualData = layout.calculateLayout(
+        networkData,
+        store.currentInput,
+        store.simulationResult
+      );
+
+      // Compute the bounding box of the network
+      const nodes = visualData.nodes;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      nodes.forEach(node => {
+        minX = Math.min(minX, node.x);
+        minY = Math.min(minY, node.y);
+        maxX = Math.max(maxX, node.x + layout.nodeWidth);
+        maxY = Math.max(maxY, node.y + layout.nodeHeight);
+      });
+
+      // Define a top padding value
+      const topPadding = 150; 
+
+      // Calculate initial offsets to position the network at the top center
+      const networkWidth = maxX - minX;
+      const initialOffsetX = (canvas.width - networkWidth) / 2 -
+      100 - minX;
+      const initialOffsetY = topPadding - minY;
+
+      // Initialize the renderer
+      const rendererInstance = new NetworkRenderer(canvas);
+      rendererInstance.offsetX = initialOffsetX;
+      rendererInstance.offsetY = initialOffsetY;
+      setRenderer(rendererInstance);
+
       onVisualizationUpdate();
       setIsCanvasInitialized(true);
     } else {

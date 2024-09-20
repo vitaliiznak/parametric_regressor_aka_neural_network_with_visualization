@@ -9,7 +9,7 @@ export const containerStyle = css`
   min-height: 400px;
   overflow: hidden;
   border: 1px solid ${colors.border};
-  background-color: #1B213D;  // A darker shade for better contrast
+  background-color: #1B213D;
   
   @media (max-width: 768px) {
     padding-bottom: 100%;

@@ -17,14 +17,9 @@ export class Neuron {
 
   forward(x: Value[]): Value {
     if (x.length !== this.w.length) {
-      console.error(`Input size (${x.length}) doesn't match weight count (${this.w.length})`);
-      // Adjust the input or weights to match
-      while (x.length < this.w.length) {
-        x.push(new Value(0));
-      }
-      while (this.w.length < x.length) {
-        this.w.push(new Value(Math.random() * 2 - 1));
-      }
+      throw new Error(
+        `Input size (${x.length}) does not match the number of weights (${this.w.length})`
+      );
     }
 
     const act = x.reduce((sum, xi, i) => sum.add(this.w[i].mul(xi)), this.b);
@@ -36,6 +31,7 @@ export class Neuron {
       case 'tanh': return x.tanh();
       case 'relu': return x.relu();
       case 'sigmoid': return x.sigmoid();
+      case 'leaky-relu': return x.leakyRelu();
       case 'identity': default: return x;
     }
   }

@@ -34,6 +34,7 @@ const styles = {
   button: css`
     ${commonStyles.button}
     ${commonStyles.primaryButton}
+    color: ${colors.textLight};
     grid-column: span 2;
   `,
 };

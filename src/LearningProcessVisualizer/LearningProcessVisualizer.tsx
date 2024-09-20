@@ -58,9 +58,6 @@ const LearningProcessVisualizer: Component = () => {
               <p>Learning Rate: {data.learningRate}</p> */}
             </div>
           );
-        case 'iteration':
-          console.log("Rendering iteration step");
-          return {/* <div>Iteration {data.iteration} completed, Loss: {data.loss?.toFixed(4)}</div>; */}
         default:
           console.log("Unknown step:", currentPhase);
           return null;

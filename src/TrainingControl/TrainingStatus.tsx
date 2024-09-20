@@ -21,6 +21,7 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
     statusItem: css`
       padding: 1rem;
       border-radius: 0.5rem;
+      background-color: ${colors.surface};
       transition: all 0.3s ease;
       &:hover {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -28,10 +29,10 @@ const TrainingStatus: Component<TrainingStatusProps> = (props) => {
       }
     `,
     iterationItem: css`
-      background-color: ${colors.primary}22;
+      border-left: 4px solid ${colors.primary};
     `,
     lossItem: css`
-      background-color: ${colors.warning}22;
+      border-left: 4px solid ${colors.error};
     `,
     statusLabel: css`
       font-size: 0.875rem;

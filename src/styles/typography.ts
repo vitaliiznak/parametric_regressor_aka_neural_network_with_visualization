@@ -1,15 +1,16 @@
 export const typography = {
     fontFamily: "'Inter', sans-serif",
     fontSize: {
+      xxs: '0.6rem',
       xs: '0.7rem',
-      sm: '0.75rem',
+      sm: '0.8rem',
       base: '0.9rem',
-      md: '0.95rem',
-      lg: '0.98rem',
-      xl: '1rem',
+      md: '1rem',
+      lg: '1.1rem',
+      xl: '1.25rem',
       '2xl': '1.5rem',
-      '3xl': '1.875rem',
-      '4xl': '2.25rem',
+      '3xl': '1.75rem',
+      '4xl': '2rem',
     },
     fontWeight: {
       normal: '400',

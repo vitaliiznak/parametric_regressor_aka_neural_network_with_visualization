@@ -106,7 +106,9 @@ const FunctionVisualizer: Component = () => {
       scrollZoom: true,
     };
 
-    Plotly.newPlot(plotDiv, data, layout, config);
+    if (plotDiv) {
+      Plotly.newPlot(plotDiv, data, layout, config);
+    }
 
     // Add event listener for legend clicks
     plotDiv.on('plotly_legendclick', (event) => {

@@ -1,4 +1,4 @@
-export type ActivationFunction = 'tanh' | 'relu' | 'sigmoid' | 'identity';
+export type ActivationFunction = 'tanh' | 'relu' | 'sigmoid' | 'identity' | 'leaky-relu';
 
 export interface NeuronData {
   id: string;

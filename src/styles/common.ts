@@ -5,9 +5,9 @@ import { typography } from './typography';
 export const spacing = {
   xs: '0.25rem',
   sm: '0.5rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
+  md: '0.75rem', // Reduced spacing for compactness
+  lg: '1rem',
+  xl: '1.5rem',
 };
 
 export const commonStyles = {
@@ -15,23 +15,27 @@ export const commonStyles = {
     font-family: ${typography.fontFamily};
     font-size: ${typography.fontSize.xs};
     font-weight: ${typography.fontWeight.medium};
-    padding: 0.125rem 0.25rem;
+    padding: 0.25rem 0.5rem; // Reduced padding
     border-radius: 0.25rem;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
-    
-    color: ${colors.text};
+    color: ${colors.textLight};
     background-color: ${colors.surface};
-    
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      font-size: ${typography.fontSize.xxs};
+      padding: 0.2rem 0.4rem;
     }
   `,
   
   primaryButton: css`
     background-color: ${colors.primary};
-    color: ${colors.text};
+    color: ${colors.textLight};
     border: none;
     
     &:hover:not(:disabled) {
@@ -41,11 +45,11 @@ export const commonStyles = {
   
   secondaryButton: css`
     background-color: ${colors.secondary};
-    color: ${colors.text};
+    color: ${colors.textLight};
     border: none;
     
     &:hover:not(:disabled) {
-      background-color: ${colors.secondaryDark};
+      background-color: ${colors.textLight};
     }
   `,
   

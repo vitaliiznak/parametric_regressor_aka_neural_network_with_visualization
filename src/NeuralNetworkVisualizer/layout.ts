@@ -83,6 +83,7 @@ export class NetworkLayout {
           // Connect input nodes to first layer
           for (let i = 0; i < inputSize; i++) {
             connections.push({
+              id: `conn_${nodeId}_to_${neuron.id}`, // Unique and consistent ID
               from: `input_${i}`,
               to: neuron.id,
               weight: neuron.weights[i],
@@ -92,6 +93,7 @@ export class NetworkLayout {
         } else {
           network.layers[layerIndex - 1].neurons.forEach((prevNeuron, prevIndex) => {
             connections.push({
+              id: `conn_${prevNeuron.id}_to_${neuron.id}`, // Unique and consistent ID
               from: prevNeuron.id,
               to: neuron.id,
               weight: neuron.weights[prevIndex],

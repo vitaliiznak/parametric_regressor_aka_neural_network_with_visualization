@@ -36,6 +36,10 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
           activationFunction = (v) => 1 / (1 + Math.exp(-v));
           xMin = -6; xMax = 6; yMin = 0; yMax = 1;
           break;
+        case 'leaky-relu':
+          activationFunction = (v) => v > 0 ? v : 0.01 * v;
+          xMin = -4; xMax = 4; yMin = -0.5; yMax = 4;
+          break;
         default:
           activationFunction = (v) => v;
           xMin = -4; xMax = 4; yMin = -4; yMax = 4;
@@ -61,7 +65,7 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
           y: y,
           type: 'scatter',
           mode: 'lines',
-          name: `${props.neuron.activation} Activation`,
+          name: `${capitalize(props.neuron.activation)} Activation`,
           line: { color: colors.primary, width: 3 }
         },
         {
@@ -93,21 +97,23 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
       const layout = {
         title: {
           text: 'Activation Function',
-          font: { size: 24, color: colors.text }
+          font: { size: 24, color: '#FFFFFF' } // Light color for visibility
         },
-        xaxis: {
-          title: 'Input',
-          range: [xMin, xMax],
-          gridcolor: colors.border,
-          zerolinecolor: colors.border
-        },
+   
         yaxis: {
           title: 'Output',
           range: [yMin, yMax],
           gridcolor: colors.border,
-          zerolinecolor: colors.border
+          zerolinecolor: colors.border,
+          titlefont: { color: '#FFFFFF' },
+          tickfont: { color: '#FFFFFF' }
         },
-        showlegend: false,
+        showlegend: true,
+        legend: {
+          font: { color: '#FFFFFF' }, // Light color for legend text
+          bgcolor: 'rgba(0,0,0,0)', // Transparent background
+          bordercolor: 'rgba(0,0,0,0)'
+        },
         annotations: [
           {
             x: neuronInput,
@@ -118,19 +124,21 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
             showarrow: true,
             arrowhead: 4,
             ax: 0,
-            ay: 40
+            ay: 40,
+            font: { color: '#FFFFFF' }
           },
-          {
-            x: xMin,
-            y: neuronOutput,
-            xref: 'x',
-            yref: 'y',
-            text: `Output: ${neuronOutput.toFixed(4)}`,
-            showarrow: true,
-            arrowhead: 4,
-            ax: 40,
-            ay: 0
-          }
+          // {
+          //   x: xMin,
+          //   y: neuronOutput,
+          //   xref: 'x',
+          //   yref: 'y',
+          //   text: `Output: ${neuronOutput.toFixed(4)}`,
+          //   showarrow: true,
+          //   arrowhead: 4,
+          //   ax: 0,
+          //   ay: 40,
+          //   font: { color: '#FFFFFF' }
+          // }
         ],
         shapes: [
           {
@@ -147,7 +155,7 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
         ],
         plot_bgcolor: colors.background,
         paper_bgcolor: colors.surface,
-        font: { color: colors.text },
+        font: { color: '#FFFFFF' }, // Light color for all text
         margin: { t: 50, r: 50, b: 50, l: 50 }
       };
 
@@ -159,6 +167,8 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
       Plotly.newPlot(plotDiv, data, layout, config);
     }
   };
+
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   const Term: Component<{ variable: string, value: string | number, subscript?: number }> = (props) => (
     <span class={styles.term}>

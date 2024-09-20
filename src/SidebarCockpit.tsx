@@ -42,9 +42,10 @@ const styles = {
     ${commonStyles.button}
     font-size: ${typography.fontSize.sm};
     padding: 0.25rem 0.5rem;
+    color: ${colors.textLight};
     &.active {
       background-color: ${colors.primary};
-      color: ${colors.surface};
+      color: ${colors.textLight};
     }
   `,
   metricsContainer: css`
@@ -144,7 +145,7 @@ const Cockpit: Component = () => {
         </Show>
         <Show when={activeTab() === "training"}>
           <TrainingConfigForm />
-          <TrainingControls onVisualizationUpdate={() => { }} />
+          <TrainingControls />
         </Show>
         <Show when={activeTab() === "simulation"}>
           <SimulationInputForm onSimulate={() => { }} />

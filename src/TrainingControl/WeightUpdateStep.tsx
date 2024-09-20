@@ -1,6 +1,7 @@
 import { Component, For } from "solid-js";
 import { css } from "@emotion/css";
 import { FaSolidArrowRight, FaSolidArrowDown } from 'solid-icons/fa';
+import { colors } from '../styles/colors';
 
 const WeightUpdateStep: Component<{ oldWeights: number[], newWeights: number[] }> = (props) => {
   const styles = {
@@ -8,8 +9,8 @@ const WeightUpdateStep: Component<{ oldWeights: number[], newWeights: number[] }
       display: flex;
       flex-direction: column;
       align-items: center;
-      background-color: #e6f7ff;
-      border: 1px solid #91d5ff;
+      background-color: ${colors.surface};
+      border: 1px solid ${colors.border};
       border-radius: 0.25rem;
       padding: 0.5rem;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -21,17 +22,19 @@ const WeightUpdateStep: Component<{ oldWeights: number[], newWeights: number[] }
     `,
     stepIcon: css`
       font-size: 1rem;
-      color: #1890ff;
+      color: ${colors.primary};
     `,
     stepLabel: css`
       font-size: 0.75rem;
       font-weight: bold;
       margin-top: 0.25rem;
+      color: ${colors.text};
     `,
     weightList: css`
       width: 100%;
       margin-top: 0.25rem;
       font-size: 0.625rem;
+      color: ${colors.textLight};
     `,
     weightItem: css`
       display: flex;
@@ -41,9 +44,10 @@ const WeightUpdateStep: Component<{ oldWeights: number[], newWeights: number[] }
     `,
     weightValue: css`
       font-family: monospace;
+      color: ${colors.text};
     `,
     arrow: css`
-      color: #52c41a;
+      color: ${colors.secondary};
       margin: 0 0.125rem;
     `,
   };

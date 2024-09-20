@@ -13,36 +13,39 @@ export type AppState = {
 
   // Training state
   trainingState: {
-    currentPhase: 'idle',
-    iteration: 0,
-    currentLoss: null,
-    forwardStepResults: [],
-    backwardStepGradients: [],
+    currentPhase: 'idle'| 'forward'| 'loss' | 'backward' | 'update',
+    iteration: number,
+    currentLoss: null | number,
+    forwardStepResults: Prediction,
+    backwardStepGradients: BackwardStepGradientsPerConnecrion,
+    weightUpdateResults: [],
     lossHistory: [],
   };
 
-  trainingStepResult: {
-    gradients: [],
-    oldWeights: [],
-    newWeights: [],
-  };
+  trainingStepResult:TrainingStepResult;
 
   trainer: Trainer | null;
 
   currentInput: [];
-  simulationResult: {
-    input: [],
-    output: [],
-    layerOutputs: []
-  },
-  trainingRuns: TrainingRun[]; // Add this line
+  simulationResult: SimulationResult,
+  trainingRuns: TrainingRun[]; 
+
+  networkUpdateTrigger: number;
 };
+
+type TrainingRun = any
 
 export type BackwardStepGradients = {
   neuron: number;
   weights: number;
   bias: number;
   gradients: number[];
+}[];
+
+export type BackwardStepGradientsPerConnecrion = {
+  connectionId: string,
+  weightGradient: number,
+  biasGradient: number,
 }[];
 
 export interface TrainingStepResult {
@@ -85,10 +88,13 @@ export interface VisualNode {
 }
 
 export interface VisualConnection {
+  id: string; // Unique identifier
   from: string;
   to: string;
   weight: number;
   bias: number;
+  weightGradient?: number;
+  biasGradient?: number;
 }
 
 export interface VisualNetworkData {
@@ -116,4 +122,6 @@ export interface VisualConnection {
   to: string;
   weight: number;
   bias: number;
+  weightGradient?: number;
+  biasGradient?: number;
 }

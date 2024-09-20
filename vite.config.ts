@@ -7,7 +7,7 @@ export default defineConfig({
       plugins: ['@emotion/babel-plugin']
     }
   })],
-  base: '/func_interpolator_aka_neural_network_with_visualization/', // Use the correct spelling here
+  base: '/parametric_regressor_aka_neural_network_with_visualization/', // Use the correct spelling here
   build: {
     target: 'esnext',
     outDir: 'dist',

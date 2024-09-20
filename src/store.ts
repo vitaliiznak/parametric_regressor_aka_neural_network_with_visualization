@@ -28,6 +28,7 @@ const initialState: AppState = {
     currentLoss: null,
     forwardStepResults: [],
     backwardStepGradients: [],
+    weightUpdateResults: [],
     lossHistory: [],
   },
 
@@ -47,6 +48,9 @@ const initialState: AppState = {
     layerOutputs: []
   },
 
+  trainingRuns: [],
+
+  networkUpdateTrigger: 0,
 };
 
 export const [store, setStore] = createStore(initialState);
@@ -98,10 +102,13 @@ function trainingStateReset() {
       backwardStepGradients: [],
       lossHistory: [],
       currentLoss: null,
+      weightUpdateResults: [],
       currentPhase: 'idle'
     });
   });
 }
+
+
 
 function singleStepForward() {
   console.log("Starting singleStepForward");
@@ -128,6 +135,7 @@ function singleStepForward() {
 
   console.log("Forward step completed. Result:", result);
   batch(() => {
+    setStore('trainingState', 'currentPhase', 'forward');
     setStore('trainingState', 'forwardStepResults', [...store.trainingState.forwardStepResults, { input: result.input, output: result.output }]);
     setStore('simulationResult', { input: result.input, output: result.output, layerOutputs: layerOutputs });
   });
@@ -179,7 +187,7 @@ function stepBackward() {
   console.log("Calling trainer.stepBackward()");
   let result;
   try {
-    result = store.trainer.stepBackward();
+    result = store.trainer.stepBackwardAndGetGradientsGroupedByConnection();
   } catch (error) {
     console.error("Error in stepBackward:", error);
     return;
@@ -188,14 +196,13 @@ function stepBackward() {
 
   if (result && Array.isArray(result)) {
     console.log("Updating store with result");
-    try {
-      console.log('here stepBackward', result)
 
+
+    batch(() => {
+      setStore('trainingState', 'currentPhase', 'backward');
       setStore('trainingState', 'backwardStepGradients', result);
-      console.log("Store updated successfully");
-    } catch (error) {
-      console.error("Error updating store:", error);
-    }
+    });
+
   } else {
     console.log("No valid result from stepBackward");
   }
@@ -211,8 +218,19 @@ function updateWeights() {
     const result = store.trainer.updateWeights(store.trainingConfig.learningRate);
 
     setStore('trainingStepResult', result);
+    setStore('trainingState', 'weightUpdateResults', result);
     setStore('network', store.trainer.network);
-    setStore('trainingState', 'currentPhase', 'update');
+    setStore('trainingState', 'currentPhase', 'idle');
+    setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1); 
+
+
+    // setStore('trainingState', {
+    //   forwardStepResults: [],
+    //   backwardStepGradients: [],
+    //   weightUpdateResults: [],
+    // });
+
+    console.log("Weights updated successfully");
   });
 }
 
@@ -266,5 +284,20 @@ export const actions = {
   updateWeights,
   simulateInput,
   trainingStateReset,
-  updateNetworkConfig
+  updateNetworkConfig,
+
+  // New Action: Run Multiple Learning Cycles Sequentially
+  runLearningCycle(measurementCount: number) {
+    for (let i = 0; i < measurementCount; i++) {
+      actions.singleStepForward();
+
+      // After each forward step, optionally calculate loss and perform backward steps
+      // Depending on the desired workflow, you might want to conditionally execute these
+      // For this example, we'll perform a full cycle each time
+    }
+    actions.calculateLoss();
+    actions.stepBackward();
+    actions.updateWeights();
+
+  },
 };

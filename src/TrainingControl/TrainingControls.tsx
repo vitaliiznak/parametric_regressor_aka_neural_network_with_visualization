@@ -1,6 +1,6 @@
-import { Component, createEffect, createSignal, Show } from "solid-js";
-import { css } from "@emotion/css";
-import { actions, store } from '../store';
+import { Component, createEffect, createMemo, createSignal, Show } from "solid-js";
+import { css, keyframes } from "@emotion/css";
+import { actions, setStore, store } from '../store';
 import TrainingStepsVisualizer from './TrainingStepsVisualizer';
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
@@ -9,22 +9,38 @@ import { commonStyles } from '../styles/common';
 import { FaSolidBackward, FaSolidCalculator, FaSolidForward, FaSolidWeightScale } from "solid-icons/fa";
 import LossHistoryChart from "./LossHistoryChart";
 
+// Define keyframes for animations
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(-20%); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20%); }
+`;
+
 const styles = {
   container: css`
     ${commonStyles.card}
     margin-top: 1rem;
+    position: relative;
   `,
   title: css`
     font-size: ${typography.fontSize.xl};
     font-weight: ${typography.fontWeight.bold};
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: ${colors.text};
   `,
   controlsContainer: css`
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
   `,
   controlButton: css`
     ${commonStyles.button}
@@ -32,16 +48,18 @@ const styles = {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    font-size: ${typography.fontSize.sm};
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease-in-out;
-    
+    padding: 0.25rem;
+    border-radius: 4px;
+    font-size: ${typography.fontSize.base};
+
     &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: none;
+      box-shadow: none;
+    }
+
+    span {
+      margin-left: 4px;
+      font-size: ${typography.fontSize.xxxs};
     }
   `,
   exportButton: css`
@@ -75,7 +93,7 @@ const styles = {
     justify-content: center;
     gap: 0.25rem;
     font-size: ${typography.fontSize.xs};
-    padding: 0.5rem 1rem; // Increase padding for larger buttons
+    padding: 0.5rem 1rem;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   `,
@@ -97,78 +115,105 @@ const styles = {
     ${commonStyles.button}
     ${commonStyles.secondaryButton}
     width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    font-size: ${typography.fontSize.sm};
-    transition: all 0.2s ease-in-out;
-    
+    padding: 0.25rem;
+    border-radius: 4px;
+    font-size: ${typography.fontSize.xxs};
+
     &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: none;
+      box-shadow: none;
     }
+  `,
+  iterationIndicator: css`
+    text-align: center;
+    margin: 1rem 0;
+    font-size: ${typography.fontSize.xl};
+    font-weight: ${typography.fontWeight.bold};
+    color: ${colors.primary};
+    animation: ${fadeIn} 0.5s ease-in-out;
+  `,
+  notification: css`
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: ${colors.primary};
+    color: ${colors.textLight};
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    animation: ${fadeIn} 0.5s ease-in-out, ${fadeOut} 0.5s ease-in-out 2.5s;
+    z-index: 1000;
   `,
 };
 
 const TrainingControls: Component = () => {
   const [zoomRange, setZoomRange] = createSignal<[number, number]>([0, 100]);
   const [chartType, setChartType] = createSignal<'bar' | 'line'>('line');
-  const [isLossCalculated, setIsLossCalculated] = createSignal(false);
+  const [showNotification, setShowNotification] = createSignal(false);
+  const [currentIteration, setCurrentIteration] = createSignal(1);
 
   createEffect(() => {
-    const { currentPhase } = store.trainingState
-    if (currentPhase === 'forward' || currentPhase === 'backward') {
-      setIsLossCalculated(false);
-    } else if (currentPhase === 'loss') {
-      setIsLossCalculated(true);
+    if (
+      store.trainingState.currentPhase === 'update' &&
+      store.trainingState.backwardStepGradients.length === 0
+    ) {
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+      // Increment iteration count
+      setCurrentIteration(prev => prev + 1);
+      // Reset for the next iteration
+      actions.trainingStateReset();
+      // Set the current phase to 'idle' to enable the Forward button
+
     }
   });
 
   const iterationProgress = () => {
-    const currentIteration = store.trainingState.iteration || 0;
+    const iteration = store.trainingState.iteration || 0;
     const totalIterations = store.trainingConfig?.iterations || 1;
-    return currentIteration / totalIterations;
+    return iteration / totalIterations;
   };
 
-  const getLossColor = (loss: number) => {
+  const getLossColor = (loss: number | null) => {
+    if (loss === null) return colors.error;
     if (loss < 0.2) return colors.success;
-    if (loss < 0.5) return colors.error;
+    if (loss < 0.5) return colors.warning;
     return colors.error;
   };
 
-  const isForwardDisabled = () =>
-    (store.trainingState.currentPhase !== 'idle' && store.trainingState.currentPhase !== 'update') ||
-    store.trainingState.backwardStepGradients.length > 0;
+  const isForwardDisabled = createMemo(() => { 
+    console.log('isForwardDisabled store.trainingState.currentPhase', store.trainingState.currentPhase)
+    return store.trainingState.currentPhase !== 'idle' && store.trainingState.currentPhase !== 'forward'
+  })
 
-  const isLossDisabled = () =>
+  const isLossDisabled = createMemo(() =>
     store.trainingState.forwardStepResults.length === 0 ||
-    store.trainingState.backwardStepGradients.length > 0;
+    store.trainingState.currentPhase !== 'forward')
 
-  const isBackwardDisabled = () => store.trainingState.currentPhase !== 'loss';
-
-  const isUpdateWeightsDisabled = () => store.trainingState.backwardStepGradients.length === 0;
-
-  const isResetDisabled = () => store.trainingState.forwardStepResults.length === 0;
+  const isBackwardDisabled = createMemo(() => store.trainingState.currentPhase !== 'loss')
+  const isUpdateWeightsDisabled = createMemo(() => store.trainingState.currentPhase !== 'backward')
+  const isResetDisabled = createMemo(() => store.trainingState.forwardStepResults.length === 0)
 
   const singleStepForward = () => {
-    if (!isForwardDisabled()) actions.singleStepForward();
-    setIsLossCalculated(false);
+    actions.singleStepForward();
   };
 
   const trainingStateReset = () => {
-    if (!isResetDisabled()) actions.trainingStateReset();
-    setIsLossCalculated(false);
+    actions.trainingStateReset();
   };
 
   const calculateLoss = () => {
-    if (!isLossDisabled()) actions.calculateLoss();
-    setIsLossCalculated(true);
+    actions.calculateLoss();
   };
 
   const stepBackward = () => {
-    if (!isBackwardDisabled()) actions.stepBackward();
+    actions.stepBackward();
   };
+
   const updateWeights = () => {
-    if (!isUpdateWeightsDisabled()) actions.updateWeights();
+    actions.updateWeights();
+  
   };
 
   const handleWheel = (e: WheelEvent) => {
@@ -185,8 +230,17 @@ const TrainingControls: Component = () => {
 
   return (
     <div class={styles.container}>
+      <Show when={showNotification()}>
+        <div class={styles.notification}>
+          Iteration {currentIteration() - 1} Completed! Starting Iteration {currentIteration()}...
+        </div>
+      </Show>
+      <div class={styles.iterationIndicator}>
+        Current Iteration: {currentIteration()}
+      </div>
       <TrainingStatus
         iteration={store.trainingState.iteration || 0}
+        totalIterations={store.trainingConfig?.iterations || 1}
         currentLoss={store.trainingState.currentLoss}
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
@@ -201,44 +255,49 @@ const TrainingControls: Component = () => {
         weightUpdateResults={store.trainingState.weightUpdateResults}
       />
       <div class={styles.controlsContainer}>
-        <div class={styles.buttonGroup}>
-          <button
-            class={`${styles.controlButton} ${isForwardDisabled() ? styles.disabledButton : ''}`}
-            onClick={singleStepForward}
-            disabled={isForwardDisabled()}
-          >
-            <FaSolidForward /> Forward
-          </button>
-          <button
-            class={`${styles.controlButton} ${isLossDisabled() ? styles.disabledButton : ''}`}
-            onClick={calculateLoss}
-            disabled={isLossDisabled()}
-          >
-            <FaSolidCalculator /> Loss
-          </button>
-        </div>
-        <div class={styles.buttonGroup}>
-          <button
-            class={`${styles.controlButton} ${isBackwardDisabled() ? styles.disabledButton : ''}`}
-            onClick={stepBackward}
-            disabled={isBackwardDisabled()}
-          >
-            <FaSolidBackward /> Backward
-          </button>
-          <button
-            class={`${styles.controlButton} ${isUpdateWeightsDisabled() ? styles.disabledButton : ''}`}
-            onClick={updateWeights}
-            disabled={isUpdateWeightsDisabled()}
-          >
-            <FaSolidWeightScale /> Update weights
-          </button>
-        </div>
+        <button
+          class={styles.controlButton}
+          onClick={singleStepForward}
+          disabled={isForwardDisabled()}
+          aria-label="Forward"
+        >
+          <FaSolidForward />
+          <span>Forward</span>
+        </button>
+        <button
+          class={styles.controlButton}
+          onClick={calculateLoss}
+          disabled={isLossDisabled()}
+          aria-label="Calculate Loss"
+        >
+          <FaSolidCalculator />
+          <span>Loss</span>
+        </button>
+        <button
+          class={styles.controlButton}
+          onClick={stepBackward}
+          disabled={isBackwardDisabled()}
+          aria-label="Backward"
+        >
+          <FaSolidBackward />
+          <span>Backward</span>
+        </button>
+        <button
+          class={styles.controlButton}
+          onClick={updateWeights}
+          disabled={isUpdateWeightsDisabled()}
+          aria-label="Update Weights"
+        >
+          <FaSolidWeightScale />
+          <span>Update</span>
+        </button>
       </div>
       <div class={styles.separator}></div>
       <button
-        class={`${styles.resetButton} ${isResetDisabled() ? styles.disabledButton : ''}`}
+        class={styles.resetButton}
         onClick={trainingStateReset}
         disabled={isResetDisabled()}
+        aria-label="Reset"
       >
         Reset
       </button>

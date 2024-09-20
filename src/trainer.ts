@@ -1,6 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-import { BackwardStepGradients, Prediction, TrainingConfig, TrainingStepResult } from "./types";
+import { BackwardStepGradients, BackwardStepGradientsPerConnecrion, Prediction, TrainingConfig, TrainingStepResult } from "./types";
 
 export class Trainer {
   _network: MLP;
@@ -109,6 +109,45 @@ export class Trainer {
     console.log('Gradients after backward pass:', result);
 
     return result;
+  }
+
+  stepBackwardAndGetGradientsGroupedByConnection(): BackwardStepGradientsPerConnecrion | null {
+    // Recalculate the loss before each backward step
+    this.calculateLoss();
+
+    if (!this.currentLoss) {
+      console.error("Loss not calculated");
+      return null;
+    }
+
+    // Zero out existing gradients
+    this._network.zeroGrad();
+
+    // Perform backpropagation
+    this.currentLoss.backward();
+
+    const gradients: BackwardStepGradientsPerConnecrion = [];
+
+    // Iterate through each layer and neuron to collect gradients
+    this._network.layers.forEach((layer, layerIndex) => {
+      layer.neurons.forEach((neuron, neuronIndex) => {
+        neuron.w.forEach((weight, weightIndex) => {
+          const fromNodeId = layerIndex === 0 ? `input_${weightIndex}` : `layer${layerIndex - 1}_neuron${weightIndex}`;
+          const toNodeId = `layer${layerIndex}_neuron${neuronIndex}`;
+          const connectionId = `conn_${fromNodeId}_to_${toNodeId}`;
+
+          gradients.push({
+            connectionId,
+            weightGradient: weight.grad,
+            biasGradient: neuron.b.grad,
+          });
+        });
+      });
+    });
+
+    console.log('Gradients after backward pass:', gradients);
+
+    return gradients;
   }
 
   updateWeights(learningRate: number): TrainingStepResult {

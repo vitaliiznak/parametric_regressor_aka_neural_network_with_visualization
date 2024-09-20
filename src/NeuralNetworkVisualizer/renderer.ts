@@ -1,38 +1,47 @@
+import { throttle } from "@solid-primitives/scheduled";
 import { colors } from "../styles/colors";
 import { Point, VisualConnection, VisualNetworkData, VisualNode } from "../types";
-import { debounce } from "@solid-primitives/scheduled";
 
 export class NetworkRenderer {
   private ctx: CanvasRenderingContext2D;
   public scale: number = 1;
   public offsetX: number = 0;
   public offsetY: number = 0;
-  private debouncedRender: (data: VisualNetworkData, selectedNode: VisualNode | null) => void;
+  private debouncedRender: (data: VisualNetworkData, selectedNode: VisualNode | null, highlightedConnectionId: string | null) => void;
   public nodeWidth: number;
   public nodeHeight: number;
   private highlightedNodeId: string | null = null;
-  lastRenderedData: VisualNetworkData | undefined;
-  lastRenderedSelectedNode: VisualNode | null;
+  private lastRenderedData: VisualNetworkData | undefined;
+  private lastRenderedSelectedNode: VisualNode | null = null;
+  private onConnectionClick: (connection: VisualConnection) => void = () => { };
+  private connectionControlPoints: { connection: VisualConnection; p0: Point; p1: Point; p2: Point; p3: Point }[] = [];
+  private selectedConnection: VisualConnection | null = null;
+  private readonly epsilon: number = 5; // pixels
+  private labelBoundingBoxes: { connection: VisualConnection; rect: { x: number; y: number; width: number; height: number } }[] = [];
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    this.nodeWidth = 60; // or whatever default value you prefer
-    this.nodeHeight = 40; // or whatever default value you prefer
-    this.debouncedRender = debounce((data: VisualNetworkData | null, selectedNode: VisualNode | null) => {
-      this._render(data, selectedNode);
+    this.nodeWidth = 60;
+    this.nodeHeight = 40;
+    this.debouncedRender = throttle((data: VisualNetworkData, selectedNode: VisualNode | null, highlightedConnectionId: string | null) => {
+      this._render(data, selectedNode, highlightedConnectionId);
     }, 16); // Debounce to ~60fps
-    this.lastRenderedSelectedNode = null;
   }
 
-  render(data: VisualNetworkData, selectedNode: VisualNode | null) {
-    this.lastRenderedData = data;
-    this.lastRenderedSelectedNode = selectedNode;
-    this._render(data, selectedNode);
+  render(data?: VisualNetworkData, selectedNode?: VisualNode | null) {
+    if (data && selectedNode !== undefined) {
+      this.lastRenderedData = data;
+      this.lastRenderedSelectedNode = selectedNode;
+    } else if (!this.lastRenderedData) {
+      console.warn('No data available to render.');
+      return;
+    }
+    this._render(this.lastRenderedData, this.lastRenderedSelectedNode, this.highlightedConnectionId);
   }
 
   setHighlightedNode(nodeId: string | null) {
     this.highlightedNodeId = nodeId;
-    this.debouncedRender(this.lastRenderedData, this.lastRenderedSelectedNode);
+    this.debouncedRender(this.lastRenderedData, this.lastRenderedSelectedNode, this.highlightedConnectionId);
   }
 
   pan(dx: number, dy: number) {
@@ -76,9 +85,26 @@ export class NetworkRenderer {
   }
 
   private drawHiddenNode(node: VisualNode, selectedNode: VisualNode | null, isHighlighted: boolean) {
-    const nodeColor = 'rgba(255, 255, 255, 0.8)'; // White with 80% opacity
+    let nodeColor: string;
+    switch (node.activation) {
+      case 'tanh':
+        nodeColor = 'rgba(0, 123, 255, 0.8)'; // Blue
+        break;
+      case 'relu':
+        nodeColor = 'rgba(40, 167, 69, 0.8)'; // Green
+        break;
+      case 'leaky-relu':
+        nodeColor = 'rgba(255, 193, 7, 0.8)'; // Yellow
+        break;
+      case 'sigmoid':
+        nodeColor = 'rgba(220, 53, 69, 0.8)'; // Red
+        break;
+      default:
+        nodeColor = 'rgba(255, 255, 255, 0.8)'; // White
+    }
+
     const strokeColor = colors.border;
-    const labelColor = colors.textDark; // Use a darker color for labels
+    const labelColor = colors.text;
 
     // Draw node
     this.ctx.fillStyle = nodeColor;
@@ -100,7 +126,7 @@ export class NetworkRenderer {
 
     // Draw neuron label (N1, N2, N{i})
     this.ctx.fillStyle = labelColor;
-    this.ctx.font = 'bold 9px Arial'; // Make the font bold for better visibility
+    this.ctx.font = '5px Arial';
     this.ctx.fillText(node.label, node.x + 25, node.y + 22);
 
     // Draw bias
@@ -147,7 +173,7 @@ export class NetworkRenderer {
 
     // Draw input icon (stylized "I" for Input)
     this.ctx.fillStyle = colors.primary;
-    this.ctx.font = 'bold 18px Arial';
+    this.ctx.font = '18px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText('I', node.x + 15, node.y + nodeHeight / 2);
@@ -163,11 +189,11 @@ export class NetworkRenderer {
     // Draw input value
     if (node.outputValue !== undefined) {
       this.ctx.fillStyle = inputValueColor;
-      this.ctx.font = 'bold 14px Arial';
+      this.ctx.font = '12px Arial';
       this.ctx.textAlign = 'right';
       this.ctx.textBaseline = 'bottom';
       const valueText = node.outputValue.toFixed(2);
-      const truncatedValue = this.truncateText(valueText, nodeWidth - 35, 'bold 14px Arial');
+      const truncatedValue = this.truncateText(valueText, nodeWidth - 35, '14px Arial');
       this.ctx.fillText(truncatedValue, node.x + nodeWidth - padding, node.y + nodeHeight - padding);
     }
 
@@ -211,23 +237,28 @@ export class NetworkRenderer {
     this.ctx.lineTo(biasX, biasY + 8);
     this.ctx.lineTo(biasX - 8, biasY);
     this.ctx.closePath();
-    this.ctx.fillStyle = node.bias >= 0 ? colors.secondary : colors.secondaryDark; // Use different color for negative bias
+    this.ctx.fillStyle = node.bias >= 0 ? colors.secondary : colors.textLight;
     this.ctx.fill();
     this.ctx.strokeStyle = colors.border;
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
 
     // Draw the bias value
-    this.ctx.fillStyle = colors.text; // Use dark text for better contrast
-    this.ctx.font = 'bold 8px Arial';
+    this.ctx.fillStyle = '#fff'; // Use white text for better contrast
+    this.ctx.font = '5px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(`${node.bias >= 0 ? '+' : '-'}${Math.abs(node.bias).toFixed(2)}`, biasX, biasY); // Add + or - prefix
 
     // Add "Bias" label
-    this.ctx.fillStyle = colors.textLight;
-    this.ctx.font = '7px Arial';
-    this.ctx.fillText('Bias', biasX, biasY + 15);
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '5px Arial';
+    const biasLabel = 'Bias';
+
+    this.ctx.fillText(biasLabel, biasX, biasY + 15);
+
+    // **Do not store the bounding box for bias labels**
+    // This ensures that clicking on bias labels does not trigger the ConnectionSidebar
   }
 
   private drawOutputValue(node: VisualNode) {
@@ -250,53 +281,147 @@ export class NetworkRenderer {
     this.ctx.stroke();
 
     // Draw the output value
-    this.ctx.fillStyle = colors.text; // Use dark text for better contrast
-    this.ctx.font = 'bold 8px Arial';
+    this.ctx.fillStyle = '#fff'; // Use dark text for better contrast
+    this.ctx.font = '5px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText(node.outputValue!.toFixed(2), outputX, outputY);
 
     // Add "Output" label
     this.ctx.fillStyle = colors.textLight;
-    this.ctx.font = '7px Arial';
+    this.ctx.font = '5px Arial';
     this.ctx.fillText('Output', outputX, outputY + 15);
   }
 
-  private drawConnections(connections: VisualConnection[], nodes: VisualNode[]) {
+  private drawConnections(
+    connections: VisualConnection[],
+    nodes: VisualNode[],
+    highlightedConnectionId: string | null
+  ) {
+    this.labelBoundingBoxes = []; // Reset on each render
+    this.connectionControlPoints = [];
+
     connections.forEach(conn => {
       const fromNode = nodes.find(n => n.id === conn.from)!;
       const toNode = nodes.find(n => n.id === conn.to)!;
 
-      const fromX = fromNode.x + 50;
-      const fromY = fromNode.y + 15;
+      const fromX = fromNode.x + this.nodeWidth;
+      const fromY = fromNode.y + this.nodeHeight / 2;
       const toX = toNode.x;
-      const toY = toNode.y + 15;
+      const toY = toNode.y + this.nodeHeight / 2;
 
-      const connectionColor = this.getConnectionColor(conn.weight);
-      this.drawCurvedArrow(fromX, fromY, toX, toY, connectionColor);
+      // Define control points for Bezier curve
+      const controlPointOffset = Math.abs(toX - fromX) * 0.2;
+      const p0 = { x: fromX, y: fromY };
+      const p1 = { x: fromX + controlPointOffset, y: fromY };
+      const p2 = { x: toX - controlPointOffset, y: toY };
+      const p3 = { x: toX, y: toY };
+
+      // Set styles for connections
+      if (highlightedConnectionId && highlightedConnectionId === conn.id) {
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeStyle = colors.highlight;
+        this.ctx.shadowColor = colors.highlight;
+        this.ctx.shadowBlur = 15;
+      } else {
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = this.getConnectionColor(conn.weight);
+        this.ctx.shadowBlur = 0;
+      }
+
+      this.drawCurvedArrow(p0.x, p0.y, p3.x, p3.y);
+
+      // Reset shadow after drawing
+      this.ctx.shadowBlur = 0;
+
+      // Store control points for hit detection
+      this.connectionControlPoints.push({ connection: conn, p0, p1, p2, p3 });
+
+      // Calculate midpoint for labels
+      const midX = (fromX + toX) / 2;
+      const midY = (fromY + toY) / 2;
+
+      // Offset for weight label
+      const offsetY = -10;
 
       // Draw weight label
-      const midX = (fromX + toX) / 2;
-      const midY = (fromY + toY) / 2 - 10;
-      this.drawLabel(midX, midY, `x${conn.weight.toFixed(2)}`); // Add "x" prefix for multiplication
+      this.drawLabel(midX, midY + offsetY, conn.weight, conn);
+    });
+
+    // Optionally, draw bias labels separately if needed
+    nodes.forEach(node => {
+      this.drawBias(node);
     });
   }
 
-  private drawLabel(x: number, y: number, text: string) {
-    this.ctx.font = '8px Arial';
-    this.ctx.fillStyle = colors.textLight;
+  private drawLabel(
+    x: number,
+    y: number,
+    weight: number,
+    connection: VisualConnection
+  ) {
+    this.ctx.save();
+    
+    // Define label dimensions
+    const labelWidth = 32;  // Increased width for better text visibility
+    const labelHeight = 16; // Reduced height for a more compact look
+    const halfWidth = labelWidth / 2;
+    const halfHeight = labelHeight / 2;
+
+    // Set font for the text
+    this.ctx.font = '5px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(text, x, y);
+    
+    // Format the weight value
+    const formattedWeight = this.formatWeight(weight);
+    
+    // Choose background color based on weight
+    const backgroundColor = weight >= 0 ? colors.weightPositive : colors.weightNegative;
+
+    // Draw solid rectangle background
+    this.ctx.fillStyle = backgroundColor;
+    this.ctx.fillRect(x - halfWidth, y - halfHeight, labelWidth, labelHeight);
+
+    // Add a border to the rectangle for better visibility
+    this.ctx.strokeStyle = colors.border;
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(x - halfWidth, y - halfHeight, labelWidth, labelHeight);
+
+    // Set text color
+    this.ctx.fillStyle = 'white';
+
+    // Draw the formatted weight text
+    this.ctx.fillText(formattedWeight, x, y);
+
+    this.ctx.restore();
+
+    // Store the bounding box for hit detection
+    this.labelBoundingBoxes.push({
+      connection,
+      rect: {
+        x: x - halfWidth,
+        y: y - halfHeight,
+        width: labelWidth,
+        height: labelHeight,
+      },
+    });
   }
 
-  private drawCurvedArrow(fromX: number, fromY: number, toX: number, toY: number, color: string) {
-    const headLength = 5;
-    const controlPointOffset = Math.abs(toX - fromX) * 0.2;
+  // Helper function to format weight values
+  private formatWeight(weight: number): string {
+    if (Math.abs(weight) < 0.01) {
+      return weight.toExponential(1); // One decimal in exponential notation
+    }
+    if (Math.abs(weight) >= 10) {
+      return weight.toFixed(1); // One decimal place for large numbers
+    }
+    return weight.toFixed(2); // Two decimal places for most numbers
+  }
 
-    this.ctx.strokeStyle = color;
-    this.ctx.fillStyle = color;
-    this.ctx.lineWidth = 1;
+  private drawCurvedArrow(fromX: number, fromY: number, toX: number, toY: number) {
+    const headLength = 10;
+    const controlPointOffset = Math.abs(toX - fromX) * 0.2;
 
     // Draw the curved line
     this.ctx.beginPath();
@@ -309,11 +434,9 @@ export class NetworkRenderer {
     this.ctx.stroke();
 
     // Calculate the angle for the arrowhead
-    const endTangentX = toX - controlPointOffset * 2;
-    const endTangentY = toY;
-    const angle = Math.atan2(toY - endTangentY, toX - endTangentX);
+    const angle = Math.atan2(toY - fromY, toX - fromX);
 
-    // Draw the arrow head
+    // Draw the arrowhead
     this.ctx.beginPath();
     this.ctx.moveTo(toX, toY);
     this.ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
@@ -348,23 +471,12 @@ export class NetworkRenderer {
     }
   }
 
-  private drawConnection(from: Point, to: Point, weight: number) {
-    const color = this.getConnectionColor(weight);
-
-    this.ctx.beginPath();
-    this.ctx.moveTo(from.x, from.y);
-    this.ctx.lineTo(to.x, to.y);
-    this.ctx.strokeStyle = color;
-    this.ctx.lineWidth = Math.abs(weight) * 2 + 1;  // Ensure a minimum width of 1
-    this.ctx.stroke();
-  }
-
-  private _render(data: VisualNetworkData, selectedNode: VisualNode | null) {
+  private _render(data: VisualNetworkData, selectedNode: VisualNode | null, highlightedConnectionId: string | null) {
     this.clear();
     this.ctx.save();
     this.ctx.translate(this.offsetX, this.offsetY);
     this.ctx.scale(this.scale, this.scale);
-    this.drawConnections(data.connections, data.nodes);
+    this.drawConnections(data.connections, data.nodes, highlightedConnectionId);
     this.drawNodes(data.nodes, selectedNode);
     this.ctx.restore();
   }
@@ -373,5 +485,88 @@ export class NetworkRenderer {
     this.canvas.width = width;
     this.canvas.height = height;
     this.render(this.lastRenderedData!, this.lastRenderedSelectedNode);
+  }
+
+  setConnectionClickCallback(callback: (connection: VisualConnection) => void) {
+    this.onConnectionClick = callback;
+  }
+
+  // Adjusted getConnectionAtPoint to exclude bias labels
+  getConnectionAtPoint(x: number, y: number): VisualConnection | null {
+    // Check proximity to connection lines
+    for (const { connection, p0, p1, p2, p3 } of this.connectionControlPoints) {
+      const distance = this.calculateDistanceToBezier(x, y, p0, p1, p2, p3);
+      if (distance <= this.epsilon) {
+        return connection;
+      }
+    }
+
+    // Check if click is within any weight label bounding box
+    for (const { connection, rect } of this.labelBoundingBoxes) {
+      if (
+        x >= rect.x &&
+        x <= rect.x + rect.width &&
+        y >= rect.y &&
+        y <= rect.y + rect.height
+      ) {
+        return connection;
+      }
+    }
+
+    return null;
+  }
+
+  setSelectedConnection(connection: VisualConnection | null) {
+    this.selectedConnection = connection;
+  }
+
+  private calculateDistanceToBezier(
+    x: number,
+    y: number,
+    p0: { x: number; y: number },
+    p1: { x: number; y: number },
+    p2: { x: number; y: number },
+    p3: { x: number; y: number }
+  ): number {
+    const steps = 100;
+    let minDist = Infinity;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const cx =
+        Math.pow(1 - t, 3) * p0.x +
+        3 * Math.pow(1 - t, 2) * t * p1.x +
+        3 * (1 - t) * Math.pow(t, 2) * p2.x +
+        Math.pow(t, 3) * p3.x;
+      const cy =
+        Math.pow(1 - t, 3) * p0.y +
+        3 * Math.pow(1 - t, 2) * t * p1.y +
+        3 * (1 - t) * Math.pow(t, 2) * p2.y +
+        Math.pow(t, 3) * p3.y;
+
+      const dx = cx - x;
+      const dy = cy - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < minDist) {
+        minDist = dist;
+      }
+    }
+
+    return minDist;
+  }
+
+  highlightConnection(connection: VisualConnection): void {
+    this.highlightedConnectionId = connection.id;
+    this.render(this.lastRenderedData!, this.lastRenderedSelectedNode);
+  }
+
+  clearHighlightedConnection(): void {
+    this.highlightedConnectionId = null;
+    this.render(this.lastRenderedData!, this.lastRenderedSelectedNode);
+  }
+
+  // Clean up when the renderer is no longer needed
+  destroy() {
+    // No cleanup needed
   }
 }

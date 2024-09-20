@@ -1,4 +1,4 @@
-import './styles/gloabal.css'
+import './styles/global.css'
 import { Component, createEffect, createSignal, Show } from 'solid-js';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import FunctionVisualizer from './FunctionVisualizer';
@@ -8,6 +8,7 @@ import { colors } from './styles/colors';
 import SidebarCockpit from './SidebarCockpit'
 import CollapsibleSidebar from './components/CollapsibleSidebar';
 import TutorialBar from './Tutorial/TutorialBar';
+import { typography } from './styles/typography';
 
 const App: Component = () => {
   createEffect(() => {
@@ -49,13 +50,21 @@ const App: Component = () => {
       flex-shrink: 0;
     `,
     tab: css`
-      padding: 10px 20px;
+      padding: 0.5rem;
       cursor: pointer;
       background-color: ${colors.surface};
       border: none;
+      font-size: ${typography.fontSize.xs};
+      color: ${colors.textLight};
+
       &.active {
         background-color: ${colors.primary};
-        color: ${colors.text};
+        color: ${colors.textLight};
+      }
+
+      @media (max-width: 600px) {
+        padding: 0.25rem;
+        font-size: ${typography.fontSize.xxs};
       }
     `,
     flexContainer: css`
@@ -139,7 +148,6 @@ const App: Component = () => {
                     includeLossNode={false}
                     onVisualizationUpdate={() => console.log("Visualization updated")}
                     onSidebarToggle={() => {/* Handle sidebar toggle */ }}
-                    onResize={(width, height) => console.log(`Resized to ${width}x${height}`)}
                   />
                 </div>
               </Show>
@@ -157,9 +165,6 @@ const App: Component = () => {
                         includeLossNode={false}
                         onVisualizationUpdate={() => console.log("Visualization updated")}
                         onSidebarToggle={() => {/* Handle sidebar toggle */ }}
-                        onResize={(width, height) => {
-                          console.log(`Network visualizer resized to ${width}x${height}`);
-                        }}
                       />
                     </div>
                   </div>
