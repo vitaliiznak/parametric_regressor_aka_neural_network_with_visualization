@@ -5,7 +5,7 @@ import { Trainer } from "./trainer";
 export type AppState = {
   // Network configuration
   network: MLP;
-  visualData: { nodes: [], connections: [] };
+  visualData: VisualNetworkData;
 
   // Training configuration
   trainingConfig: TrainingConfig;

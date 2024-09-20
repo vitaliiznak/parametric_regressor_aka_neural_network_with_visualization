@@ -1,29 +1,35 @@
-import { Component, Show } from "solid-js";
+import { Component, createMemo, Show } from "solid-js";
 import { css } from "@emotion/css";
 import { colors } from "../styles/colors";
 import { VisualConnection } from "../types";
+import { store } from "../store";
 
 interface ConnectionSidebarProps {
-  connection: VisualConnection | null;
+  connection: string | null;
   onClose: () => void;
 }
 
 const ConnectionSidebar: Component<ConnectionSidebarProps> = (props) => {
+  const connectionObject = createMemo(() => {
+    if (!props.connection) return null;
+     const connections = store.trainingState.backwardStepGradients;
+     return connections.find((c) => c.connectionId === props.connection);
+  })
   return (
-    <Show when={props.connection}>
+    <Show when={connectionObject()}>
       {(connection) => (
         <div class={styles.sidebar}>
           <button class={styles.closeButton} onClick={props.onClose}>×</button>
           <h2 class={styles.title}>Connection Details</h2>
 
           <div class={styles.detail}>
-            <strong>From:</strong> {connection().from}
+            <strong>From:</strong> {connectionObject().from}
           </div>
           <div class={styles.detail}>
-            <strong>To:</strong> {connection().to}
+            <strong>To:</strong> {connectionObject().to}
           </div>
           <div class={styles.detail}>
-            <strong>Weight:</strong> {connection().weight.toFixed(4)}
+            <strong>Weight:</strong> {connectionObject().weight.toFixed(4)}
           </div>
           <div class={styles.detail}>
             <strong>Weight Gradient:</strong> {connection().weightGradient?.toFixed(4) || 'N/A'}

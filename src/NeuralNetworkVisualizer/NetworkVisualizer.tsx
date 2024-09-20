@@ -1,7 +1,7 @@
 import { Component, createEffect, onCleanup, createSignal, createMemo, Show, batch } from "solid-js";
 import { NetworkRenderer } from "./renderer";
 import NeuronInfoSidebar from "./NeuronInfoSidebar";
-import { store } from "../store";
+import { setVisualData, store } from "../store";
 import { VisualNode } from "../types";
 import { useCanvasSetup } from "./useCanvasSetup";
 import { canvasStyle, containerStyle, tooltipStyle } from "./NetworkVisualizerStyles";
@@ -36,38 +36,37 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
   let mouseDownTimer: number | null = null;
   let lastPanPosition: { x: number; y: number } = { x: 0, y: 0 };
 
-  const visualData = createMemo(() => {
-    const networkUpdateTrigger = store.networkUpdateTrigger;
-    
-    const layoutCalculatorValue = layoutCalculator();
-    if (!layoutCalculatorValue) {
-      console.warn('Layout calculator is not initialized');
-      return { nodes: [], connections: [] };
-    }
 
-    const networkData = store.network.toJSON();
-    return layoutCalculatorValue.calculateLayout(
-      networkData,
-      store.currentInput,
-      store.simulationResult,
-      customNodePositions()
-    );
-  });
+  const visualData = createMemo(() => store.visualData);
 
   const currentSelectedNeuron = createMemo(() => {
     if (!selectedNeuron()) return null;
     return visualData().nodes.find(node => node.id === selectedNeuron()?.id) || null;
   });
 
-  const currentSelectedConnection = createMemo(() => {
-    const id = selectedConnectionId();
-    if (!id) return null;
-    return visualData().connections.find(conn => conn.id === id) || null;
-  });
+
 
   createEffect(() => {
     if (isCanvasInitialized()) {
       setupEventListeners();
+
+      const networkUpdateTrigger = store.networkUpdateTrigger;
+
+      const layoutCalculatorValue = layoutCalculator();
+      if (!layoutCalculatorValue) {
+        console.warn('Layout calculator is not initialized');
+        return { nodes: [], connections: [] };
+      }
+
+      const networkData = store.network.toJSON();
+      const visualData = layoutCalculatorValue.calculateLayout(
+        networkData,
+        store.currentInput,
+        store.simulationResult,
+        customNodePositions()
+      );
+
+      setVisualData(visualData);
     }
   });
 
@@ -258,21 +257,21 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
 
   const handleMouseUp = () => {
     const canvas = canvasRef();
-    
-      if (mouseDownTimer !== null) {
-        clearTimeout(mouseDownTimer);
-        if (draggedNode) {
-          setSelectedNeuron(draggedNode);
-          renderer()?.render(visualData(), draggedNode); // Trigger re-render with selected node
-        }
+
+    if (mouseDownTimer !== null) {
+      clearTimeout(mouseDownTimer);
+      if (draggedNode) {
+        setSelectedNeuron(draggedNode);
+        renderer()?.render(visualData(), draggedNode); // Trigger re-render with selected node
       }
-      setIsPanning(false);
-      draggedNode = null;
-      mouseDownTimer = null;
-      lastPanPosition = { x: 0, y: 0 };
-      if (canvas) {
-        canvas.style.cursor = 'grab';
-      }
+    }
+    setIsPanning(false);
+    draggedNode = null;
+    mouseDownTimer = null;
+    lastPanPosition = { x: 0, y: 0 };
+    if (canvas) {
+      canvas.style.cursor = 'grab';
+    }
   };
 
   return (
@@ -301,7 +300,7 @@ const NetworkVisualizer: Component<NetworkVisualizerProps> = (props) => {
         }}
       />
       <ConnectionSidebar
-        connection={currentSelectedConnection()}
+        connection={selectedConnectionId()}
         onClose={() => {
           setSelectedConnectionId(null);
           renderer()?.clearHighlightedConnection();

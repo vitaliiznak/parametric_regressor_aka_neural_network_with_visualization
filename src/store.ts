@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { AppState } from "./types";
+import { AppState, VisualNetworkData } from "./types";
 import { generateSampleData } from "./utils/dataGeneration";
 import { MLP } from "./NeuralNetwork/mlp";
 import { CONFIG } from "./config";
@@ -187,7 +187,7 @@ function stepBackward() {
   console.log("Calling trainer.stepBackward()");
   let result;
   try {
-    result = store.trainer.stepBackwardAndGetGradientsGroupedByConnection();
+    result = store.trainer.stepBackward();
   } catch (error) {
     console.error("Error in stepBackward:", error);
     return;
@@ -221,7 +221,7 @@ function updateWeights() {
     setStore('trainingState', 'weightUpdateResults', result);
     setStore('network', store.trainer.network);
     setStore('trainingState', 'currentPhase', 'idle');
-    setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1); 
+    setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
 
 
     // setStore('trainingState', {
@@ -268,6 +268,18 @@ function updateNetworkConfig(layers: number[], activations: ActivationFunction[]
     trainingStateReset();
   });
 }
+
+// src/store.ts
+export function setVisualData(newVisualData: VisualNetworkData) {
+  setStore('visualData', newVisualData);
+}
+
+// Action to reset VisualData
+export function resetVisualData() {
+  setStore("visualData", { nodes: [], connections: [] });
+}
+
+
 
 // Initial state
 
