@@ -11,7 +11,6 @@ interface NeuronInfoSidebarProps {
 }
 
 const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
-
   createEffect(() => {
     if (props.neuron) {
       renderActivationFunctionChart();
@@ -126,19 +125,7 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
             ax: 0,
             ay: 40,
             font: { color: '#FFFFFF' }
-          },
-          // {
-          //   x: xMin,
-          //   y: neuronOutput,
-          //   xref: 'x',
-          //   yref: 'y',
-          //   text: `Output: ${neuronOutput.toFixed(4)}`,
-          //   showarrow: true,
-          //   arrowhead: 4,
-          //   ax: 0,
-          //   ay: 40,
-          //   font: { color: '#FFFFFF' }
-          // }
+          }
         ],
         shapes: [
           {

@@ -40,8 +40,8 @@ export class NetworkLayout {
     const startY = (this.canvasHeight - totalHeight) / 2;
     for (let i = 0; i < inputSize; i++) {
       nodes.push({
-        id: `input_${i}`,
-        label: 'ChatGPT Usage',
+        id: `neuron_-1_${i}`, // Standardized ID
+        label: `Input ${i}`,
         layerId: 'input',
         x: this.inputValuesSpacing,
         y: startY + i * (this.nodeHeight + this.nodeSpacing),
@@ -83,9 +83,9 @@ export class NetworkLayout {
           // Connect input nodes to first layer
           for (let i = 0; i < inputSize; i++) {
             connections.push({
-              id: `conn_${nodeId}_to_${neuron.id}`, // Unique and consistent ID
-              from: `input_${i}`,
-              to: neuron.id,
+              id: `from_neuron_-1_${i}_to_neuron_${layerIndex}_${neuronIndex}`, // Standardized format
+              from: `neuron_-1_${i}`,
+              to: nodeId,
               weight: neuron.weights[i],
               bias: neuron.bias
             });
@@ -93,9 +93,9 @@ export class NetworkLayout {
         } else {
           network.layers[layerIndex - 1].neurons.forEach((prevNeuron, prevIndex) => {
             connections.push({
-              id: `conn_${prevNeuron.id}_to_${neuron.id}`, // Unique and consistent ID
-              from: prevNeuron.id,
-              to: neuron.id,
+              id: `from_neuron_${layerIndex - 1}_${prevIndex}_to_neuron_${layerIndex}_${neuronIndex}`, // Standardized format
+              from: `neuron_${layerIndex - 1}_${prevIndex}`,
+              to: nodeId,
               weight: neuron.weights[prevIndex],
               bias: neuron.bias
             });
@@ -114,7 +114,7 @@ export class NetworkLayout {
         const layerIndex = parseInt(layerIndexStr);
         const nodeIndex = parseInt(nodeIndexStr);
     
-        if (nodeType === 'input' && input[nodeIndex] !== undefined) {
+        if (nodeType === 'neuron' && layerIndex === -1 && input[nodeIndex] !== undefined) {
           node.outputValue = input[nodeIndex];
         } else if (nodeType === 'neuron') {
           if (layerOutputs[layerIndex] && layerOutputs[layerIndex][nodeIndex] !== undefined) {

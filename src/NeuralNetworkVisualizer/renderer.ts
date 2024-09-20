@@ -15,7 +15,6 @@ export class NetworkRenderer {
   private lastRenderedSelectedNode: VisualNode | null = null;
   private onConnectionClick: (connection: VisualConnection) => void = () => { };
   private connectionControlPoints: { connection: VisualConnection; p0: Point; p1: Point; p2: Point; p3: Point }[] = [];
-  private selectedConnection: VisualConnection | null = null;
   private readonly epsilon: number = 5; // pixels
   private labelBoundingBoxes: { connection: VisualConnection; rect: { x: number; y: number; width: number; height: number } }[] = [];
 
@@ -302,8 +301,13 @@ export class NetworkRenderer {
     this.connectionControlPoints = [];
 
     connections.forEach(conn => {
-      const fromNode = nodes.find(n => n.id === conn.from)!;
-      const toNode = nodes.find(n => n.id === conn.to)!;
+      const fromNode = nodes.find(n => n.id === conn.from);
+      const toNode = nodes.find(n => n.id === conn.to);
+
+      if (!fromNode || !toNode) {
+        console.error(`Node not found for connection: ${conn.id}`);
+        return; // Skip this connection
+      }
 
       const fromX = fromNode.x + this.nodeWidth;
       const fromY = fromNode.y + this.nodeHeight / 2;

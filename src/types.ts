@@ -17,7 +17,7 @@ export type AppState = {
     iteration: number,
     currentLoss: null | number,
     forwardStepResults: Prediction,
-    backwardStepGradients: BackwardStepGradientsPerConnecrion[],
+    backwardStepGradients: BackwardStepGradientsPerConnection[],
     weightUpdateResults: [],
     lossHistory: [],
   };
@@ -35,18 +35,13 @@ export type AppState = {
 
 type TrainingRun = any
 
-export type BackwardStepGradients = {
-  neuron: number;
-  weights: number;
-  bias: number;
-  gradients: number[];
-}[];
+export interface BackwardStepGradientsPerConnection {
+  connectionId: string;
+  weightGradient: number;
+  biasGradient: number;
+}
 
-export type BackwardStepGradientsPerConnecrion = {
-  connectionId: string,
-  weightGradient: number,
-  biasGradient: number,
-};
+export type BackwardStepGradients = BackwardStepGradientsPerConnection[];
 
 export interface TrainingStepResult {
   gradients: number[] | null;

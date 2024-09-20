@@ -97,6 +97,9 @@ export class MLP {
       });
     });
 
+    // Ensure connection IDs are regenerated consistently
+    // Assuming connections are handled in the layout generation
+
     return newMLP;
   }
 

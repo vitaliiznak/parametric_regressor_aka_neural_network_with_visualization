@@ -185,9 +185,9 @@ function stepBackward() {
   }
 
   console.log("Calling trainer.stepBackward()");
-  let result;
+  let result: BackwardStepGradientsPerConnection[];
   try {
-    result = store.trainer.stepBackward();
+    result = store.trainer.stepBackwardAndGetGradientsGroupedByConnection();
   } catch (error) {
     console.error("Error in stepBackward:", error);
     return;
@@ -196,7 +196,6 @@ function stepBackward() {
 
   if (result && Array.isArray(result)) {
     console.log("Updating store with result");
-
 
     batch(() => {
       setStore('trainingState', 'currentPhase', 'backward');
@@ -222,13 +221,6 @@ function updateWeights() {
     setStore('network', store.trainer.network);
     setStore('trainingState', 'currentPhase', 'idle');
     setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
-
-
-    // setStore('trainingState', {
-    //   forwardStepResults: [],
-    //   backwardStepGradients: [],
-    //   weightUpdateResults: [],
-    // });
 
     console.log("Weights updated successfully");
   });

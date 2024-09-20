@@ -1,6 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-import { BackwardStepGradients, BackwardStepGradientsPerConnecrion, Prediction, TrainingConfig, TrainingStepResult } from "./types";
+import { BackwardStepGradients, BackwardStepGradientsPerConnection, Prediction, TrainingConfig, TrainingStepResult } from "./types";
 
 export class Trainer {
   _network: MLP;
@@ -14,7 +14,7 @@ export class Trainer {
   private currentBatchInputs: number[][] = [];
   private currentBatchTargets: number[] = [];
   
-  stepBackward: () => BackwardStepGradientsPerConnecrion[];
+  stepBackward: () => BackwardStepGradientsPerConnection[];
 
   constructor(network: MLP, config: TrainingConfig) {
     this._network = network.clone();
@@ -115,12 +115,12 @@ export class Trainer {
     return result;
   }
 
-  stepBackwardAndGetGradientsGroupedByConnection(): BackwardStepGradientsPerConnecrion[] {
-
+  stepBackwardAndGetGradientsGroupedByConnection(): BackwardStepGradientsPerConnection[] {
+    // Recalculate the loss before each backward step
+    this.calculateLoss();
 
     if (!this.currentLoss) {
-      // Recalculate the loss before each backward step
-      this.calculateLoss();
+      console.error("Loss not calculated");
       return [];
     }
 
@@ -130,15 +130,17 @@ export class Trainer {
     // Perform backpropagation
     this.currentLoss.backward();
 
-    const gradients: BackwardStepGradientsPerConnecrion[] = [];
+    const gradients: BackwardStepGradientsPerConnection[] = [];
 
     // Iterate through each layer and neuron to collect gradients
     this._network.layers.forEach((layer, layerIndex) => {
       layer.neurons.forEach((neuron, neuronIndex) => {
         neuron.w.forEach((weight, weightIndex) => {
-          const fromNodeId = layerIndex === 0 ? `input_${weightIndex}` : `layer${layerIndex - 1}_neuron${weightIndex}`;
-          const toNodeId = `layer${layerIndex}_neuron${neuronIndex}`;
-          const connectionId = `conn_${fromNodeId}_to_${toNodeId}`;
+          const fromNodeId = layerIndex === 0
+            ? `neuron_-1_${weightIndex}` // Consistent with input node IDs
+            : `neuron_${layerIndex - 1}_${weightIndex}`;
+          const toNodeId = `neuron_${layerIndex}_${neuronIndex}`;
+          const connectionId = `from_neuron_${layerIndex - 1}_${weightIndex}_to_neuron_${layerIndex}_${neuronIndex}`; // Standardized format
 
           gradients.push({
             connectionId,
