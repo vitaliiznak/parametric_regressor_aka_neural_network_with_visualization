@@ -13,9 +13,13 @@ export class Trainer {
   private currentDataIndex: number = 0;
   private currentBatchInputs: number[][] = [];
   private currentBatchTargets: number[] = [];
+  
+  stepBackward: () => BackwardStepGradientsPerConnecrion[];
 
   constructor(network: MLP, config: TrainingConfig) {
     this._network = network.clone();
+    
+    this.stepBackward = this.stepBackwardAndGetGradientsGroupedByConnection
   }
 
   get network(): MLP {
@@ -82,7 +86,7 @@ export class Trainer {
     return avgLoss;
   }
 
-  stepBackward(): BackwardStepGradients | null {
+  stepBackwardAndGetGradientsGroupedByNeurons(): BackwardStepGradients | null {
     // Recalculate the loss before each backward step
     this.calculateLoss();
 
@@ -111,13 +115,13 @@ export class Trainer {
     return result;
   }
 
-  stepBackwardAndGetGradientsGroupedByConnection(): BackwardStepGradientsPerConnecrion | null {
-    // Recalculate the loss before each backward step
-    this.calculateLoss();
+  stepBackwardAndGetGradientsGroupedByConnection(): BackwardStepGradientsPerConnecrion[] {
+
 
     if (!this.currentLoss) {
-      console.error("Loss not calculated");
-      return null;
+      // Recalculate the loss before each backward step
+      this.calculateLoss();
+      return [];
     }
 
     // Zero out existing gradients
@@ -126,7 +130,7 @@ export class Trainer {
     // Perform backpropagation
     this.currentLoss.backward();
 
-    const gradients: BackwardStepGradientsPerConnecrion = [];
+    const gradients: BackwardStepGradientsPerConnecrion[] = [];
 
     // Iterate through each layer and neuron to collect gradients
     this._network.layers.forEach((layer, layerIndex) => {
@@ -149,6 +153,8 @@ export class Trainer {
 
     return gradients;
   }
+
+
 
   updateWeights(learningRate: number): TrainingStepResult {
     const oldWeights = this._network.parameters().map(p => p.data);

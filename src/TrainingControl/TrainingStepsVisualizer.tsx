@@ -2,17 +2,12 @@ import { Component, For, Show, createMemo } from "solid-js";
 import { css } from "@emotion/css";
 import { FaSolidArrowRight, FaSolidCalculator, FaSolidArrowLeft, FaSolidArrowDown, FaSolidLayerGroup } from 'solid-icons/fa';
 import WeightUpdateStep from './WeightUpdateStep';
-import { TrainingStepResult } from "../types";
+import { BackwardStepGradientsPerConnecrion, TrainingStepResult } from "../types";
 import { colors } from '../styles/colors';
 
 interface TrainingStepsVisualizerProps {
   forwardStepResults: { input: number[], output: number[] }[];
-  backwardStepResults: {
-    neuron: number;
-    weights: number;
-    bias: number;
-    gradients: number[];
-  }[];
+  backwardStepResults: BackwardStepGradientsPerConnecrion[];
   currentLoss: number | null;
   weightUpdateResults: TrainingStepResult;
 }
@@ -229,19 +224,16 @@ const TrainingStepsVisualizer: Component<TrainingStepsVisualizerProps> = (props)
                 <For each={props.backwardStepResults}>
                   {(element, neuronIndex) => (
                     <div class={styles.neuronGradients}>
-                      <h4 class={styles.neuronLabel}>Neuron {neuronIndex()}</h4>
+                      <h4 class={styles.neuronLabel}>Connection {element.connectionId}</h4>
                       <div class={styles.gradientGroup}>
-                        <For each={element.gradients.slice(0, element.weights)}>
-                          {(gradient, weightIndex) => (
+                 
                             <div class={styles.gradientItem}>
-                              <span class={styles.gradientLabel}>W{weightIndex() + 1}:</span>
-                              <span class={styles.gradientValue}>{gradient.toFixed(4)}</span>
+                              <span class={styles.gradientLabel}>W:</span>
+                              <span class={styles.gradientValue}>B: {element.weightGradient.toFixed(4)}</span>
                             </div>
-                          )}
-                        </For>
                         <div class={styles.gradientItem}>
                           <span class={styles.gradientLabel}>B:</span>
-                          <span class={styles.gradientValue}>{element.gradients[element.gradients.length - 1].toFixed(4)}</span>
+                          <span class={styles.gradientValue}>B: {element.biasGradient.toFixed(4)}</span>
                         </div>
                       </div>
                     </div>
