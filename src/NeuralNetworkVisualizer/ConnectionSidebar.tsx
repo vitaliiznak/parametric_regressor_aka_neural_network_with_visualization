@@ -23,7 +23,6 @@ const ConnectionSidebar: Component<ConnectionSidebarProps> = (props) => {
 
   return (
     <Show when={connectionObject()}>
-      {(connection) => (
         <div class={styles.sidebar}>
           <button class={styles.closeButton} onClick={props.onClose}>×</button>
           <h2 class={styles.title}>Connection Details</h2>
@@ -47,7 +46,6 @@ const ConnectionSidebar: Component<ConnectionSidebarProps> = (props) => {
             <strong>Bias Gradient:</strong> {connectionObject()?.biasGradient?.toFixed(4) || 'N/A'}
           </div>
         </div>
-      )}
     </Show>
   );
 };
