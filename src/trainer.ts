@@ -78,7 +78,7 @@ export class Trainer {
       const target = new Value(targets[i]);
       const diff = pred.sub(target);
       const squaredDiff = diff.mul(diff);
-      console.log(`Prediction: ${pred.data}, Target: ${target.data}, Squared Diff: ${squaredDiff.data}`);
+      console.log(`Batch ${i + 1}: Prediction = ${pred.data}, Target = ${target.data}, Squared Diff = ${squaredDiff.data}`);
       totalLoss = totalLoss.add(squaredDiff);
     }
     const avgLoss = totalLoss.div(new Value(inputs.length));

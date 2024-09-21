@@ -166,6 +166,7 @@ export class Value {
 
     buildTopo(this);
     this.grad = 1;
+    // Traverse in reverse topological order
     for (const v of topo.reverse()) {
       v._backward();
     }

@@ -4,7 +4,7 @@ export const CONFIG = {
   INITIAL_NETWORK: {
     inputSize: 1,
     layers: [5, 3, 1],
-    activations: ['leaky-relu', 'leaky-relu', 'identity']
+    activations: ['tanh', 'leaky-relu', 'identity']
   } as MLPConfig,
   INITIAL_TRAINING: {
     learningRate: 0.005
