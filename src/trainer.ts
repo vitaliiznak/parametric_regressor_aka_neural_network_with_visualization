@@ -13,12 +13,12 @@ export class Trainer {
   private currentDataIndex: number = 0;
   private currentBatchInputs: number[][] = [];
   private currentBatchTargets: number[] = [];
-  
+
   stepBackward: () => BackwardStepGradientsPerConnection[];
 
   constructor(network: MLP, config: TrainingConfig) {
     this._network = network.clone();
-    
+
     this.stepBackward = this.stepBackwardAndGetGradientsGroupedByConnection
   }
 
@@ -48,8 +48,8 @@ export class Trainer {
     this.currentBatchTargets.push(y);
 
     const result: Prediction = {
-        input: x,
-        output: this.currentOutput.map(v => v.data),
+      input: x,
+      output: this.currentOutput.map(v => v.data),
     };
 
     this.currentDataIndex++;
@@ -66,9 +66,79 @@ export class Trainer {
 
     console.log('Calculated loss:', this.currentLoss.data);
 
+    // After calculating currentLoss
+    console.log('Computation Tree for currentLoss:');
+    if (this.currentLoss) {
+      const compuationTreeString = this.currentLoss.printTree()
+      console.log(compuationTreeString);
+
+      // Derive batch size by counting 'add' operations
+      const batchSize = this.deriveBatchSizeFromComputationTreeString(compuationTreeString);
+      console.log(`Derived Batch Size From Computation Tree String: ${batchSize}`);
+    } else {
+      console.log('currentLoss is null');
+    }
 
     return this.currentLoss;
   }
+
+
+  /**
+ * Determines the batch size from a computational graph log.
+ * 
+ * The function primarily looks for the line starting with 'Value (^-1):'
+ * and computes the batch size as the inverse of that value.
+ * If such a line isn't found, it falls back to counting unique non-zero 'Value (Input):' entries.
+ * 
+ * @param computationalGraph - The computational graph log as a multi-line string.
+ * @returns The determined batch size as a number.
+ */
+  private deriveBatchSizeFromComputationTreeString(computationalGraph: string): number {
+    // Split the computational graph into lines
+    const lines = computationalGraph.split('\n');
+
+    // Regular expression to match 'Value (^-1): <number>'
+    const inverseRegex = /^ *Value\s*\(\^-1\):\s*([0-9.]+)/;
+
+    // Initialize batchSize as null
+    let batchSize: number | null = null;
+
+    // Iterate through each line to find 'Value (^-1):'
+    for (const line of lines) {
+      const match = line.match(inverseRegex);
+      if (match) {
+        const inverseValue = parseFloat(match[1]);
+        if (inverseValue !== 0) {
+          batchSize = 1 / inverseValue;
+          break; // Assuming only one 'Value (^-1):' line is present
+        }
+      }
+    }
+
+    // If 'Value (^-1):' was found and batchSize determined
+    if (batchSize !== null) {
+      return batchSize;
+    }
+
+    // Fallback: Count unique non-zero 'Value (Input):' entries
+    // Note: This is less reliable and may include parameters/activations
+    const inputRegex = /^ *Value \(Input\):\s*([-+]?[0-9]*\.?[0-9]+)/;
+    const inputValues = new Set<string>();
+
+    for (const line of lines) {
+      const match = line.match(inputRegex);
+      if (match) {
+        const inputValue = match[1].trim();
+        // Ignore zero inputs or constants
+        if (inputValue !== '0') {
+          inputValues.add(inputValue);
+        }
+      }
+    }
+
+    return inputValues.size;
+  }
+
 
 
   private calculateBatchLoss(inputs: number[][], targets: number[]): Value {
@@ -81,7 +151,11 @@ export class Trainer {
       console.log(`Batch ${i + 1}: Prediction = ${pred.data}, Target = ${target.data}, Squared Diff = ${squaredDiff.data}`);
       totalLoss = totalLoss.add(squaredDiff);
     }
-    const avgLoss = totalLoss.div(new Value(inputs.length));
+
+    // Label the batch size value
+    const batchSizeValue = new Value(inputs.length, []);
+
+    const avgLoss = totalLoss.div(batchSizeValue);
     console.log(`Total Loss: ${totalLoss.data}, Avg Loss: ${avgLoss.data}`);
     return avgLoss;
   }

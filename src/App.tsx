@@ -1,5 +1,5 @@
 import './styles/global.css'
-import { Component, createEffect, createSignal, Show } from 'solid-js';
+import { Component, createEffect, createSignal, Show, onMount } from 'solid-js';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import FunctionVisualizer from './FunctionVisualizer';
 import { actions } from './store';
@@ -9,9 +9,11 @@ import SidebarCockpit from './SidebarCockpit'
 import CollapsibleSidebar from './components/CollapsibleSidebar';
 import TutorialBar from './Tutorial/TutorialBar';
 import { typography } from './styles/typography';
+import NormalizationSettings from "./LearningProcessVisualizer/NormalizationSettings";
+import NormalizationVisualizer from "./LearningProcessVisualizer/NormalizationVisualizer";
 
 const App: Component = () => {
-  createEffect(() => {
+  onMount(() => {
     actions.initializeTrainingData();
   });
 

@@ -1,58 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Trainer } from "./trainer";
-
-
-export type AppState = {
-  // Network configuration
-  network: MLP;
-  visualData: VisualNetworkData;
-
-  // Training configuration
-  trainingConfig: TrainingConfig;
-  trainingData: TrainingData | null;
-
-  // Training state
-  trainingState: {
-    currentPhase: 'idle'| 'forward'| 'loss' | 'backward' | 'update',
-    iteration: number,
-    currentLoss: null | number,
-    forwardStepResults: Prediction,
-    backwardStepGradients: BackwardStepGradientsPerConnection[],
-    weightUpdateResults: [],
-    lossHistory: [],
-  };
-
-  trainingStepResult:TrainingStepResult;
-
-  trainer: Trainer | null;
-
-  currentInput: [];
-  simulationResult: SimulationResult,
-  trainingRuns: TrainingRun[]; 
-
-  networkUpdateTrigger: number;
-};
-
-type TrainingRun = any
-
-export interface BackwardStepGradientsPerConnection {
-  connectionId: string;
-  weightGradient: number;
-  biasGradient: number;
-}
-
-export type BackwardStepGradients = BackwardStepGradientsPerConnection[];
-
-export interface TrainingStepResult {
-  gradients: number[] | null;
-  oldWeights: number[] | null;
-  newWeights: number[] | null;
-}
-
-export interface Prediction {
-  input: number[];
-  output: number[];
-}
+import { NormalizationMethod, Normalizer } from "./utils/dataNormalization";
 
 export interface TrainingData {
   xs: number[][];
@@ -102,21 +50,67 @@ export interface Point {
   y: number;
 }
 
-export interface VisualNode extends Point {
-  id: string;
-  label: string;
-  layerId: string;
-  outputValue?: number;
-  activation?: string;
-  weights: number[];
-  bias: number;
+export interface NormalizationState {
+  method: NormalizationMethod;
+  normalizer: Normalizer;
+  normalizedData: number[] | null;
 }
 
-export interface VisualConnection {
-  from: string;
-  to: string;
-  weight: number;
-  bias: number;
-  weightGradient?: number;
-  biasGradient?: number;
+export interface AppState {
+  network: MLP;
+  visualData: VisualNetworkData;
+
+  trainingConfig: TrainingConfig;
+  trainingData: TrainingData | null;
+
+  trainingState: {
+    currentPhase: string;
+    iteration: number;
+    currentLoss: number | null;
+    forwardStepResults: ForwardStepResults[];
+    backwardStepGradients: BackwardStepGradients[];
+    weightUpdateResults: any[];
+    lossHistory: number[];
+  };
+
+  trainingStepResult: TrainingStepResult;
+
+  trainer: Trainer | null;
+
+  currentInput: number[];
+
+  simulationResult: SimulationResult;
+
+  trainingRuns: any[];
+
+  networkUpdateTrigger: number;
+
+  normalization: NormalizationState;
+}
+
+type TrainingRun = any
+
+export interface BackwardStepGradientsPerConnection {
+  connectionId: string;
+  weightGradient: number;
+  biasGradient: number;
+}
+
+export type BackwardStepGradients = BackwardStepGradientsPerConnection[];
+
+export interface TrainingStepResult {
+  gradients: number[] | null;
+  oldWeights: number[] | null;
+  newWeights: number[] | null;
+}
+
+export interface ForwardStepResults {
+  input: number[];
+  output: number[];
+}
+
+export interface TrainingStepResult {
+  gradients: number[] | null;
+  oldWeights: number[] | null;
+  newWeights: number[] | null;
 }

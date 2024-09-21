@@ -17,6 +17,7 @@ export class Value {
     this.id = Value.idCounter++;
   }
 
+
   static idCounter: number = 0;
 
   static from(n: number | Value): Value {
@@ -208,6 +209,38 @@ export class Value {
         ${edges.join('\n')}
     }`;
   }
-}
 
+  /**
+   * Recursively builds a string representation of the computation tree.
+   * @param indent - The current indentation level.
+   * @returns A string representing the computation tree.
+   */
+  printTree(indent: string = ''): string {
+    let treeStr = `${indent}${this.label || 'Value'} (${this._op || 'Input'}): ${this.data}\n`;
+    if (this._prev.size > 0) {
+      this._prev.forEach(child => {
+        treeStr += child.printTree(indent + '  ');
+      });
+    }
+    return treeStr;
+  }
+
+  /**
+   * Retrieves a node from the computation tree by its label.
+   * @param targetLabel - The label of the node to retrieve.
+   * @returns The Value node with the specified label or undefined if not found.
+   */
+  findByLabel(targetLabel: string): Value | undefined {
+    if (this.label === targetLabel) {
+      return this;
+    }
+    for (const child of this._prev) {
+      const result = child.findByLabel(targetLabel);
+      if (result) {
+        return result;
+      }
+    }
+    return undefined;
+  }
+}
 Value.idCounter = 0;
