@@ -152,9 +152,7 @@ export class Trainer {
       totalLoss = totalLoss.add(squaredDiff);
     }
 
-    // Label the batch size value
     const batchSizeValue = new Value(inputs.length, []);
-
     const avgLoss = totalLoss.div(batchSizeValue);
     console.log(`Total Loss: ${totalLoss.data}, Avg Loss: ${avgLoss.data}`);
     return avgLoss;
@@ -247,6 +245,13 @@ export class Trainer {
 
   getCurrentIteration(): number {
     return this.currentIteration;
+  }
+
+  resetBatch(): void {
+    this.currentBatchInputs = [];
+    this.currentBatchTargets = [];
+    this.currentDataIndex = 0;
+    console.log('Trainer batch has been reset.');
   }
 
 }

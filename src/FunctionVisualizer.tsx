@@ -17,78 +17,75 @@ const FunctionVisualizer: Component = () => {
     const { xs, ys } = store.trainingData;
 
     // Generate points for the true function
-    const trueX = Array.from({ length: 100 }, (_, i) => i);
+    const trueX = Array.from({ length: 100 }, (_, i) => i / 100); // 0 to 1 with step 0.01
     const trueY = trueX.map(getTrueFunction);
 
     // Generate points for the learned function
     const learnedY = trueX.map(x => {
-      // Assuming store.network.forward accepts a regular number input
-      // and returns a regular number output
       const output = store.network.forward([x]);
       return output[0].data;
     });
 
     // Prepare data for the neural network predictions
-    const nnX = xs.map(x => x[0]);
-    const nnY = ys;
+    const nnX = xs.map(x => x[0]); // Already in 0-1 range
+    const nnY = ys; // Already in 0-1 range
 
     const data = [
       {
         x: trueX,
         y: trueY,
         type: 'scatter',
-        mode: 'lines+text', // Include text labels
+        mode: 'lines+markers', // Changed from 'lines+text' to 'lines+markers' for better visibility
         name: 'True Function',
         line: { color: colors.primary, width: 3 },
-       
+        marker: { color: colors.primary, size: 6 },
         hoverinfo: 'x+y',
       },
       {
         x: nnX,
         y: nnY,
         type: 'scatter',
-        mode: 'markers+text', // Include text labels
+        mode: 'markers', // Changed from 'markers+text' to 'markers' to reduce clutter
         name: 'Training Data',
         marker: { color: colors.error, size: 8 },
-
         hoverinfo: 'x+y',
       },
       {
         x: trueX,
         y: learnedY,
         type: 'scatter',
-        mode: 'lines+text', // Include text labels
+        mode: 'lines',
         name: 'Learned Function',
         line: { color: colors.success, width: 3, dash: 'dash' },
         visible: showLearnedFunction() ? true : 'legendonly',
-  
         hoverinfo: 'x+y',
       }
     ];
 
     const layout = {
       xaxis: {
-        title: 'ChatGPT Usage (%)',
-        range: [0, 100],
+        title: 'ChatGPT Usage (0-1)',
+        range: [0, 1],
         gridcolor: colors.border,
         zerolinecolor: colors.border,
+        tickformat: '.2f',
       },
       yaxis: {
-        title: 'Productivity Score',
-        range: [0, 100],
+        title: 'Productivity Score (0-1)',
+        range: [0, 1],
         gridcolor: colors.border,
         zerolinecolor: colors.border,
+        tickformat: '.2f',
       },
       legend: {
         x: 1,
         xanchor: 'right',
         y: 1,
-   
         bordercolor: colors.border,
         borderwidth: 1,
       },
       hovermode: 'closest',
-      plot_bgcolor: '#1B213D', // Ensure this matches the desired background color
+      plot_bgcolor: '#1B213D',
       paper_bgcolor: '#1B213D',
       font: {
         family: typography.fontFamily,

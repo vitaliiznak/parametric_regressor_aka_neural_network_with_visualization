@@ -10,7 +10,7 @@ export class Neuron {
 
   constructor(nin: number, activation: ActivationFunction = 'tanh') {
     this.w = Array(nin).fill(0).map(() => new Value(Math.random() * 2 - 1));
-    this.b = new Value(0);
+    this.b = new Value(Math.random() * 0.1 - 0.05); // Initialize bias with a small random value
     this.activation = activation;
     console.log(`Neuron created with ${nin} inputs and ${this.activation} activation`);
   }

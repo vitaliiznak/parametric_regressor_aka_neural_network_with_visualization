@@ -89,18 +89,15 @@ export class MLP {
     };
     const newMLP = new MLP(config);
     
-    // Copy weights and biases
+    // Deep copy weights and biases
     this.layers.forEach((layer, i) => {
       layer.neurons.forEach((neuron, j) => {
         neuron.w.forEach((w, k) => {
-          newMLP.layers[i].neurons[j].w[k].data = w.data;
+          newMLP.layers[i].neurons[j].w[k] = new Value(w.data, [], 'weight');
         });
-        newMLP.layers[i].neurons[j].b.data = neuron.b.data;
+        newMLP.layers[i].neurons[j].b = new Value(neuron.b.data, [], 'bias');
       });
     });
-
-    // Ensure connection IDs are regenerated consistently
-    // Assuming connections are handled in the layout generation
 
     return newMLP;
   }

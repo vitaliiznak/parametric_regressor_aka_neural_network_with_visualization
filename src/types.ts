@@ -99,18 +99,12 @@ export interface BackwardStepGradientsPerConnection {
 export type BackwardStepGradients = BackwardStepGradientsPerConnection[];
 
 export interface TrainingStepResult {
-  gradients: number[] | null;
-  oldWeights: number[] | null;
-  newWeights: number[] | null;
+  gradients: BackwardStepGradientsPerConnection[] | null;
+  oldWeights: number[];
+  newWeights: number[];
 }
 
 export interface ForwardStepResults {
   input: number[];
   output: number[];
-}
-
-export interface TrainingStepResult {
-  gradients: number[] | null;
-  oldWeights: number[] | null;
-  newWeights: number[] | null;
 }

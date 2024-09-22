@@ -166,8 +166,6 @@ function trainingStateReset() {
     setStore('trainingState', {
       forwardStepResults: [],
       backwardStepGradients: [],
-      lossHistory: [],
-      currentLoss: null,
       weightUpdateResults: [],
       currentPhase: 'idle'
     });
@@ -217,7 +215,7 @@ function calculateLoss() {
   }
 
   const result = store.trainer.calculateLoss();
-  console.log("After calling trainer.calculateLoss(). Result:", result);
+  // console.log("After calling trainer.calculateLoss(). Result:", result);
 
   let currentLoss: number;
   if (result === null) {
@@ -281,6 +279,15 @@ function updateWeights() {
     setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
 
     console.log("Action: Weights updated successfully");
+
+    // ** Reset Batch After Weight Update **
+    store.trainer.resetBatch();
+    batch(() => {
+      setStore('trainingState', 'forwardStepResults', []);
+      setStore('trainingState', 'backwardStepGradients', []);
+      setStore('trainingState', 'currentPhase', 'idle');
+    });
+    console.log('Batch has been reset for the next training cycle.');
   });
 }
 
