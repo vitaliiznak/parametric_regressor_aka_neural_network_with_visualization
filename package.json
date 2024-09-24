@@ -1,9 +1,9 @@
 {
-  "name": "func_interpolator_aka_neural_network_with_visualization",
+  "name": "parametric_regressor_aka_neural_network_with_visualization",
   "version": "1.0.0",
   "main": "index.js",
   "description": "Neural Network Visualization",
-  "homepage": "https://vitaliiznak.github.io/func_interpolator_aka_neural_network_with_visualization",
+  "homepage": "https://vitaliiznak.github.io/parametric_regressor_aka_neural_network_with_visualization",
   "scripts": {
     "start": "vite",
     "build": "vite build",

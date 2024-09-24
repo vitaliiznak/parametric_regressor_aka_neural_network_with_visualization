@@ -1,7 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, Show } from "solid-js";
 import { css, keyframes } from "@emotion/css";
 import { actions, setStore, store } from '../store';
-import TrainingStepsVisualizer from './TrainingStepsVisualizer';
 import TrainingStatus from "./TrainingStatus";
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
@@ -67,14 +66,7 @@ const styles = {
     ${commonStyles.secondaryButton}
     margin-top: 1rem;
   `,
-  progressBar: css`
-    width: 100%;
-    height: 6px;
-    background-color: ${colors.border};
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-  `,
+
   progressFill: css`
     height: 100%;
     background-color: ${colors.primary};
@@ -145,6 +137,36 @@ const styles = {
     animation: ${fadeIn} 0.5s ease-in-out, ${fadeOut} 0.5s ease-in-out 2.5s;
     z-index: 1000;
   `,
+  inputGroup: css`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`,
+  label: css`
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.text};
+`,
+  input: css`
+    ${commonStyles.input}
+    width: 100%;
+  `,
+  runButton: css`
+    ${commonStyles.button}
+    ${commonStyles.primaryButton}
+    width: 100%;
+  `,
+  progressBarContainer: css`
+    width: 100%;
+    background-color: ${colors.border};
+    border-radius: 4px;
+    overflow: hidden;
+    height: 20px;
+  `,
+  progressBar: css`
+    height: 100%;
+    background-color: ${colors.primary};
+    transition: width 0.3s ease;
+  `
 };
 
 const TrainingControls: Component = () => {
@@ -152,6 +174,8 @@ const TrainingControls: Component = () => {
   const [chartType, setChartType] = createSignal<'bar' | 'line'>('line');
   const [showNotification, setShowNotification] = createSignal(false);
   const [currentIteration, setCurrentIteration] = createSignal(1);
+  const [batchSize, setBatchSize] = createSignal(store.trainingConfig.defaultBatchSize);
+  const [epochs, setEpochs] = createSignal(store.trainingConfig.defaultEpochs);
 
   createEffect(() => {
     if (
@@ -171,8 +195,7 @@ const TrainingControls: Component = () => {
 
   const iterationProgress = () => {
     const iteration = store.trainingState.iteration || 0;
-    const totalIterations = store.trainingConfig?.iterations || 1;
-    return iteration / totalIterations;
+    return iteration
   };
 
   const getLossColor = (loss: number | null) => {
@@ -182,7 +205,7 @@ const TrainingControls: Component = () => {
     return colors.error;
   };
 
-  const isForwardDisabled = createMemo(() => { 
+  const isForwardDisabled = createMemo(() => {
     console.log('isForwardDisabled store.trainingState.currentPhase', store.trainingState.currentPhase)
     return store.trainingState.currentPhase !== 'idle' && store.trainingState.currentPhase !== 'forward'
   })
@@ -194,6 +217,20 @@ const TrainingControls: Component = () => {
   const isBackwardDisabled = createMemo(() => store.trainingState.currentPhase !== 'loss')
   const isUpdateWeightsDisabled = createMemo(() => store.trainingState.currentPhase !== 'backward')
   const isResetDisabled = createMemo(() => store.trainingState.forwardStepResults.length === 0)
+
+  const isTraining = createMemo(() => store.trainingState.isTraining);
+
+  const handleBatchSizeChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const value = Number(target.value);
+    setBatchSize(value);
+  };
+
+  const handleEpochsChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const value = Number(target.value);
+    setEpochs(value);
+  };
 
   const singleStepForward = () => {
     actions.singleStepForward();
@@ -213,7 +250,12 @@ const TrainingControls: Component = () => {
 
   const updateWeights = () => {
     actions.updateWeights();
-  
+
+    
+  };
+
+  const onRunTrainingCycles = () => {
+    actions.runTrainingCycles(batchSize(), epochs());
   };
 
   const handleWheel = (e: WheelEvent) => {
@@ -240,7 +282,7 @@ const TrainingControls: Component = () => {
       </div>
       <TrainingStatus
         iteration={store.trainingState.iteration || 0}
-        totalIterations={store.trainingConfig?.iterations || 1}
+        totalIterations={store.trainingState?.iteration || 1}
         currentLoss={store.trainingState.currentLoss}
         iterationProgress={iterationProgress()}
         getLossColor={getLossColor}
@@ -248,12 +290,6 @@ const TrainingControls: Component = () => {
       <div class={styles.progressBar}>
         <div class={styles.progressFill} style={{ width: `${iterationProgress() * 100}%` }}></div>
       </div>
-      <TrainingStepsVisualizer
-        forwardStepResults={store.trainingState.forwardStepResults}
-        backwardStepResults={store.trainingState.backwardStepGradients}
-        currentLoss={store.trainingState.currentLoss}
-        weightUpdateResults={store.trainingState.weightUpdateResults}
-      />
       <div class={styles.controlsContainer}>
         <button
           class={styles.controlButton}
@@ -301,6 +337,46 @@ const TrainingControls: Component = () => {
       >
         Reset
       </button>
+      {/* Automated Training Controls */}
+      <div class={styles.inputGroup}>
+        <label class={styles.label} for="batchSize">Batch Size:</label>
+        <input
+          id="batchSize"
+          type="number"
+          min="1"
+          value={batchSize()}
+          onInput={handleBatchSizeChange}
+          class={styles.input}
+        />
+
+        <label class={styles.label} for="epochs">Number of Iterations (Epochs):</label>
+        <input
+          id="epochs"
+          type="number"
+          min="1"
+          value={epochs()}
+          onInput={handleEpochsChange}
+          class={styles.input}
+        />
+
+        <button
+          class={styles.runButton}
+          onClick={onRunTrainingCycles}
+        >
+          {"Run Training Cycles"}
+        </button>
+      </div>
+
+      {/* Progress Bar
+      {isTraining() && (
+        <div class={styles.progressBarContainer}>
+          <div
+            class={styles.progressBar}
+            style={{ width: `${progress()}%` }}
+          ></div>
+        </div>
+      )} */}
+
       <LossHistoryChart
         lossHistory={store.trainingState.lossHistory}
         trainingRuns={store.trainingRuns}

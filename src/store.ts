@@ -34,7 +34,9 @@ const initialState: AppState = {
 
   // Training state
   trainingState: {
+    isTraining: false,
     currentPhase: 'idle',
+    currentEpoch: 0,
     iteration: 0,
     currentLoss: null,
     forwardStepResults: [],
@@ -81,7 +83,7 @@ function initializeTrainingData() {
   console.log("Action: initializeTrainingData started");
 
   try {
-    const rawData = generateSampleData(100);
+    const rawData = generateSampleData(1000);
 
     if (!rawData || !Array.isArray(rawData)) {
       console.error("Invalid training data:", rawData);
@@ -112,17 +114,13 @@ function initializeTrainingData() {
       },
     });
 
-    console.log('Action: initializeTrainingData completed');
-    console.log('Training data set:', trainingData);
   } catch (error) {
-    console.error("Error in initializeTrainingData:", error);
   } finally {
     isInitializing = false;
   }
 }
 
 function setNormalizationMethod(method: NormalizationMethod) {
-  console.log("Action: setNormalizationMethod started with method:", method);
   if (!store.trainingData) {
     console.error("Training data not initialized.");
     return;
@@ -187,13 +185,11 @@ function singleStepForward() {
   const layerOutputs = trainerAux.network.getLayerOutputs();
 
   if (result === null) {
-    console.log("Action: Completed one epoch of training");
     batch(() => {
       setStore('trainingState', 'forwardStepResults', []);
       // Additional logic if needed
     });
   } else {
-    console.log("Action: Forward step completed. Result:", result);
     batch(() => {
       setStore('trainingState', 'currentPhase', 'forward');
       setStore('trainingState', 'forwardStepResults', [
@@ -274,7 +270,7 @@ function updateWeights() {
 
     setStore('trainingStepResult', result);
     setStore('trainingState', 'weightUpdateResults', result);
-    setStore('network', store.trainer.network);
+    setStore('network', store.trainer.network.clone());
     setStore('trainingState', 'currentPhase', 'idle');
     setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
 
@@ -336,16 +332,86 @@ export function resetVisualData() {
   setStore("visualData", { nodes: [], connections: [] });
 }
 
+ /**
+   * Runs training for a specified number of iterations with a given batch size.
+   * 
+   * @param batchSize - Number of Forward Steps per iteration.
+   * @param iterations - Number of learning iterations.
+   */
+ function* runTrainingCyclesGenerator(batchSize: number, iterations: number): Generator<void, void, unknown> {
+  setStore("trainingState", "isTraining", true);
+  setStore("trainingState", "currentEpoch", 0);
+  setStore("trainingState", "currentLoss", null);
+  setStore("trainingState", "lossHistory", []);
+
+  for (let epoch = 1; epoch <= iterations; epoch++) {
+    if (!store.trainingState.isTraining) break; // Allow stopping the training
+
+    // Perform Forward Steps based on Batch Size
+    for (let batch = 0; batch < batchSize; batch++) {
+      actions.singleStepForward();
+      //yield; // Yield control after each batch
+    }
+
+    // Calculate Loss
+    actions.calculateLoss();
+    //yield;
+
+    // Perform Backward Step
+    actions.stepBackward();
+    //yield;
+
+    // Update Weights
+    actions.updateWeights();
+    //yield;
+
+    // Update Training State
+    setStore("trainingState", "currentEpoch", epoch);
+    yield;
+
+    console.log(`Epoch ${epoch} completed.`);
+  }
+
+  setStore("trainingState", "isTraining", false);
+  console.log("Training completed.");
+}
+
+function scheduleTraining(generator: Generator<void, void, unknown>): void {
+  const step = () => {
+    const { value, done } = generator.next();
+    if (!done) {
+      requestAnimationFrame(step); // Schedule the next step
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+function runTrainingCycles(batchSize: number, iterations: number): void {
+  const generator = runTrainingCyclesGenerator(batchSize, iterations);
+  scheduleTraining(generator);
+}
+
+/**
+ * Stops the ongoing training process.
+ */
+function stopTraining() {
+  setStore("trainingState", "isTraining", false);
+  console.log("Training stopped by user.");
+}
+
 // Export actions
 export const actions = {
   initializeTrainingData,
   setNormalizationMethod,
+
+  runTrainingCycles,
 
   singleStepForward,
   calculateLoss,
   stepBackward,
   updateWeights,
   simulateInput,
+
   trainingStateReset,
   updateNetworkConfig,
   setVisualData,

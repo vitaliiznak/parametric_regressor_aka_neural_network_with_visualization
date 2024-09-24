@@ -11,41 +11,33 @@ const FunctionVisualizer: Component = () => {
   let plotDiv: HTMLDivElement | undefined;
   const [showLearnedFunction, setShowLearnedFunction] = createSignal(true);
 
-  const createPlot = () => {
-    if (!plotDiv || !store.trainingData || !store.network) return;
-
-    const { xs, ys } = store.trainingData;
-
-    // Generate points for the true function
-    const trueX = Array.from({ length: 100 }, (_, i) => i / 100); // 0 to 1 with step 0.01
+  const generateTrueFunctionPoints = () => {
+    const trueX = Array.from({ length: 100 }, (_, i) => i / 100);
     const trueY = trueX.map(getTrueFunction);
+    return { trueX, trueY };
+  };
 
-    // Generate points for the learned function
-    const learnedY = trueX.map(x => {
-      const output = store.network.forward([x]);
-      return output[0].data;
-    });
+  const generateLearnedFunctionPoints = (xs: number[][]) => {
+    return xs.map(x => store.network.forward(x)[0].data);
+  };
 
-    // Prepare data for the neural network predictions
-    const nnX = xs.map(x => x[0]); // Already in 0-1 range
-    const nnY = ys; // Already in 0-1 range
-
-    const data = [
+  const preparePlotData = (trueX: number[], trueY: number[], learnedY: number[], xs: number[][], ys: number[]) => {
+    return [
       {
         x: trueX,
         y: trueY,
         type: 'scatter',
-        mode: 'lines+markers', // Changed from 'lines+text' to 'lines+markers' for better visibility
+        mode: 'lines+markers',
         name: 'True Function',
         line: { color: colors.primary, width: 3 },
         marker: { color: colors.primary, size: 6 },
         hoverinfo: 'x+y',
       },
       {
-        x: nnX,
-        y: nnY,
+        x: xs.map(x => x[0]),
+        y: ys,
         type: 'scatter',
-        mode: 'markers', // Changed from 'markers+text' to 'markers' to reduce clutter
+        mode: 'markers',
         name: 'Training Data',
         marker: { color: colors.error, size: 8 },
         hoverinfo: 'x+y',
@@ -57,10 +49,46 @@ const FunctionVisualizer: Component = () => {
         mode: 'lines',
         name: 'Learned Function',
         line: { color: colors.success, width: 3, dash: 'dash' },
+        marker: { color: colors.primary, size: 6 },
         visible: showLearnedFunction() ? true : 'legendonly',
         hoverinfo: 'x+y',
       }
     ];
+  };
+
+  const createPlot = () => {
+    if (!plotDiv || !store.trainingData || !store.network) return;
+
+    const { xs, ys } = store.trainingData;
+    const { trueX, trueY } = generateTrueFunctionPoints();
+
+
+    const learnedY = generateLearnedFunctionPoints(trueX.map(x => [x]));
+
+    const minTrueY = Math.min(...trueY);
+    const maxTrueY = Math.max(...trueY);
+    const minTrueIndex = trueY.indexOf(minTrueY);
+    const maxTrueIndex = trueY.indexOf(maxTrueY);
+    const minTrueX = trueX[minTrueIndex];
+    const maxTrueX = trueX[maxTrueIndex];
+
+    const minLearnedY = Math.min(...learnedY);
+    const maxLearnedY = Math.max(...learnedY);
+    const minLearnedIndex = learnedY.indexOf(minLearnedY);
+    const maxLearnedIndex = learnedY.indexOf(maxLearnedY);
+    const minLearnedX = trueX[minLearnedIndex];
+    const maxLearnedX = trueX[maxLearnedIndex];
+
+    console.log(`here True Function - Min Y: ${minTrueY} at X: ${minTrueX}`);
+    console.log(`here True Function - Max Y: ${maxTrueY} at X: ${maxTrueX}`);
+    console.log(`here Learned Function - Min Y: ${minLearnedY} at X: ${minLearnedX}`);
+    console.log(`here Learned Function - Max Y: ${maxLearnedY} at X: ${maxLearnedX}`);
+
+    const data = preparePlotData(trueX, trueY, learnedY, xs, ys);
+
+    console.log({
+      trueX, trueY, learnedY, xs, ys
+    })
 
     const layout = {
       xaxis: {
@@ -107,14 +135,13 @@ const FunctionVisualizer: Component = () => {
       Plotly.newPlot(plotDiv, data, layout, config);
     }
 
-    // Add event listener for legend clicks
     plotDiv.on('plotly_legendclick', (event) => {
-      if (event.curveNumber === 2) { // Learned Function
+      if (event.curveNumber === 2) {
         setShowLearnedFunction(!showLearnedFunction());
       }
-      return false; // Prevent default legend click behavior
+      return false;
     });
-  }
+  };
 
   onMount(() => {
     createPlot();
@@ -189,4 +216,4 @@ const FunctionVisualizer: Component = () => {
   );
 };
 
-export default FunctionVisualizer;
+export default FunctionVisualizer

@@ -1,6 +1,6 @@
 import { MLP } from "./NeuralNetwork/mlp";
 import { Value } from "./NeuralNetwork/value";
-import { BackwardStepGradients, BackwardStepGradientsPerConnection, Prediction, TrainingConfig, TrainingStepResult } from "./types";
+import { BackwardStepGradients, BackwardStepGradientsPerConnection, ForwardStepResults, TrainingConfig, TrainingStepResult } from "./types";
 
 export class Trainer {
   _network: MLP;
@@ -34,7 +34,7 @@ export class Trainer {
 
 
 
-  singleStepForward(): Prediction | null {
+  singleStepForward(): ForwardStepResults | null {
     if (this.currentDataIndex >= this.xs.length) {
       this.currentDataIndex = 0;
       return null;
@@ -47,7 +47,7 @@ export class Trainer {
     this.currentBatchInputs.push(x);
     this.currentBatchTargets.push(y);
 
-    const result: Prediction = {
+    const result: ForwardStepResults = {
       input: x,
       output: this.currentOutput.map(v => v.data),
     };
@@ -67,7 +67,7 @@ export class Trainer {
     console.log('Calculated loss:', this.currentLoss.data);
 
     // After calculating currentLoss
-    console.log('Computation Tree for currentLoss:');
+/*     console.log('Computation Tree for currentLoss:');
     if (this.currentLoss) {
       const compuationTreeString = this.currentLoss.printTree()
       console.log(compuationTreeString);
@@ -78,7 +78,7 @@ export class Trainer {
     } else {
       console.log('currentLoss is null');
     }
-
+ */
     return this.currentLoss;
   }
 

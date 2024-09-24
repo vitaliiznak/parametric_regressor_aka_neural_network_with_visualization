@@ -111,30 +111,30 @@ const TutorialBar: Component = () => {
       <Show when={isOpen()}>
         <div class={styles.bar}>
           <div class={styles.content}>
-            <h1 class={styles.title}>Task: Boost Alice's Productivity with Neural Networks!</h1>
-            <h2 class={styles.subtitle}>Welcome to the AI-Powered Productivity Challenge!</h2>
+            <h1 class={styles.title}>Task: Crack Dr. House's Dosage Dilemma with Neural Networks! 🧪</h1>
+            <h2 class={styles.subtitle}>Welcome to the AI-Powered Medical Challenge!</h2>
             <p class={styles.paragraph}>
-              Hey there, future AI maestro! 👋 Ready to embark on a neural network adventure? Your mission, should you choose to accept it (cue dramatic music 🎵), is to help Alice, our junior developer, master the art of ChatGPT usage for maximum productivity!
+              Hey there, future AI superstar! 👋 Ready to step into the intriguing world of Dr. House and tackle a medical mystery? Your mission, should you choose to accept it (insert dramatic heartbeat sound 🎵), is to assist the brilliant but enigmatic Dr. House in optimizing medication dosages for maximum patient effectiveness with minimal side effects!
             </p>
             <p class={styles.paragraph}>
-              Here's the lowdown on your exciting task:
+              Here's the scoop on your thrilling task:
             </p>
             <ul>
-              <li><span class={styles.highlight}>Input:</span> Alice's ChatGPT usage time (0-100%)</li>
-              <li><span class={styles.highlight}>Output:</span> Her productivity score (0-100)</li>
-              <li><span class={styles.highlight}>The Twist:</span> The relationship between ChatGPT time and productivity is as unpredictable as a cat on a hot tin roof! 🐱🔥</li>
+              <li><span class={styles.highlight}>Input:</span> Medication dosage level (0% - 100%).</li>
+              <li><span class={styles.highlight}>Output:</span> Patient effectiveness score (0% - 100%).</li>
+              <li><span class={styles.highlight}>The Twist:</span> The relationship between dosage and effectiveness is as wavy as a heartbeat monitor! 💓</li>
             </ul>
             <p class={styles.paragraph}>
-              We've cooked up a funky formula that captures this wild relationship. Your job? Train a neural network to match it and uncover the sweet spot where Alice's productivity skyrockets! 🚀
+              We've cooked up a funky formula that captures this wild relationship. Your job? Train a neural network to match it and uncover the sweet spot where patient effectiveness peaks with minimal side effects! 🚀
             </p>
             <p class={styles.paragraph}>
               No fancy libraries here – you're building this neural network from scratch. It's like assembling a LEGO Death Star without instructions, but way cooler because it's AI! 🧠✨
             </p>
             <p class={styles.paragraph}>
-              By the time you're done, you'll not only be Alice's productivity hero but also a neural network ninja. So, flex those coding muscles and get ready to dive into the wonderful world of AI!
+              By the time you're done, you'll not only be Dr. House's dosage hero but also a neural network ninja. So, flex those coding muscles and get ready to dive into the wonderful world of AI!
             </p>
             <p class={styles.paragraph}>
-              Remember, no pressure... but Alice's productivity (and the fate of the universe) depends on you! May the code be with you! 😄🖖
+              Remember, no pressure... but patient health (and the fate of the universe) depends on you! May the code be with you! 😄🖖
             </p>
           </div>
         </div>

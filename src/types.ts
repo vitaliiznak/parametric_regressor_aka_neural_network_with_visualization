@@ -9,6 +9,8 @@ export interface TrainingData {
 
 export interface TrainingConfig {
   learningRate: number;
+  defaultBatchSize: number;
+  defaultEpochs: number;
 }
 
 export interface SimulationResult {
@@ -64,8 +66,11 @@ export interface AppState {
   trainingData: TrainingData | null;
 
   trainingState: {
-    currentPhase: string;
+    isTraining: boolean;
+    currentEpoch: number;
     iteration: number;
+
+    currentPhase: string;
     currentLoss: number | null;
     forwardStepResults: ForwardStepResults[];
     backwardStepGradients: BackwardStepGradients[];

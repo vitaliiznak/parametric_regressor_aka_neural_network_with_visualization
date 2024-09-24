@@ -22,10 +22,7 @@ export class NetworkLayout {
   ): VisualNetworkData {
     const nodes: VisualNode[] = [];
     const connections: VisualConnection[] = [];
-    console.log('Network data:', network);
-    console.log('network.inputSize', network.inputSize);
     const inputSize = network.inputSize;
-    console.log('Calculated inputSize:', inputSize);
 
     const layerCount = network.layers.length;
     const maxNeuronsInLayer = Math.max(inputSize, ...network.layers.map(layer => layer.neurons.length));
@@ -103,9 +100,6 @@ export class NetworkLayout {
         }
       });
     });
-
-    console.log('Generated nodes:', nodes);
-    console.log('Generated connections:', connections);
 
     if (simulationResult) {
       const { input, layerOutputs } = simulationResult;
