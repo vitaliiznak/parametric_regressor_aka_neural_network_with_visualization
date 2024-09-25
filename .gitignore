@@ -1,4 +1,5 @@
-/node_modules/
-**/.DS_Store
-**/dist/
-PROJECT_REQUIREMENTS.md
+
+python_playground/venv/
+
+.DS_Store
+
