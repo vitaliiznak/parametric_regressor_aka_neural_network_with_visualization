@@ -39,6 +39,11 @@ const NeuronInfoSidebar: Component<NeuronInfoSidebarProps> = (props) => {
           activationFunction = (v) => v > 0 ? v : 0.01 * v;
           xMin = -4; xMax = 4; yMin = -0.5; yMax = 4;
           break;
+        case 'swish':
+          activationFunction = (v) => v / (1 + Math.exp(-v));
+          xMin = -6; xMax = 6; yMin = -2; yMax = 6;
+          break;
+        
         default:
           activationFunction = (v) => v;
           xMin = -4; xMax = 4; yMin = -4; yMax = 4;

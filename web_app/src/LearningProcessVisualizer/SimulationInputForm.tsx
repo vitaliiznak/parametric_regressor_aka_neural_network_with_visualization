@@ -66,7 +66,7 @@ const SimulationInputForm: Component<SimulationInputFormProps> = ({ onSimulate }
 
   return (
     <div class={styles.container}>
-      <h3 class={commonStyles.sectionTitle}>Simulate ChatGPT Usage</h3>
+      <h3 class={commonStyles.sectionTitle}>Simulate Drug Dosage Usage</h3>
       <form onSubmit={handleSubmit} class={styles.form}>
         <div class={styles.inputGroup}>
           <label htmlFor="chatGPTUsage" class={commonStyles.label}>

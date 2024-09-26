@@ -39,21 +39,15 @@ export class MLP {
 
 
   forward(x: (number | Value)[]): Value[] {
-    console.log("MLP forward pass starting...");
     this.clearLayerOutputs();
     this._initialInput = x.map(Value.from);
     let out: Value[] = this._initialInput;
-    console.log("Input:", out.map(v => v.data));
     for (let i = 0; i < this.layers.length; i++) {
       const layer = this.layers[i];
-      console.log(`Processing layer ${i + 1}...`);
       out = layer.forward(out);
-      console.log(`Layer ${i + 1} outputs:`, out.map(v => v.data));
       this.layerOutputs.push(out);
     }
-  
 
-    console.log("MLP forward pass completed.");
     return out;
   }
 

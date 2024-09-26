@@ -59,9 +59,10 @@ const FunctionVisualizer: Component = () => {
     if (!plotDiv || !store.trainingData || !store.network) return;
 
     const { xs, ys } = store.trainingData;
+
     const { trueX, trueY } = generateTrueFunctionPoints();
 
-    const learnedY: number[] = xs.map(x => store.network.forward([x[0]])[0].data);
+    const learnedY: number[] = trueX.map(x => store.network.forward([x])[0].data);
 
     const data = preparePlotData(trueX, trueY, learnedY, xs, ys);
 
@@ -69,10 +70,10 @@ const FunctionVisualizer: Component = () => {
     const allX = [...trueX, ...xs.map(x => x[0])];
     const allY = [...trueY, ...learnedY, ...ys];
 
-    const xMin = Math.min(...allX) - 5;
-    const xMax = Math.max(...allX) + 5;
-    const yMin = Math.min(...allY) - 0.1;
-    const yMax = Math.max(...allY) + 0.1;
+    const xMin = Math.min(...allX);
+    const xMax = Math.max(...allX);
+    const yMin = Math.min(...allY);
+    const yMax = Math.max(...allY);
 
     const layout: Partial<Plotly.Layout> = {
       xaxis: {

@@ -1,5 +1,5 @@
 import './styles/global.css'
-import { Component, createEffect, createSignal, Show, onMount } from 'solid-js';
+import { Component, createSignal, Show, onMount } from 'solid-js';
 import NetworkVisualizer from './NeuralNetworkVisualizer/NetworkVisualizer';
 import FunctionVisualizer from './FunctionVisualizer';
 import { actions } from './store';
@@ -9,8 +9,6 @@ import SidebarCockpit from './SidebarCockpit'
 import CollapsibleSidebar from './components/CollapsibleSidebar';
 import TutorialBar from './Tutorial/TutorialBar';
 import { typography } from './styles/typography';
-import NormalizationSettings from "./LearningProcessVisualizer/NormalizationSettings";
-import NormalizationVisualizer from "./LearningProcessVisualizer/NormalizationVisualizer";
 
 const App: Component = () => {
   onMount(() => {
@@ -113,10 +111,21 @@ const App: Component = () => {
       min-height: 0;
       position: relative;
     `,
+    githubLogo: css`
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+    `
   };
 
   return (
     <div class={styles.flexContainer}>
+      <a href="https://github.com/julianstroheker/neural-network-visualizer" target="_blank" rel="noopener noreferrer">
+        <img src="/GitHub_Logo_White.png" alt="GitHub Repository" class={styles.githubLogo} />
+      </a>
+      
       <div class={styles.mainContent}>
         <div class={styles.contentWrapper}>
           <CollapsibleSidebar>

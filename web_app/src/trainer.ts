@@ -32,7 +32,15 @@ export class Trainer {
     this.currentIteration = 0;
   }
 
-
+  shuffleDataset() {
+    const shuffled = this.xs.map((x, i) => ({ x, y: this.yt[i] }));
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    this.xs = shuffled.map(item => item.x);
+    this.yt = shuffled.map(item => item.y);
+  }
 
   singleStepForward(): ForwardStepResults | null {
     if (this.currentDataIndex >= this.xs.length) {

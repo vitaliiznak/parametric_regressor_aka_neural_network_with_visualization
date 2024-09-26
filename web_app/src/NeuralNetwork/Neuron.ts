@@ -32,6 +32,7 @@ export class Neuron {
       case 'relu': return x.relu();
       case 'sigmoid': return x.sigmoid();
       case 'leaky-relu': return x.leakyRelu();
+      case 'swish': return x.mul(x.sigmoid());
       case 'identity': default: return x;
     }
   }

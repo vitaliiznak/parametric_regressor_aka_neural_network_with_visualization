@@ -1,7 +1,4 @@
-export interface DataPoint {
-  x: number; // ChatGPT usage as a fraction between 0 and 1
-  y: number;
-}
+
 
 /**
  * Generates sample data points for the neural network.
@@ -10,15 +7,19 @@ export interface DataPoint {
  * @param addNoise - Whether to add random noise to the data.
  * @returns An array of DataPoint objects.
  */
-export function generateSampleData(count: number, addNoise: boolean = true): DataPoint[] {
-  const data: DataPoint[] = [];
+export function generateSampleData(count: number, addNoise: boolean = true) {
+
+  const D_array = [];
+  const I_array = [];
   for (let i = 0; i < count; i++) {
     const D = Math.random(); // Dosage amount from 0 to 100 mg
-    const noise = addNoise ? (Math.random() - 0.5) * 0.05 : 0; // Noise between -0.025 and 0.025
+    const noise = addNoise ? (Math.random() - 0.7) * 0.09 : 0; // Noise between -0.025 and 0.025
     const I = getTrueFunction(D) + noise; // Immune response with optional noise
-    data.push({ x: D, y: I });
+    D_array.push(D);
+    I_array.push(I);
   }
-  return data;
+
+  return [D_array, I_array];
 }
 /**
  * Computes the true function value based on the ChatGPT usage fraction.

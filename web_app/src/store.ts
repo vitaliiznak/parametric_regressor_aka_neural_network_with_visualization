@@ -83,17 +83,19 @@ function initializeTrainingData() {
   console.log("Action: initializeTrainingData started");
 
   try {
-    const rawData = generateSampleData(1000);
+    const rawData = generateSampleData(1000, true);
 
-    if (!rawData || !Array.isArray(rawData)) {
+    if (!rawData || !Array.isArray(rawData) || rawData.length !== 2) {
       console.error("Invalid training data:", rawData);
       return;
     }
 
-    // Transform DataPoint[] to TrainingData
+    const [x, y] = rawData;
+
+    // Transform DataPoints[] to TrainingData
     const trainingData: TrainingData = {
-      xs: rawData.map(dp => [dp.x]), // Assuming each input is a single feature
-      ys: rawData.map(dp => dp.y),
+      xs: x.map(value => [value]), // Wrap each x value in an array
+      ys: y,
     };
 
     // Validate transformed training data
@@ -115,6 +117,7 @@ function initializeTrainingData() {
     });
 
   } catch (error) {
+    console.error("Error in initializeTrainingData:", error);
   } finally {
     isInitializing = false;
   }
@@ -332,6 +335,8 @@ export function resetVisualData() {
   setStore("visualData", { nodes: [], connections: [] });
 }
 
+
+
  /**
    * Runs training for a specified number of iterations with a given batch size.
    * 
@@ -343,6 +348,9 @@ export function resetVisualData() {
   setStore("trainingState", "currentEpoch", 0);
   setStore("trainingState", "currentLoss", null);
   setStore("trainingState", "lossHistory", []);
+
+
+  
 
   for (let epoch = 1; epoch <= iterations; epoch++) {
     if (!store.trainingState.isTraining) break; // Allow stopping the training

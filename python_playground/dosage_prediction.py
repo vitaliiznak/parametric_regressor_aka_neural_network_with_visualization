@@ -101,18 +101,26 @@ def train_model(
         float: Final training loss.
     """
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     final_loss = 0.0  # Initialize final loss
 
     for epoch in range(1, epochs + 1):
         epoch_loss = 0.0  # Cumulative loss for the epoch
         for inputs, targets in dataloader:
-            optimizer.zero_grad()
+            # Forward pass
             outputs = model(inputs)
             loss = criterion(outputs, targets)
+
+            # Backward pass
+            model.zero_grad()
             loss.backward()
-            optimizer.step()
+
+            # Manual update of parameters (Simple Gradient Descent)
+            with torch.no_grad():
+                for param in model.parameters():
+                    param -= learning_rate * param.grad
+
             epoch_loss += loss.item()
+
         average_loss = epoch_loss / len(dataloader)
         if epoch % max(epochs // 10, 1) == 0 or epoch == 1:
             print(f"Epoch {epoch}/{epochs}, Loss: {average_loss:.6f}")
@@ -181,13 +189,13 @@ def main() -> None:
 
     # Create dataset and dataloader
     dataset = TensorDataset(D_tensor, I_tensor)
-    dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=20, shuffle=True)
 
     # Initialize model
     model = ImmuneResponseModel()
 
     # Training parameters
-    num_epochs = 70
+    num_epochs = 10
     learning_rate = 0.02
 
     # Train the model and capture final loss
