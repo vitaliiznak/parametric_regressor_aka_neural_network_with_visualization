@@ -3,12 +3,12 @@ import { MLPConfig } from "./NeuralNetwork/types";
 export const CONFIG = {
   INITIAL_NETWORK: {
     inputSize: 1,
-    layers: [8, 8, 1],
-    activations: ['leaky-relu', 'leaky-relu',  'identity']
+    layers: [5, 3, 1],
+    activations: ['tanh', 'tanh',  'identity']
   } as MLPConfig,
   INITIAL_TRAINING: {
-    learningRate: 0.001,
-    defaultBatchSize: 32,
+    learningRate: 0.02,
+    defaultBatchSize: 8,
     defaultEpochs: 70,
   },
   VISUALIZATION: {

@@ -114,14 +114,17 @@ const TutorialBar: Component = () => {
             <h1 class={styles.title}>Task: Crack Dr. House's Dosage Dilemma with Neural Networks! 🧪</h1>
             <h2 class={styles.subtitle}>Welcome to the AI-Powered Medical Challenge!</h2>
             <p class={styles.paragraph}>
-              Hey there, future AI superstar! 👋 Ready to step into the intriguing world of Dr. House and tackle a medical mystery? Your mission, should you choose to accept it (insert dramatic heartbeat sound 🎵), is to assist the brilliant but enigmatic Dr. House in optimizing medication dosages for maximum patient effectiveness with minimal side effects!
+              Dr. Gregory House is confronted with a tricky case: a patient’s immune system is reacting unpredictably to an experimental drug. At low doses, the drug seems to boost the immune response, but as the dosage increases, things go downhill fast. However, just when it seems like all hope is lost, there's an unexpected second peak in the immune response—like the immune system’s last-ditch effort to fight back. Of course, it doesn’t last long before crashing again.
+            </p>
+            <p class={styles.paragraph}>
+              House, as sarcastic as ever, remarks, “Looks like the immune system’s trying to pull a Houdini—disappears, then makes a dramatic comeback,” as he uses a neural network to find the perfect dose before the patient (or his team) flatlines.
             </p>
             <p class={styles.paragraph}>
               Here's the scoop on your thrilling task:
             </p>
             <ul>
-              <li><span class={styles.highlight}>Input:</span> Medication dosage level (0% - 100%).</li>
-              <li><span class={styles.highlight}>Output:</span> Patient effectiveness score (0% - 100%).</li>
+              <li><span class={styles.highlight}>Input:</span> Medication dosage level (0 mg - 100 mg).</li>
+              <li><span class={styles.highlight}>Output:</span> Immune response score (-1 to 1).</li>
               <li><span class={styles.highlight}>The Twist:</span> The relationship between dosage and effectiveness is as wavy as a heartbeat monitor! 💓</li>
             </ul>
             <p class={styles.paragraph}>

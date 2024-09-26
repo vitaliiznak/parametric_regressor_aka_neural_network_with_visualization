@@ -9,52 +9,51 @@ import { css } from '@emotion/css';
 
 const FunctionVisualizer: Component = () => {
   let plotDiv: HTMLDivElement | undefined;
+  const [showTrueFunction, setShowTrueFunction] = createSignal(true);
   const [showLearnedFunction, setShowLearnedFunction] = createSignal(true);
+  const [showTrainingData, setShowTrainingData] = createSignal(true);
 
   const generateTrueFunctionPoints = () => {
-    const trueX = Array.from({ length: 100 }, (_, i) => i / 100);
-    const trueY = trueX.map(getTrueFunction);
+    const trueX: number[] = Array.from({ length: 100 }, (_, i) => i/100);
+    const trueY: number[] = trueX.map(D => getTrueFunction(D));
     return { trueX, trueY };
   };
 
-  const generateLearnedFunctionPoints = (xs: number[][]) => {
-    return xs.map(x => store.network.forward(x)[0].data);
-  };
-
-  const preparePlotData = (trueX: number[], trueY: number[], learnedY: number[], xs: number[][], ys: number[]) => {
-    return [
-      {
-        x: trueX,
-        y: trueY,
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: 'True Function',
-        line: { color: colors.primary, width: 3 },
-        marker: { color: colors.primary, size: 6 },
-        hoverinfo: 'x+y',
-      },
-      {
-        x: xs.map(x => x[0]),
-        y: ys,
-        type: 'scatter',
-        mode: 'markers',
-        name: 'Training Data',
-        marker: { color: colors.error, size: 8 },
-        hoverinfo: 'x+y',
-      },
-      {
-        x: trueX,
-        y: learnedY,
-        type: 'scatter',
-        mode: 'lines',
-        name: 'Learned Function',
-        line: { color: colors.success, width: 3, dash: 'dash' },
-        marker: { color: colors.primary, size: 6 },
-        visible: showLearnedFunction() ? true : 'legendonly',
-        hoverinfo: 'x+y',
-      }
-    ];
-  };
+  const preparePlotData = (
+    trueX: number[],
+    trueY: number[],
+    learnedY: number[],
+    xs: number[][],
+    ys: number[]
+  ) => [
+    {
+      x: trueX,
+      y: trueY,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'True Function',
+      line: { color: colors.primary, width: 3 },
+      visible: showTrueFunction() ? true : 'legendonly',
+    },
+    {
+      x: xs.map(x => x[0]),
+      y: ys,
+      type: 'scatter',
+      mode: 'markers',
+      name: 'Training Data',
+      marker: { color: colors.error, size: 6 },
+      visible: showTrainingData() ? true : 'legendonly',
+    },
+    {
+      x: trueX,
+      y: learnedY,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Learned Function',
+      line: { color: colors.success, width: 3, dash: 'dash' },
+      visible: showLearnedFunction() ? true : 'legendonly',
+    },
+  ];
 
   const createPlot = () => {
     if (!plotDiv || !store.trainingData || !store.network) return;
@@ -62,45 +61,30 @@ const FunctionVisualizer: Component = () => {
     const { xs, ys } = store.trainingData;
     const { trueX, trueY } = generateTrueFunctionPoints();
 
-
-    const learnedY = generateLearnedFunctionPoints(trueX.map(x => [x]));
-
-    const minTrueY = Math.min(...trueY);
-    const maxTrueY = Math.max(...trueY);
-    const minTrueIndex = trueY.indexOf(minTrueY);
-    const maxTrueIndex = trueY.indexOf(maxTrueY);
-    const minTrueX = trueX[minTrueIndex];
-    const maxTrueX = trueX[maxTrueIndex];
-
-    const minLearnedY = Math.min(...learnedY);
-    const maxLearnedY = Math.max(...learnedY);
-    const minLearnedIndex = learnedY.indexOf(minLearnedY);
-    const maxLearnedIndex = learnedY.indexOf(maxLearnedY);
-    const minLearnedX = trueX[minLearnedIndex];
-    const maxLearnedX = trueX[maxLearnedIndex];
-
-    console.log(`here True Function - Min Y: ${minTrueY} at X: ${minTrueX}`);
-    console.log(`here True Function - Max Y: ${maxTrueY} at X: ${maxTrueX}`);
-    console.log(`here Learned Function - Min Y: ${minLearnedY} at X: ${minLearnedX}`);
-    console.log(`here Learned Function - Max Y: ${maxLearnedY} at X: ${maxLearnedX}`);
+    const learnedY: number[] = xs.map(x => store.network.forward([x[0]])[0].data);
 
     const data = preparePlotData(trueX, trueY, learnedY, xs, ys);
 
-    console.log({
-      trueX, trueY, learnedY, xs, ys
-    })
+    // Dynamically calculate axis ranges based on data
+    const allX = [...trueX, ...xs.map(x => x[0])];
+    const allY = [...trueY, ...learnedY, ...ys];
 
-    const layout = {
+    const xMin = Math.min(...allX) - 5;
+    const xMax = Math.max(...allX) + 5;
+    const yMin = Math.min(...allY) - 0.1;
+    const yMax = Math.max(...allY) + 0.1;
+
+    const layout: Partial<Plotly.Layout> = {
       xaxis: {
-        title: 'ChatGPT Usage (0-1)',
-        range: [0, 1],
+        title: 'Drug Dosage (mg)',
+        range: [xMin, xMax],
         gridcolor: colors.border,
         zerolinecolor: colors.border,
-        tickformat: '.2f',
+        tickformat: '.0f',
       },
       yaxis: {
-        title: 'Productivity Score (0-1)',
-        range: [0, 1],
+        title: 'Immune Response',
+        range: [yMin, yMax],
         gridcolor: colors.border,
         zerolinecolor: colors.border,
         tickformat: '.2f',
@@ -113,16 +97,17 @@ const FunctionVisualizer: Component = () => {
         borderwidth: 1,
       },
       hovermode: 'closest',
-      plot_bgcolor: '#1B213D',
-      paper_bgcolor: '#1B213D',
+      plot_bgcolor: colors.background,
+      paper_bgcolor: colors.background,
       font: {
         family: typography.fontFamily,
         size: 14,
         color: colors.text,
-      }
+      },
+      autosize: true,
     };
 
-    const config = {
+    const config: Partial<Plotly.Config> = {
       responsive: true,
       displayModeBar: true,
       modeBarButtonsToAdd: ['select2d', 'lasso2d'],
@@ -131,30 +116,41 @@ const FunctionVisualizer: Component = () => {
       scrollZoom: true,
     };
 
-    if (plotDiv) {
-      Plotly.newPlot(plotDiv, data, layout, config);
-    }
+    Plotly.react(plotDiv, data, layout, config);
+  };
 
-    plotDiv.on('plotly_legendclick', (event) => {
-      if (event.curveNumber === 2) {
-        setShowLearnedFunction(!showLearnedFunction());
-      }
-      return false;
-    });
+  const handleLegendClick = (event: Plotly.PlotPlotlyClickEvent) => {
+    if (event.curveNumber === 0) { // True Function
+      setShowTrueFunction(prev => !prev());
+    }
+    if (event.curveNumber === 1) { // Training Data
+      setShowTrainingData(prev => !prev());
+    }
+    if (event.curveNumber === 2) { // Learned Function
+      setShowLearnedFunction(prev => !prev());
+    }
+    return false; // Prevent default behavior
   };
 
   onMount(() => {
     createPlot();
+
     const resizeObserver = new ResizeObserver(() => {
       if (plotDiv) {
         Plotly.Plots.resize(plotDiv);
       }
     });
+
     if (plotDiv) {
       resizeObserver.observe(plotDiv);
+      plotDiv.on('plotly_legendclick', handleLegendClick);
     }
 
     onCleanup(() => {
+      if (plotDiv) {
+        Plotly.purge(plotDiv);
+        plotDiv.removeEventListener('plotly_legendclick', handleLegendClick);
+      }
       resizeObserver.disconnect();
     });
   });
@@ -165,12 +161,18 @@ const FunctionVisualizer: Component = () => {
     }
   });
 
+  createEffect(() => {
+    if (showTrueFunction() || showLearnedFunction() || showTrainingData()) {
+      createPlot();
+    }
+  });
+
   const styles = {
     container: css`
       ${commonStyles.card}
       padding: ${spacing.xl};
       margin-top: ${spacing.xl};
-      background-color: #1B213D;
+      background-color: ${colors.background};
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       border-radius: 8px;
       height: 100%;
@@ -190,7 +192,14 @@ const FunctionVisualizer: Component = () => {
     plotContainer: css`
       flex-grow: 1;
       min-height: 0;
-      background-color: #1B213D;
+      background-color: ${colors.background};
+    `,
+    toggleButtonsContainer: css`
+      display: flex;
+      justify-content: center;
+      gap: ${spacing.sm};
+      margin-top: ${spacing.md};
+      flex-wrap: wrap;
     `,
     toggleButton: css`
       ${commonStyles.button}
@@ -199,21 +208,39 @@ const FunctionVisualizer: Component = () => {
       align-items: center;
       justify-content: center;
       gap: ${spacing.sm};
-      width: 100%;
-      max-width: 200px;
-      margin: ${spacing.md} auto 0;
+      width: 200px;
+      @media (max-width: 500px) {
+        width: 100%;
+      }
     `,
   };
 
   return (
     <div class={styles.container}>
-      <h2 class={styles.title}>ChatGPT Productivity Function</h2>
-      <div ref={el => plotDiv = el} class={styles.plotContainer}></div>
-      <button class={styles.toggleButton} onClick={() => setShowLearnedFunction(!showLearnedFunction())}>
-        {showLearnedFunction() ? 'Hide' : 'Show'} Learned Function
-      </button>
+      <h2 class={styles.title}>Drug Dosage vs Immune Response</h2>
+      <div ref={el => (plotDiv = el)} class={styles.plotContainer}></div>
+      <div class={styles.toggleButtonsContainer}>
+        <button
+          class={styles.toggleButton}
+          onClick={() => setShowTrueFunction(prev => !prev())}
+        >
+          {showTrueFunction() ? 'Hide' : 'Show'} True Function
+        </button>
+        <button
+          class={styles.toggleButton}
+          onClick={() => setShowLearnedFunction(prev => !prev())}
+        >
+          {showLearnedFunction() ? 'Hide' : 'Show'} Learned Function
+        </button>
+        <button
+          class={styles.toggleButton}
+          onClick={() => setShowTrainingData(prev => !prev())}
+        >
+          {showTrainingData() ? 'Hide' : 'Show'} Training Data
+        </button>
+      </div>
     </div>
   );
 };
 
-export default FunctionVisualizer
+export default FunctionVisualizer;
