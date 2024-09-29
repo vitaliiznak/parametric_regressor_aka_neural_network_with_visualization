@@ -43,6 +43,7 @@ const initialState: AppState = {
     backwardStepGradients: [],
     weightUpdateResults: [],
     lossHistory: [],
+    progress: 0,
   },
 
   trainingStepResult: {
@@ -70,6 +71,20 @@ const initialState: AppState = {
 
 export const [store, setStore] = createStore(initialState);
 
+const requestIdleCallback = 
+  window.requestIdleCallback ||
+  function (cb: IdleRequestCallback): number {
+    const start = Date.now();
+    return setTimeout(function () {
+      cb({
+        didTimeout: false,
+        timeRemaining: function () {
+          return Math.max(0, 50 - (Date.now() - start));
+        },
+      });
+    }, 1);
+  };
+  
 // Flag to prevent multiple initializations
 let isInitializing = false;
 
@@ -270,12 +285,13 @@ function updateWeights() {
       return;
     }
     const result = store.trainer.updateWeights(store.trainingConfig.learningRate);
-
-    setStore('trainingStepResult', result);
-    setStore('trainingState', 'weightUpdateResults', result);
-    setStore('network', store.trainer.network.clone());
-    setStore('trainingState', 'currentPhase', 'idle');
-    setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
+    batch(() => {
+      setStore('trainingStepResult', result);
+      setStore('trainingState', 'weightUpdateResults', result);
+      setStore('network', store.trainer!.network.clone());
+      setStore('trainingState', 'currentPhase', 'idle');
+      setStore('networkUpdateTrigger', store.networkUpdateTrigger + 1);
+    });
 
     console.log("Action: Weights updated successfully");
 
@@ -337,66 +353,87 @@ export function resetVisualData() {
 
 
 
- /**
-   * Runs training for a specified number of iterations with a given batch size.
-   * 
-   * @param batchSize - Number of Forward Steps per iteration.
-   * @param iterations - Number of learning iterations.
-   */
- function* runTrainingCyclesGenerator(batchSize: number, iterations: number): Generator<void, void, unknown> {
+/**
+  * Runs training for a specified number of iterations with a given batch size.
+  * 
+  * @param batchSize - Number of Forward Steps per iteration.
+  * @param iterations - Number of learning iterations.
+  */
+function* runTrainingCyclesGenerator(batchSize: number, iterations: number): Generator<void, void, unknown> {
   setStore("trainingState", "isTraining", true);
   setStore("trainingState", "currentEpoch", 0);
   setStore("trainingState", "currentLoss", null);
   setStore("trainingState", "lossHistory", []);
 
-
-  
+  const yieldInterval = Math.max(1, Math.floor(iterations / 100)); // Yield approximately 100 times during the entire process
 
   for (let epoch = 1; epoch <= iterations; epoch++) {
-    if (!store.trainingState.isTraining) break; // Allow stopping the training
+    if (!store.trainingState.isTraining) break;
 
-    // Perform Forward Steps based on Batch Size
-    for (let batch = 0; batch < batchSize; batch++) {
+    // Perform training steps in batches
+    for (let i = 0; i < batchSize; i++) {
       actions.singleStepForward();
-      //yield; // Yield control after each batch
     }
-
-    // Calculate Loss
     actions.calculateLoss();
-    //yield;
-
-    // Perform Backward Step
     actions.stepBackward();
-    //yield;
-
-    // Update Weights
     actions.updateWeights();
-    //yield;
 
-    // Update Training State
-    setStore("trainingState", "currentEpoch", epoch);
+    // Update training state less frequently
+    if (epoch % yieldInterval === 0) {
+      batch(() => {
+        setStore("trainingState", "currentEpoch", epoch);
+        setStore("trainingState", "progress", (epoch / iterations) * 100);
+      });
+    }
     yield;
-
-    console.log(`Epoch ${epoch} completed.`);
   }
 
   setStore("trainingState", "isTraining", false);
-  console.log("Training completed.");
+  setStore("trainingState", "progress", 100);
 }
 
-function scheduleTraining(generator: Generator<void, void, unknown>): void {
-  const step = () => {
-    const { value, done } = generator.next();
-    if (!done) {
-      requestAnimationFrame(step); // Schedule the next step
+function runTrainingCyclesNoUI(batchSize: number, iterations: number): void {
+  let trainer = store.trainer;
+  if (!trainer) {
+    trainer = initializeTrainer();
+  }
+
+  for (let epoch = 1; epoch <= iterations; epoch++) {
+    for (let i = 0; i < batchSize; i++) {
+      trainer.singleStepForward();
     }
-  };
-  requestAnimationFrame(step);
+    trainer.calculateLoss();
+    trainer.stepBackwardAndGetGradientsGroupedByConnection();
+    trainer.updateWeights(store.trainingConfig.learningRate);
+
+    if (epoch % 100 === 0) {
+      console.log(`Epoch ${epoch}/${iterations} completed`);
+    }
+  }
+
+  console.log("Training completed.");
 }
 
 function runTrainingCycles(batchSize: number, iterations: number): void {
   const generator = runTrainingCyclesGenerator(batchSize, iterations);
-  scheduleTraining(generator);
+  
+  const runBatch = (deadline: IdleDeadline) => {
+    let shouldYield = false;
+    while (!shouldYield) {
+      const { value, done } = generator.next();
+      if (done) {
+        console.log("Training completed.");
+        return;
+      }
+      
+      shouldYield = deadline.timeRemaining() < 1;
+    }
+
+    requestIdleCallback(runBatch);
+  };
+
+  setStore("trainingState", "isTraining", true);
+  requestIdleCallback(runBatch);
 }
 
 /**

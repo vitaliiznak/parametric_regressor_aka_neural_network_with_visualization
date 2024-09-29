@@ -154,22 +154,26 @@ export class Value {
   backward(): void {
     const topo: Value[] = [];
     const visited = new Set<Value>();
-
-    function buildTopo(v: Value) {
-      if (!visited.has(v)) {
+    const stack: Value[] = [this];
+  
+    while (stack.length > 0) {
+      const v = stack[stack.length - 1];
+      if (visited.has(v)) {
+        stack.pop();
+        topo.push(v);
+      } else {
         visited.add(v);
         for (const child of v._prev) {
-          buildTopo(child);
+          if (!visited.has(child)) {
+            stack.push(child);
+          }
         }
-        topo.push(v);
       }
     }
-
-    buildTopo(this);
+  
     this.grad = 1;
-    // Traverse in reverse topological order
-    for (const v of topo.reverse()) {
-      v._backward();
+    for (let i = topo.length - 1; i >= 0; i--) {
+      topo[i]._backward();
     }
   }
 

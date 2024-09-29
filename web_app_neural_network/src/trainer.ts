@@ -64,6 +64,19 @@ export class Trainer {
     return result;
   }
 
+  batchForwardStep(batchSize: number): ForwardStepResults[] {
+    const results: ForwardStepResults[] = [];
+    for (let i = 0; i < batchSize; i++) {
+      const result = this.singleStepForward();
+      if (result) {
+        results.push(result);
+      } else {
+        break;
+      }
+    }
+    return results;
+  }
+
   calculateLoss(): Value | number | null {
     if (this.currentBatchInputs.length === 0) {
       console.error("No data in the current batch");
