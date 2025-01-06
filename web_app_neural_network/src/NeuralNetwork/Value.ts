@@ -63,7 +63,6 @@ export class Value {
 
     return out;
   }
-
   div(other: number | Value): Value {
     const otherValue = Value.from(other);
     const out = this.mul(otherValue.pow(-1));
@@ -248,3 +247,4 @@ export class Value {
   }
 }
 Value.idCounter = 0;
+

@@ -1,30 +1,52 @@
 import { ActivationFunction, NetworkData, MLPConfig } from './types';
-import { Layer } from './layer';
-import { Value } from './value';
+import { Layer } from './Layer';
+import { Value } from './Value';
 
 export class MLP {
-  layers: Layer[];
-  activations: ActivationFunction[];
-  inputSize: number;
-  layerOutputs: Value[][] = [];
-  private gradientMapping: { neuron: number; parameter: number }[] = [];
+  private layers: Layer[];
+  private activations: ActivationFunction[];
+  private inputSize: number;
+  private layerOutputs: Value[][] = [];
+  private gradientMapping: Array<{ neuron: number; parameter: number }> = [];
   private _initialInput: Value[] = [];
 
+  /**
+   * Creates a new Multi-Layer Perceptron
+   * @param config Network configuration
+   */
   constructor(config: MLPConfig) {
+    this.validateConfig(config);
+    
     const { inputSize, layers, activations } = config;
     this.inputSize = inputSize;
     const sizes = [inputSize, ...layers];
     this.activations = activations || [];
     this.layers = [];
+
     for (let i = 0; i < layers.length; i++) {
-      this.layers.push(new Layer(sizes[i], layers[i], this.activations[i] || 'identity'));
+      this.layers.push(
+        new Layer(sizes[i], layers[i], this.activations[i] || 'identity')
+      );
     }
-    console.log("Creating MLP with layers:", layers, "and activations:", this.activations);
-    this.layers.forEach((layer, i) => {
-      console.log(`Layer ${i}: size ${layer.neurons.length}, activation ${layer.neurons[0].activation}`);
-    });
-    this.clearLayerOutputs();
-    this.computeGradientMapping();
+
+    this.initializeGradientMapping();
+  }
+
+  /**
+   * Validates the network configuration
+   * @param config Network configuration to validate
+   * @throws Error if configuration is invalid
+   */
+  private validateConfig(config: MLPConfig): void {
+    if (!config.inputSize || config.inputSize <= 0) {
+      throw new Error('Invalid input size');
+    }
+    if (!config.layers || !config.layers.length) {
+      throw new Error('At least one layer is required');
+    }
+    if (config.activations && config.activations.length !== config.layers.length) {
+      throw new Error('Number of activation functions must match number of layers');
+    }
   }
 
   getLayerOutputs(): number[][] {
@@ -111,7 +133,7 @@ export class MLP {
     });
   }
 
-  private computeGradientMapping() {
+  private initializeGradientMapping() {
     const parametersPerNeuron = this.getParametersPerNeuron();
     let index = 0;
   
