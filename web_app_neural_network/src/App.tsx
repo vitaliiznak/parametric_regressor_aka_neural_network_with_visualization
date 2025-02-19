@@ -15,7 +15,7 @@ const App: Component = () => {
     actions.initializeTrainingData();
   });
 
-  const [activeTab, setActiveTab] = createSignal<"network" | "function" | "combinedView">("network");
+  const [activeTab, setActiveTab] = createSignal<"network" | "function" | "combinedView">("combinedView");
 
   const styles = {
     mainContainer: css`
